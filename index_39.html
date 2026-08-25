@@ -158,21 +158,84 @@ input[type=file]{display:none}
 .visit-item-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto}
 .visit-empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:13.5px}
 .filterbar select:focus,.filterbar input:focus{border-color:var(--exp)}
-/* katlanır admin paneli */
-.admin-panel{margin-top:34px;border:1px solid transparent;border-top:1px solid var(--border);border-radius:0;background:transparent;overflow:hidden;transition:background .25s ease,border-color .25s ease}
-.admin-panel:hover{background:rgba(255,255,255,.012)}
-.admin-panel[open]{border:1px solid var(--border);border-radius:12px;background:var(--panel);margin-top:34px}
-.admin-panel summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--faint);user-select:none;transition:color .2s ease}
-.admin-panel summary:hover{color:var(--muted)}
-.admin-panel summary::-webkit-details-marker{display:none}
-.admin-panel summary::after{content:"⌄";color:var(--faint);font-size:15px;margin-left:8px;transition:transform .25s ease}
-.admin-panel[open] summary::after{content:"";width:15px;height:15px;display:inline-block;background:none}
-.admin-panel[open] summary::after{content:"⌃"}
-.admin-sum-label{font-weight:500;color:var(--faint);letter-spacing:.02em}
-.admin-panel:hover .admin-sum-label{color:var(--muted)}
-.admin-sum-status{font-size:11px;color:var(--faint);font-family:'IBM Plex Mono',monospace;opacity:.7}
-.admin-body{padding:2px 16px 16px;animation:adminFade .25s ease}
-@keyframes adminFade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+/* Tam ekran yönetim paneli */
+.admin-full-panel{position:fixed;inset:0;z-index:4000;background:var(--bg);display:flex;flex-direction:column;animation:adminFade .2s ease}
+@keyframes adminFade{from{opacity:0}to{opacity:1}}
+.admin-full-panel[hidden]{display:none!important}
+.admin-topbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--panel)}
+.admin-topbar-brand{display:flex;align-items:center;gap:10px}
+.admin-topbar-icon{width:28px;height:28px;border-radius:8px;background:rgba(53,196,168,.15);display:flex;align-items:center;justify-content:center;font-size:14px}
+.admin-topbar-title{font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px}
+.admin-topbar-sub{font-size:9.5px;color:var(--faint);letter-spacing:.04em}
+.admin-topbar-actions{display:flex;align-items:center;gap:10px}
+.admin-topbar-badge{background:rgba(232,163,61,.1);border:1px solid rgba(232,163,61,.4);color:var(--imp);border-radius:16px;padding:5px 12px;font-size:11.5px;font-weight:600}
+
+/* Yönetim paneli: sol kenar çubuğu (sidebar) düzeni */
+.admin-layout{display:flex;gap:0;flex:1;min-height:0;overflow:hidden;background:var(--panel2)}
+.admin-sidebar{flex:0 0 190px;background:var(--bg);border-right:1px solid var(--border);padding:14px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.admin-sidebar-label{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;padding:6px 10px 12px}
+.admin-sidebar-sep{height:1px;background:var(--border);margin:10px 6px}
+.admin-nav-item{display:flex;align-items:center;gap:10px;background:none;border:none;color:var(--muted);border-radius:8px;padding:9px 10px;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;transition:.15s}
+.admin-nav-item svg{width:16px;height:16px;flex:0 0 auto}
+.admin-nav-item:hover{background:rgba(255,255,255,.03);color:var(--text)}
+.admin-nav-item.active{background:rgba(53,196,168,.12);color:#5FE0C6;font-weight:600}
+.admin-content{flex:1;min-width:0;padding:24px;overflow-y:auto}
+.admin-screen-firmview{padding:0;max-width:1100px;margin:0 auto}
+@media(max-width:640px){
+  .admin-layout{flex-direction:column}
+  .admin-sidebar{flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--border);overflow-y:visible}
+  .admin-sidebar-label{display:none}
+  .admin-sidebar-sep{display:none}
+  .admin-nav-item{flex:1 1 auto;justify-content:center}
+}
+
+/* Genel Bakış */
+.overview-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:16px}
+.overview-stat{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.overview-stat-label{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.overview-stat-label svg{width:12px;height:12px;flex:0 0 auto}
+.overview-stat-value{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;margin-top:6px}
+.overview-stat-value.exp{color:var(--exp)}
+
+/* Alt ekranlar (Şubeler / Hedef Kitleler / Genel Bakış) */
+.admin-screen{margin-top:0}
+.admin-screen-title{font-family:'Sora',sans-serif;font-weight:700;font-size:16px;margin-bottom:16px}
+.admin-subhead{font-family:'Sora',sans-serif;font-weight:600;font-size:13.5px;margin-top:26px;margin-bottom:8px;color:var(--text)}
+
+/* Şube sınıflandırma sekmeleri */
+.branch-class-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.branch-class-tab{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:8px 13px;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.15s}
+.branch-class-tab:hover{border-color:var(--axis)}
+.branch-class-tab.active{background:rgba(53,196,168,.1);border-color:var(--exp);color:var(--exp);font-weight:600}
+.bct-count{background:var(--panel);border-radius:8px;padding:1px 6px;font-size:10.5px;font-family:'IBM Plex Mono',monospace}
+.branch-class-tab.active .bct-count{background:rgba(53,196,168,.18)}
+
+/* Şube listesi tablosu */
+.branch-list-table{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto}
+.branch-list-row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:12.5px}
+.branch-list-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.branch-list-tag{flex:0 0 auto;font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.03em}
+.branch-list-tag.ticari{background:rgba(124,131,253,.14);color:#A9AEFF}
+.branch-list-tag.kurumsal{background:rgba(232,163,61,.14);color:var(--imp)}
+.branch-list-tag.kobi{background:rgba(53,196,168,.14);color:var(--exp)}
+.branch-list-stat{flex:0 0 auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint);white-space:nowrap}
+
+/* Hedef Kitleleri Yönet: kaynak kartları */
+.audience-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:16px}
+.audience-card{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:16px}
+.audience-card-title{font-family:'Sora',sans-serif;font-weight:600;font-size:13.5px;margin-bottom:6px}
+
+/* Firma listesi + manuel birleştirme */
+.merge-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}
+.merge-toolbar input[type=search]{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 12px;font-family:inherit;font-size:13px}
+.merge-selected-hint{font-size:11.5px;color:var(--faint)}
+.merge-firm-list{display:flex;flex-direction:column;gap:5px;max-height:380px;overflow-y:auto}
+.merge-firm-row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12.5px;cursor:pointer;transition:.12s}
+.merge-firm-row:hover{border-color:var(--axis)}
+.merge-firm-row.selected{border-color:var(--exp);background:rgba(53,196,168,.08)}
+.merge-firm-row input[type=checkbox]{accent-color:var(--exp);cursor:pointer;flex:0 0 auto}
+.merge-firm-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.merge-firm-src{flex:0 0 auto;font-size:10px;color:var(--faint);font-family:'IBM Plex Mono',monospace}
 .controls label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
 select,input[type=search],input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 10px;font-family:inherit;font-size:14px;outline:none}
 select:focus,input:focus{border-color:var(--exp)}
@@ -480,155 +543,6 @@ select:focus,input:focus{border-color:var(--exp)}
   .leaflet-popup-content{font-size:12px}
   .brand{gap:10px}
 }
-
-/* ===== ADMIN 2.0 — Premium Yönetim Paneli ===== */
-.admin-v2{margin-top:34px;border-radius:16px;overflow:hidden;border:1px solid var(--border);background:var(--panel);position:relative}
-.admin-v2::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 30% 0%,rgba(53,196,168,.06),transparent 55%),radial-gradient(ellipse at 70% 100%,rgba(232,163,61,.04),transparent 55%);pointer-events:none;z-index:0}
-.admin-v2[hidden]{display:none!important}
-.admin-hero{position:relative;z-index:1;padding:28px 28px 0;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.admin-hero-left{display:flex;align-items:center;gap:14px}
-.admin-hero-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(53,196,168,.18),rgba(232,163,61,.12));display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto}
-.admin-hero-text h2{font-family:'Sora',sans-serif;font-size:20px;font-weight:700;color:var(--text);margin:0;line-height:1.2}
-.admin-hero-text p{color:var(--muted);font-size:12.5px;margin:3px 0 0;letter-spacing:.02em}
-.admin-hero-right{display:flex;align-items:center;gap:10px}
-.admin-hero-user{font-size:12px;color:var(--exp);font-weight:600;background:rgba(53,196,168,.1);border:1px solid rgba(53,196,168,.25);border-radius:20px;padding:6px 14px}
-.admin-hero-logout{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:7px 14px;font-family:inherit;font-size:12.5px;cursor:pointer;transition:.15s}
-.admin-hero-logout:hover{border-color:var(--danger);color:var(--danger)}
-
-/* Sekme çubuğu */
-.admin-tabs-bar{position:relative;z-index:1;display:flex;gap:4px;padding:20px 28px 0;border-bottom:1px solid var(--border)}
-.admin-tab-btn{background:none;border:none;border-bottom:2.5px solid transparent;color:var(--muted);font-family:'Sora',sans-serif;font-size:14px;font-weight:600;padding:12px 20px;cursor:pointer;transition:.18s;white-space:nowrap;position:relative}
-.admin-tab-btn:hover{color:var(--text)}
-.admin-tab-btn.active{color:var(--exp);border-bottom-color:var(--exp)}
-.admin-tab-btn .tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;font-size:11px;font-weight:700;font-family:'IBM Plex Mono',monospace;margin-left:8px;color:var(--faint)}
-.admin-tab-btn.active .tab-badge{background:rgba(53,196,168,.15);border-color:rgba(53,196,168,.3);color:var(--exp)}
-.admin-tab-content{position:relative;z-index:1;padding:24px 28px 28px;display:none;animation:adminFade .25s ease}
-.admin-tab-content.active{display:block}
-
-/* Şube Sınıf Başlıkları */
-.branch-type-section{margin-bottom:24px}
-.branch-type-header{display:flex;align-items:center;gap:10px;padding:10px 0 14px;border-bottom:1px solid var(--border);margin-bottom:14px}
-.branch-type-dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
-.branch-type-dot.ticari{background:var(--imp);box-shadow:0 0 8px rgba(232,163,61,.5)}
-.branch-type-dot.kurumsal{background:#7C83FD;box-shadow:0 0 8px rgba(124,131,253,.5)}
-.branch-type-dot.kobi{background:var(--exp);box-shadow:0 0 8px rgba(53,196,168,.5)}
-.branch-type-name{font-family:'Sora',sans-serif;font-size:14px;font-weight:700;color:var(--text)}
-.branch-type-count{font-size:11.5px;color:var(--faint);font-family:'IBM Plex Mono',monospace}
-
-/* Şube Grid Kartları */
-.branch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
-.branch-card{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .18s,box-shadow .18s,transform .12s}
-.branch-card:hover{border-color:var(--axis);box-shadow:0 4px 20px rgba(0,0,0,.12);transform:translateY(-1px)}
-.branch-card.selected{border-color:var(--exp);background:rgba(53,196,168,.04);box-shadow:0 0 0 1px var(--exp)}
-.branch-card-name{font-weight:600;font-size:13.5px;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.branch-card-type-tag{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em}
-.branch-card-type-tag.ticari{color:var(--imp);background:rgba(232,163,61,.12);border:1px solid rgba(232,163,61,.3)}
-.branch-card-type-tag.kurumsal{color:#A9AEFF;background:rgba(124,131,253,.1);border:1px solid rgba(124,131,253,.3)}
-.branch-card-type-tag.kobi{color:var(--exp);background:rgba(53,196,168,.1);border:1px solid rgba(53,196,168,.3)}
-.branch-card-stats{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
-.branch-card-stat{display:flex;align-items:center;gap:4px}
-.branch-card-stat b{color:var(--text);font-family:'IBM Plex Mono',monospace;font-weight:600}
-
-/* Şube Detay Paneli */
-.branch-detail-panel{margin-top:18px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px 22px;animation:adminFade .2s ease}
-.branch-detail-panel[hidden]{display:none!important}
-.branch-detail-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
-.branch-detail-title{font-family:'Sora',sans-serif;font-size:16px;font-weight:700;color:var(--text)}
-.branch-detail-close{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:8px;width:30px;height:30px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.branch-detail-close:hover{border-color:var(--danger);color:var(--danger)}
-.branch-detail-stats-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
-.branch-detail-stat-card{flex:1;min-width:100px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center}
-.branch-detail-stat-card .k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-.branch-detail-stat-card .v{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;margin-top:4px;color:var(--text)}
-.branch-detail-section{margin-top:16px}
-.branch-detail-section-title{font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}
-.branch-visit-list{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto}
-.branch-visit-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;font-size:12.5px}
-.branch-visit-item .vname{flex:1;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.branch-visit-item .vstatus{flex:0 0 auto;font-size:11px;color:var(--muted)}
-.branch-star-section{margin-top:14px}
-
-/* Hedef Kitle Yükleme Kartları */
-.upload-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:28px}
-.upload-card-v2{background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;transition:border-color .18s}
-.upload-card-v2:hover{border-color:var(--axis)}
-.upload-card-v2-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.upload-card-v2-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
-.upload-card-v2-icon.diib{background:rgba(53,196,168,.15)}
-.upload-card-v2-icon.tim{background:rgba(232,163,61,.15)}
-.upload-card-v2-icon.tq{background:rgba(124,131,253,.15)}
-.upload-card-v2-title{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:var(--text)}
-.upload-card-v2-desc{color:var(--muted);font-size:12.5px;margin-bottom:14px;line-height:1.5}
-.upload-card-v2 .drop{margin-top:0}
-.upload-card-v2 .saverow{margin-top:10px}
-.upload-card-v2 .tim-status{margin-top:8px}
-.upload-card-v2-cloud{font-size:11px;color:var(--exp);margin-top:8px;display:flex;align-items:center;gap:5px}
-.upload-card-v2-cloud .dot{width:6px;height:6px;border-radius:50%;background:var(--exp)}
-
-/* Firma Birleştirme Tablosu */
-.merge-section{margin-top:6px}
-.merge-section-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-.merge-section-title{font-family:'Sora',sans-serif;font-size:16px;font-weight:700;color:var(--text)}
-.merge-filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.merge-filter-bar input[type=search]{width:240px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 12px;font-family:inherit;font-size:13px}
-.merge-filter-bar select{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 10px;font-family:inherit;font-size:13px}
-.merge-table-wrap{max-height:500px;overflow-y:auto;border:1px solid var(--border);border-radius:12px}
-.merge-table{width:100%;border-collapse:collapse;font-size:12.5px}
-.merge-table th{position:sticky;top:0;background:var(--panel2);text-align:left;font-size:10.5px;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:10px 12px;border-bottom:1px solid var(--border);z-index:2}
-.merge-table td{padding:9px 12px;border-bottom:1px solid rgba(38,48,74,.35);color:var(--text);vertical-align:middle}
-.merge-table tr:hover td{background:rgba(53,196,168,.03)}
-.merge-table .src-badges{display:flex;gap:5px;flex-wrap:wrap}
-.merge-table .src-badge{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap}
-.merge-table .src-badge.on{color:var(--exp);background:rgba(53,196,168,.12);border:1px solid rgba(53,196,168,.25)}
-.merge-table .src-badge.off{color:var(--faint);background:transparent;border:1px solid var(--border);opacity:.5}
-.merge-table .merge-btn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:4px 10px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
-.merge-table .merge-btn:hover{border-color:var(--imp);color:var(--imp)}
-.merge-result-count{font-size:12px;color:var(--muted);margin-top:10px}
-
-/* Birleştirme Modal */
-.merge-modal-overlay{position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fade .15s ease}
-.merge-modal-overlay[hidden]{display:none!important}
-.merge-modal{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:24px 26px;width:100%;max-width:520px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)}
-.merge-modal-title{font-family:'Sora',sans-serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px}
-.merge-modal-hint{color:var(--muted);font-size:12.5px;margin-bottom:18px;line-height:1.5}
-.merge-modal-firm{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px}
-.merge-modal-firm-name{font-weight:600;font-size:14px;color:var(--text)}
-.merge-modal-firm-meta{font-size:12px;color:var(--muted);margin-top:3px}
-.merge-modal-search{margin-bottom:14px}
-.merge-modal-search input{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:10px 14px;font-family:inherit;font-size:14px}
-.merge-modal-search input:focus{border-color:var(--exp);outline:none}
-.merge-modal-results{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
-.merge-modal-result{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:.12s;font-size:13px}
-.merge-modal-result:hover{border-color:var(--exp);background:rgba(53,196,168,.05)}
-.merge-modal-result.selected{border-color:var(--exp);background:rgba(53,196,168,.08)}
-.merge-modal-result .rname{font-weight:600}
-.merge-modal-result .rmeta{font-size:11px;color:var(--muted);margin-top:2px}
-.merge-modal-actions{display:flex;gap:10px;justify-content:flex-end}
-.merge-modal-actions .btn{padding:10px 20px}
-.merge-linked{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--exp)}
-.merge-linked .link-icon{font-size:13px}
-
-/* Admin V2 responsive */
-@media(max-width:560px){
-  .admin-hero{padding:18px 16px 0}
-  .admin-hero-text h2{font-size:17px}
-  .admin-tabs-bar{padding:14px 16px 0;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .admin-tab-btn{padding:10px 14px;font-size:13px}
-  .admin-tab-content{padding:16px}
-  .branch-grid{grid-template-columns:1fr}
-  .upload-card-grid{grid-template-columns:1fr}
-  .branch-detail-stats-row{gap:8px}
-  .branch-detail-stat-card{min-width:70px;padding:10px}
-  .branch-detail-stat-card .v{font-size:16px}
-  .merge-filter-bar input[type=search]{width:100%}
-  .merge-section-header{flex-direction:column;align-items:flex-start}
-}
-
-/* Light theme admin overrides */
-[data-theme="light"] .admin-v2::before{background:radial-gradient(ellipse at 30% 0%,rgba(53,196,168,.04),transparent 55%),radial-gradient(ellipse at 70% 100%,rgba(232,163,61,.03),transparent 55%)}
-[data-theme="light"] .branch-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.06)}
-[data-theme="light"] .merge-modal{box-shadow:0 20px 60px rgba(0,0,0,.15)}
-[data-theme="light"] .merge-modal-overlay{background:rgba(0,0,0,.35)}
 </style>
 </head>
 <body>
@@ -706,6 +620,7 @@ select:focus,input:focus{border-color:var(--exp)}
 
 <div class="wrap" id="appWrap" hidden>
 
+<div id="userViewWrap">
 <header>
   <div class="header-right-row">
     <button class="header-visit-btn" id="visitListBtn" hidden type="button" title="Ziyaret Listem">🔖<span class="header-visit-label"> Ziyaret Listem</span></button>
@@ -859,122 +774,161 @@ select:focus,input:focus{border-color:var(--exp)}
 </div>
 
 <div class="empty" id="emptyState">Buluttan veri yükleniyor…</div>
+</div><!-- /userViewWrap -->
 
-<!-- ADMIN V2 — Premium İki Sekmeli Yönetim Paneli -->
-<div class="admin-v2" id="adminPanel" hidden>
-  <div class="admin-hero">
-    <div class="admin-hero-left">
-      <div class="admin-hero-icon">🛡️</div>
-      <div class="admin-hero-text">
-        <h2>Yönetim Paneli</h2>
-        <p id="authInfo">Buluta bağlanılıyor…</p>
+<!-- ADMIN (tam ekran, kullanıcı görünümünden bağımsız) -->
+<div class="admin-full-panel" id="adminFullPanel" hidden>
+  <div class="admin-topbar">
+    <div class="admin-topbar-brand">
+      <span class="admin-topbar-icon">📡</span>
+      <div>
+        <div class="admin-topbar-title">Dış Ticaret Radar</div>
+        <div class="admin-topbar-sub">YÖNETİM PANELİ</div>
       </div>
     </div>
-    <div class="admin-hero-right">
-      <span class="admin-hero-user" id="adminHeroUser" hidden></span>
-      <button class="admin-hero-logout" id="authBtn" style="display:none">Çıkış</button>
+    <div class="admin-topbar-actions">
+      <span class="admin-topbar-badge" id="adminTopbarName">Admin</span>
+      <button class="btn" id="adminGoUserView" type="button">↩ Kullanıcı görünümüne dön</button>
+      <button class="btn" id="authBtn">Çıkış</button>
     </div>
   </div>
 
-  <div class="admin-tabs-bar" id="adminTabsBar">
-    <button class="admin-tab-btn active" data-admin-tab="branches">🏢 Şubeleri Yönet <span class="tab-badge" id="branchCountBadge">0</span></button>
-    <button class="admin-tab-btn" data-admin-tab="targets">🎯 Hedef Kitleleri Yönet</button>
-  </div>
+  <div class="admin-layout">
+    <nav class="admin-sidebar">
+      <div class="admin-sidebar-label">Yönetim</div>
+      <button class="admin-nav-item active" id="navOverview" type="button" data-target="adminOverviewScreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        Genel Bakış
+      </button>
+      <button class="admin-nav-item" id="navBranches" type="button" data-target="adminBranchesScreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M13 21V11l6 3v7"/><path d="M9 9v.01M9 12v.01M9 15v.01"/></svg>
+        Şubeler
+      </button>
+      <button class="admin-nav-item" id="navAudiences" type="button" data-target="adminAudiencesScreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+        Hedef Kitleler
+      </button>
+      <div class="admin-sidebar-sep"></div>
+      <button class="admin-nav-item" id="navFirmView" type="button" data-target="adminFirmViewScreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.5-7-11a7 7 0 1 1 14 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        Firma Görünümü
+      </button>
+    </nav>
 
-  <!-- SEKME 1: Şubeleri Yönet -->
-  <div class="admin-tab-content active" id="adminTabBranches">
-    <div id="adminBranchGrid"></div>
-    <div class="branch-detail-panel" id="adminBranchDetail" hidden></div>
-  </div>
+    <div class="admin-content">
 
-  <!-- SEKME 2: Hedef Kitleleri Yönet -->
-  <div class="admin-tab-content" id="adminTabTargets">
-    <div id="uploadCard" style="display:none">
-      <div class="upload-card-grid">
-        <!-- DİİB Yükleme Kartı -->
-        <div class="upload-card-v2">
-          <div class="upload-card-v2-header">
-            <div class="upload-card-v2-icon diib">📄</div>
-            <div class="upload-card-v2-title">DİİB Yükle</div>
+      <!-- Genel Bakış -->
+      <div id="adminOverviewScreen" class="admin-screen">
+        <div class="admin-screen-title">Genel Bakış</div>
+        <div class="overview-stats">
+          <div class="overview-stat">
+            <div class="overview-stat-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              Toplam Firma
+            </div>
+            <div class="overview-stat-value" id="ovStatFirms">—</div>
           </div>
-          <div class="upload-card-v2-desc">ticaret.gov.tr › Belge Listeleri sayfasından Dahilde İşleme İzin Belgeleri (D1) Excel'ini indirip yükle.</div>
-          <div class="drop" id="drop"><b>Dosya seç</b> veya sürükle (.xlsx / .xls / .csv)</div>
-          <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv">
-          <div class="filelist" id="fileList"></div>
-          <div class="saverow" id="saveRow" style="display:none">
-            <button class="btn primary" id="saveCloudBtn">☁ Buluta kaydet</button>
-            <span class="savestatus" id="saveStatus"></span>
+          <div class="overview-stat">
+            <div class="overview-stat-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l8-4v18M13 21V11l6 3v7"/></svg>
+              Aktif Şube
+            </div>
+            <div class="overview-stat-value" id="ovStatBranches">—</div>
           </div>
-          <div class="upload-card-v2-cloud" id="diibCloudStatus"></div>
-        </div>
-
-        <!-- İlk 1000 Yükleme Kartı -->
-        <div class="upload-card-v2">
-          <div class="upload-card-v2-header">
-            <div class="upload-card-v2-icon tim">🏆</div>
-            <div class="upload-card-v2-title">İlk 1000 Yükle</div>
-          </div>
-          <div class="upload-card-v2-desc">TİM'in "İlk 1000 İhracatçı" listesini yükle. Firmalar ada göre eşleştirilip rozetlenir.</div>
-          <div class="drop small" id="dropTim"><b>İlk 1000 listesini seç</b> veya sürükle</div>
-          <input type="file" id="fileTim" accept=".xlsx,.xls,.csv">
-          <div class="tim-status" id="timStatus"></div>
-          <div class="saverow" id="timSaveRow" style="display:none">
-            <button class="btn primary" id="saveTimBtn">☁ İlk 1000'i buluta kaydet</button>
-            <button class="btn" id="clearTimBtn">Listeyi temizle</button>
-          </div>
-        </div>
-
-        <!-- Turquality Yükleme Kartı -->
-        <div class="upload-card-v2">
-          <div class="upload-card-v2-header">
-            <div class="upload-card-v2-icon tq">🎖️</div>
-            <div class="upload-card-v2-title">Turquality Yükle</div>
-          </div>
-          <div class="upload-card-v2-desc">Turquality desteklenen markalar listesini yükle. DİİB'de olmasa bile havuza eklenir.</div>
-          <div class="drop small" id="dropTq"><b>Turquality listesini seç</b> veya sürükle</div>
-          <input type="file" id="fileTq" accept=".xlsx,.xls,.csv">
-          <div class="tim-status" id="tqStatus"></div>
-          <div class="saverow" id="tqSaveRow" style="display:none">
-            <button class="btn primary" id="saveTqBtn">☁ Turquality'yi buluta kaydet</button>
-            <button class="btn" id="clearTqBtn">Listeyi temizle</button>
+          <div class="overview-stat">
+            <div class="overview-stat-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+              Toplam Giriş
+            </div>
+            <div class="overview-stat-value exp" id="ovStatLogins">—</div>
           </div>
         </div>
+        <div class="hint" style="margin-top:18px">Sol menüden bir bölüm seçerek devam et.</div>
       </div>
 
-      <!-- Firma Birleştirme Bölümü -->
-      <div class="merge-section">
-        <div class="merge-section-header">
-          <div class="merge-section-title">Tüm Firmalar</div>
-          <div class="merge-filter-bar">
-            <input type="search" id="mergeSearchBox" placeholder="🔍 Firma ara…">
-            <select id="mergeFilterSel">
-              <option value="">Tüm firmalar</option>
-              <option value="unmatched">Eşleşmemiş (tek kaynak)</option>
-              <option value="diib">Sadece DİİB</option>
-              <option value="tim">Sadece İlk 1000</option>
-              <option value="tq">Sadece Turquality</option>
-              <option value="merged">Birleştirilmiş</option>
-            </select>
+      <!-- Şubeler -->
+      <div id="adminBranchesScreen" class="admin-screen" hidden>
+        <div class="admin-screen-title">Şubeler</div>
+
+        <div class="branch-class-tabs" id="branchClassTabs">
+          <button class="branch-class-tab active" data-class="all" type="button">Tümü <span class="bct-count" id="bctAll">0</span></button>
+          <button class="branch-class-tab" data-class="ticari" type="button">Ticari Şube <span class="bct-count" id="bctTicari">0</span></button>
+          <button class="branch-class-tab" data-class="kurumsal" type="button">Kurumsal Şube <span class="bct-count" id="bctKurumsal">0</span></button>
+          <button class="branch-class-tab" data-class="kobi" type="button">Kobi Şube <span class="bct-count" id="bctKobi">0</span></button>
+        </div>
+
+        <div class="branch-mgmt-row">
+          <select id="branchStatSelect"><option value="">— Şube seç —</option></select>
+          <button class="btn" id="branchStarModeBtn" disabled>⭐ Bu şube için yıldız firma seç</button>
+          <span class="branch-mgmt-status" id="branchStarModeStatus"></span>
+        </div>
+
+        <div id="branchStatsBox" class="branch-stats-box">
+          <div class="branch-stats-empty">Yukarıdan bir şube seç, giriş geçmişini burada gör.</div>
+        </div>
+
+        <div class="admin-subhead">Şube Listesi</div>
+        <div id="branchListTable" class="branch-list-table"></div>
+      </div>
+
+      <!-- Hedef Kitleler -->
+      <div id="adminAudiencesScreen" class="admin-screen" hidden>
+        <div class="admin-screen-title">Hedef Kitleler</div>
+
+        <div class="audience-grid">
+          <div class="audience-card">
+            <div class="audience-card-title">📄 DİİB <span class="hint-inline">(aylık, ticaret.gov.tr)</span></div>
+            <div class="hint">Belge Listeleri (D1, D3, H1) sayfasından her ayın <b>Dahilde İşleme İzin Belgeleri (D1)</b> Excel'ini indirip ekle. Ay otomatik algılanır.</div>
+            <div class="drop small" id="drop"><b>Dosya seç</b> veya sürükle (.xlsx / .xls / .csv)</div>
+            <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv">
+            <div class="filelist" id="fileList"></div>
+            <div class="saverow" id="saveRow" style="display:none">
+              <button class="btn primary" id="saveCloudBtn">☁ Buluta kaydet</button>
+              <span class="savestatus" id="saveStatus"></span>
+            </div>
+          </div>
+
+          <div class="audience-card">
+            <div class="audience-card-title">🏆 İlk 1000 İhracatçı <span class="hint-inline">(TİM)</span></div>
+            <div class="hint">TİM'in "İlk 1000 İhracatçı" listesini yükle. Firmalar ada göre eşleştirilip rozetlenir.</div>
+            <div class="drop small" id="dropTim"><b>İlk 1000 listesini seç</b> veya sürükle</div>
+            <input type="file" id="fileTim" accept=".xlsx,.xls,.csv">
+            <div class="tim-status" id="timStatus"></div>
+            <div class="saverow" id="timSaveRow" style="display:none">
+              <button class="btn primary" id="saveTimBtn">☁ Buluta kaydet</button>
+              <button class="btn" id="clearTimBtn">Listeyi temizle</button>
+            </div>
+          </div>
+
+          <div class="audience-card">
+            <div class="audience-card-title">🎖️ Turquality / Marka Destek <span class="hint-inline">(Ticaret Bak.)</span></div>
+            <div class="hint">Turquality desteklenen markalar listesini yükle. DİİB'de olmasalar bile havuza eklenir.</div>
+            <div class="drop small" id="dropTq"><b>Turquality listesini seç</b> veya sürükle</div>
+            <input type="file" id="fileTq" accept=".xlsx,.xls,.csv">
+            <div class="tim-status" id="tqStatus"></div>
+            <div class="saverow" id="tqSaveRow" style="display:none">
+              <button class="btn primary" id="saveTqBtn">☁ Buluta kaydet</button>
+              <button class="btn" id="clearTqBtn">Listeyi temizle</button>
+            </div>
           </div>
         </div>
-        <div id="mergeTableWrap" class="merge-table-wrap"></div>
-        <div class="merge-result-count" id="mergeResultCount"></div>
+
+        <div class="admin-subhead">Firma Listesi &amp; Manuel Birleştirme</div>
+        <div class="hint">Aşağıda tüm kaynaklardan (DİİB, İlk 1000, Turquality) gelen firmalar tek listede. İsim farklılığı yüzünden otomatik eşleşmeyen iki kaydı seçip elle birleştirebilirsin.</div>
+        <div class="merge-toolbar">
+          <input type="search" id="mergeSearchBox" placeholder="🔍 Firma ara…">
+          <span class="merge-selected-hint" id="mergeSelectedHint"></span>
+          <button class="btn primary" id="mergeConfirmBtn" disabled>🔗 Seçilenleri Birleştir</button>
+        </div>
+        <div id="mergeFirmList" class="merge-firm-list"></div>
       </div>
+
+      <!-- Firma Görünümü: kullanıcı arayüzü buraya taşınmadan, olduğu yerde gösterilir -->
+      <div id="adminFirmViewScreen" class="admin-screen admin-screen-firmview" hidden></div>
+
     </div>
   </div>
 </div>
-
-<!-- Birleştirme Modal -->
-<div class="merge-modal-overlay" id="mergeModalOverlay" hidden>
-  <div class="merge-modal" id="mergeModal"></div>
-</div>
-
-<!-- Eski admin uyumluluğu için gizli elemanlar -->
-<span id="authInfoMini" hidden></span>
-<select id="branchStatSelect" hidden><option value="">— Şube seç —</option></select>
-<button id="branchStarModeBtn" hidden disabled>⭐</button>
-<span id="branchStarModeStatus" hidden></span>
-<div id="branchStatsBox" hidden></div>
 
 <footer class="site-footer">by <span>Ensar</span></footer>
 </div>
@@ -1036,6 +990,7 @@ const S = {
   important: {},     // { subeKullaniciAdi: { firmaKey: true, ... }, ... } — şube kendi işaretler, buluttan yüklenir
   visits: {},        // { subeKullaniciAdi: { firmaKey: {status:"planned"|"done", ts:number} } } — şubenin ziyaret listesi
   loginLogs: {},     // { subeKullaniciAdi: [ts, ts, ...] } — buluttan yüklenir (yönetim panelinde)
+  manualMerges: {},  // { kucukKey: buyukKey } — admin'in elle "aynı firma" işaretlediği eşleşmeler, buluttan yüklenir
 };
 let fid = 0;
 
@@ -1590,6 +1545,28 @@ function applyStarPriority(list){
   return [...starred, ...important, ...rest];
 }
 
+// Admin'in "aynı firma" diye elle birleştirdiği kayıtları tek satıra indirger.
+// aggregate()'in kendisine dokunmaz — çıktısı üzerinde çalışan ayrı bir katmandır.
+function applyManualMerges(list){
+  const merges = S.manualMerges;
+  if (!merges || !Object.keys(merges).length) return list;
+  const byKey = {}; for (const a of list) byKey[a.key] = a;
+  const absorbed = new Set(); // küçük (kaybolan) key'ler
+  for (const [smallKey, bigKey] of Object.entries(merges)){
+    const small = byKey[smallKey], big = byKey[bigKey];
+    if (!small || !big || small===big) continue;
+    big.imp += small.imp; big.exp += small.exp; big.belge += small.belge;
+    if (!big.vkn && small.vkn) big.vkn = small.vkn;
+    if (!big.adres && small.adres) big.adres = small.adres;
+    if (!big.tim && small.tim) big.tim = small.tim;
+    if (!big.tq && small.tq) big.tq = small.tq;
+    big.src = { ...small.src, ...big.src };
+    absorbed.add(smallKey);
+  }
+  if (!absorbed.size) return list;
+  return list.filter(a=>!absorbed.has(a.key));
+}
+
 /* ================= RENDER ================= */
 function renderIlOptions(){
   const cur=$("ilSel").value;
@@ -1711,7 +1688,7 @@ function render(){
   $("emptyState").style.display = has?"none":"";
   if (!has) return;
   renderIlOptions();
-  const list = applyStarPriority(filtered());
+  const list = applyManualMerges(applyStarPriority(filtered()));
   renderActiveFilterTags();
   const tImp = list.reduce((s,a)=>s+a.imp,0), tExp = list.reduce((s,a)=>s+a.exp,0);
   $("stats").innerHTML = `
@@ -1880,7 +1857,7 @@ document.addEventListener("click", e=>{
   if (!key) return;
   S._openFirm = key;
   // Tıklanan firma, gösterilen ilk S.shown kayıt dışında kalmasın diye gerektiği kadar genişlet
-  const list = applyStarPriority(filtered());
+  const list = applyManualMerges(applyStarPriority(filtered()));
   const idx = list.findIndex(a=>a.key===key);
   if (idx >= 0 && idx >= S.shown) S.shown = idx + 10;
   render();
@@ -2259,7 +2236,6 @@ function initFirebase(){
     fbAuth = firebase.auth();
     fbDB = firebase.database();
   }catch(e){
-    $("authInfo").textContent = "Bulut bağlantısı kurulamadı: "+e.message;
     $("emptyState").textContent = "Bulut bağlantısı yok. Firebase config'i kontrol et.";
     return;
   }
@@ -2436,41 +2412,203 @@ $("branchBadgeLogout").onclick = ()=>{
 };
 
 function renderAuth(){
-  const info=$("authInfo"), btn=$("authBtn"), mini=$("authInfoMini"), panel=$("adminPanel"), adminBadge=$("adminHeaderBadge");
-  const heroUser = $("adminHeroUser");
-  if (S.user && !S.branch){
-    panel.hidden = false;
-    const admin = S.isAdmin;
-    const adminName = admin ? (ADMIN_TABLE[S.user.email.split("@")[0]] || S.user.email.split("@")[0]) : "";
-    info.textContent = admin ? "Hoş geldin, " + adminName : "Bu hesap admin değil.";
-    btn.textContent = "Çıkış"; btn.style.display="";
-    if (heroUser){ heroUser.hidden = !admin; heroUser.textContent = adminName; }
-    $("uploadCard").style.display = admin ? "" : "none";
-    if (adminBadge) adminBadge.hidden = !admin;
+  const adminBadge=$("adminHeaderBadge"), fullPanel=$("adminFullPanel"), userView=$("userViewWrap");
+  if (S.isAdmin){
+    // Admin: tam ekran yönetim paneli. userViewWrap sadece admin moduna İLK girişte gizlenir;
+    // "Firma Görünümü" sekmesindeyken bu render tekrar tetiklendiğinde açık kalmalı.
+    const enteringAdminMode = fullPanel && fullPanel.hidden;
+    if (fullPanel) fullPanel.hidden = false;
+    if (enteringAdminMode && userView && userView.parentElement !== $("adminFirmViewScreen")){
+      userView.hidden = true;
+    }
+    const adminName = ADMIN_TABLE[S.user.email.split("@")[0]] || S.user.email.split("@")[0];
+    if ($("adminTopbarName")) $("adminTopbarName").textContent = adminName;
+    if (adminBadge) adminBadge.hidden = true; // topbar zaten kimliği gösteriyor, header rozetine gerek yok
+    fillAdminBranchSelect();
+    renderAdminOverview();
     const picker = $("adminBranchPicker");
-    if (picker) picker.hidden = !admin;
-    if (admin && Object.keys(S.tim).length && S.timDirty) $("timSaveRow").style.display="";
-    if (admin && Object.keys(S.tq).length && S.tqDirty) $("tqSaveRow").style.display="";
-    if (mini) mini.textContent = admin ? "giriş yapıldı" : "yetkisiz hesap";
-    if (admin) renderAdminV2();
-  } else if (S.branch){
-    panel.hidden = true;
-    if (adminBadge) adminBadge.hidden = true;
-    const picker1 = $("adminBranchPicker"); if (picker1) picker1.hidden = true;
+    if (picker) picker.hidden = true; // konum kartı zaten görünmüyor ama güvence
+    if (Object.keys(S.tim).length && S.timDirty) $("timSaveRow").style.display="";
+    if (Object.keys(S.tq).length && S.tqDirty) $("tqSaveRow").style.display="";
   } else {
-    panel.hidden = true;
-    if (heroUser) heroUser.hidden = true;
-    btn.style.display="none";
-    $("uploadCard").style.display = "none";
-    if (mini) mini.textContent = "giriş gerekli";
+    // Şube ya da ziyaretçi: yönetimle ilgili hiçbir iz görünmesin.
+    // userViewWrap daha önce admin panelinin içine taşınmışsa, önce eski yerine (appWrap'a) geri koy.
+    if (userView && userView.parentElement !== $("appWrap")){
+      $("appWrap").insertBefore(userView, fullPanel);
+    }
+    if (fullPanel) fullPanel.hidden = true;
+    if (userView) userView.hidden = false;
     if (adminBadge) adminBadge.hidden = true;
-    const picker2 = $("adminBranchPicker"); if (picker2) picker2.hidden = true;
+    const picker = $("adminBranchPicker"); if (picker) picker.hidden = true;
   }
 }
 
 // ---- Yönetim paneli: Şube Yönetimi (giriş istatistikleri + yıldız firma atama) ----
 
-// Şube seçici açılır listesini SUBE_TABLE'dan bir kez doldur
+// ---- Yönetim paneli: sidebar navigasyonu ----
+const ADMIN_SCREENS = ["adminOverviewScreen", "adminBranchesScreen", "adminAudiencesScreen", "adminFirmViewScreen"];
+function showAdminScreen(targetId){
+  ADMIN_SCREENS.forEach(id => { const el = $(id); if (el) el.hidden = (id !== targetId); });
+  document.querySelectorAll(".admin-nav-item").forEach(nav => nav.classList.toggle("active", nav.dataset.target === targetId));
+  if (targetId !== "adminFirmViewScreen"){
+    const userView = $("userViewWrap");
+    if (userView) userView.hidden = true;
+  }
+  if (targetId === "adminBranchesScreen"){
+    fillBranchStatSelect();
+    renderBranchClassCounts();
+    renderBranchListTable();
+  } else if (targetId === "adminAudiencesScreen"){
+    renderMergeFirmList();
+  } else if (targetId === "adminOverviewScreen"){
+    renderAdminOverview();
+  } else if (targetId === "adminFirmViewScreen"){
+    // Kullanıcı arayüzünü kopyalamadan, olduğu DOM elemanını buraya taşı
+    const userView = $("userViewWrap"), slot = $("adminFirmViewScreen");
+    if (userView && slot && userView.parentElement !== slot){
+      userView.hidden = false;
+      slot.appendChild(userView);
+    }
+    render();
+  }
+}
+document.querySelectorAll(".admin-nav-item").forEach(nav=>{
+  nav.addEventListener("click", ()=> showAdminScreen(nav.dataset.target));
+});
+$("adminGoUserView") && ($("adminGoUserView").onclick = ()=> showAdminScreen("adminFirmViewScreen"));
+
+// Genel Bakış: toplam firma, aktif şube, toplam giriş sayısı
+function renderAdminOverview(){
+  if ($("ovStatFirms")) $("ovStatFirms").textContent = aggregate().length.toLocaleString("tr-TR");
+  if ($("ovStatBranches")) $("ovStatBranches").textContent = Object.keys(SUBE_TABLE).length.toLocaleString("tr-TR");
+  if ($("ovStatLogins")){
+    let total = 0;
+    for (const uname in S.loginLogs){ total += Object.keys(S.loginLogs[uname]).length; }
+    $("ovStatLogins").textContent = total.toLocaleString("tr-TR");
+  }
+}
+
+// ---- Manuel Birleştirme: tüm firmaları listele, iki tanesini seçip birleştir ----
+S._mergeSelected = []; // en fazla 2 key tutar
+
+function renderMergeFirmList(){
+  const box = $("mergeFirmList");
+  if (!box) return;
+  const q = trUp(($("mergeSearchBox")?.value || "").trim());
+  let list = aggregate(); // ham liste — birleştirilecek çiftleri BULMAK için manuel birleştirme uygulanmamış hâli lazım
+  if (q) list = list.filter(a=>trUp(a.firma).includes(q));
+  list = list.slice().sort((a,b)=>a.firma.localeCompare(b.firma,"tr")).slice(0, 200); // performans için üst sınır
+  if (!list.length){ box.innerHTML = `<div class="branch-stats-empty">Eşleşen firma yok.</div>`; return; }
+  box.innerHTML = list.map(a=>{
+    const srcTags = [a.src?.diib?"DİİB":"", a.src?.tim?"İlk1000":"", a.src?.tq?"TQ":""].filter(Boolean).join("+");
+    const selected = S._mergeSelected.includes(a.key);
+    return `<label class="merge-firm-row${selected?" selected":""}">
+      <input type="checkbox" data-merge-key="${a.key}" ${selected?"checked":""}>
+      <span class="merge-firm-name">${a.firma}</span>
+      <span class="merge-firm-src">${srcTags}</span>
+    </label>`;
+  }).join("");
+  updateMergeToolbar();
+}
+
+$("mergeSearchBox") && $("mergeSearchBox").addEventListener("input", ()=>renderMergeFirmList());
+
+$("mergeFirmList") && $("mergeFirmList").addEventListener("change", e=>{
+  const cb = e.target.closest("input[data-merge-key]");
+  if (!cb) return;
+  const key = cb.dataset.mergeKey;
+  if (cb.checked){
+    if (S._mergeSelected.length >= 2){
+      // zaten 2 seçiliyken üçüncüsüne basılırsa, en eskisini bırak
+      S._mergeSelected.shift();
+    }
+    S._mergeSelected.push(key);
+  } else {
+    S._mergeSelected = S._mergeSelected.filter(k=>k!==key);
+  }
+  renderMergeFirmList();
+});
+
+function updateMergeToolbar(){
+  const hint = $("mergeSelectedHint"), btn = $("mergeConfirmBtn");
+  if (!hint || !btn) return;
+  const n = S._mergeSelected.length;
+  hint.textContent = n===0 ? "İki firma seç" : n===1 ? "1 firma seçildi — bir tane daha seç" : "2 firma seçildi";
+  btn.disabled = n !== 2;
+}
+
+$("mergeConfirmBtn") && $("mergeConfirmBtn").addEventListener("click", async ()=>{
+  if (S._mergeSelected.length !== 2) return;
+  const all = aggregate();
+  const byKey = {}; for (const a of all) byKey[a.key] = a;
+  const [k1, k2] = S._mergeSelected;
+  const a1 = byKey[k1], a2 = byKey[k2];
+  if (!a1 || !a2) return;
+  // Daha az veri kaynağına sahip olan (ya da belge sayısı düşük olan) "küçük" sayılır, diğerine katılır
+  const score = a => (a.src?.diib?1:0) + (a.src?.tim?1:0) + (a.src?.tq?1:0) + (a.belge||0)*0.01;
+  const [small, big] = score(a1) <= score(a2) ? [a1,a2] : [a2,a1];
+  const current = { ...S.manualMerges, [small.key]: big.key };
+  S.manualMerges = current;
+  S._mergeSelected = [];
+  render();
+  renderMergeFirmList();
+  try{
+    await fbDB.ref("manualMerges").set(current);
+    toast(`"${small.firma}" → "${big.firma}" ile birleştirildi`);
+  }catch(e){
+    toast("Birleştirme kaydedilemedi: "+(e.message||e.code));
+  }
+});
+
+// ---- Şube sınıflandırması: isimde "Ticari"/"Kurumsal" geçiyorsa öyle, yoksa "Kobi" ----
+function branchClassOf(subeAdi){
+  if (/ticari/i.test(subeAdi)) return "ticari";
+  if (/kurumsal/i.test(subeAdi)) return "kurumsal";
+  return "kobi";
+}
+const BRANCH_CLASS_LABEL = {ticari:"Ticari Şube", kurumsal:"Kurumsal Şube", kobi:"Kobi Şube"};
+
+function renderBranchClassCounts(){
+  const counts = {ticari:0, kurumsal:0, kobi:0};
+  for (const uname in SUBE_TABLE){ counts[branchClassOf(SUBE_TABLE[uname][0])]++; }
+  const total = counts.ticari + counts.kurumsal + counts.kobi;
+  if ($("bctAll")) $("bctAll").textContent = total;
+  if ($("bctTicari")) $("bctTicari").textContent = counts.ticari;
+  if ($("bctKurumsal")) $("bctKurumsal").textContent = counts.kurumsal;
+  if ($("bctKobi")) $("bctKobi").textContent = counts.kobi;
+}
+
+S._branchClassFilter = "all";
+document.querySelectorAll(".branch-class-tab").forEach(tab=>{
+  tab.addEventListener("click", ()=>{
+    S._branchClassFilter = tab.dataset.class;
+    document.querySelectorAll(".branch-class-tab").forEach(t=>t.classList.toggle("active", t===tab));
+    renderBranchListTable();
+  });
+});
+
+// Şube listesini (sınıf, giriş sayısı, ziyaret listesi özeti) tablo halinde çiz
+function renderBranchListTable(){
+  const box = $("branchListTable");
+  if (!box) return;
+  let entries = Object.entries(SUBE_TABLE).map(([uname, rec])=>({
+    uname, name: rec[0], cls: branchClassOf(rec[0])
+  }));
+  if (S._branchClassFilter !== "all") entries = entries.filter(e=>e.cls===S._branchClassFilter);
+  entries.sort((a,b)=>a.name.localeCompare(b.name,"tr"));
+  if (!entries.length){ box.innerHTML = `<div class="branch-stats-empty">Bu sınıfta şube yok.</div>`; return; }
+  box.innerHTML = entries.map(e=>{
+    const loginCount = S.loginLogs[e.uname] ? Object.keys(S.loginLogs[e.uname]).length : 0;
+    const visitEntries = S.visits[e.uname] ? Object.values(S.visits[e.uname]) : [];
+    return `<div class="branch-list-row">
+      <span class="branch-list-tag ${e.cls}">${BRANCH_CLASS_LABEL[e.cls]}</span>
+      <span class="branch-list-name">${e.name}</span>
+      <span class="branch-list-stat">${loginCount} giriş</span>
+      <span class="branch-list-stat">🔖 ${visitEntries.length} ziyaret</span>
+    </div>`;
+  }).join("");
+}
+
 function fillBranchStatSelect(){
   const sel = $("branchStatSelect");
   if (!sel || sel.dataset.filled) return;
@@ -2542,6 +2680,7 @@ function renderAdminStats(){
   const box = $("branchStatsBox");
   if (!box) return;
   fillBranchStatSelect();
+  if ($("adminBranchesScreen") && !$("adminBranchesScreen").hidden) renderBranchListTable();
   const uname = $("branchStatSelect") ? $("branchStatSelect").value : "";
   if (!uname){
     box.innerHTML = `<div class="branch-stats-empty">Yukarıdan bir şube seç, giriş geçmişini burada gör.</div>`;
@@ -2593,8 +2732,6 @@ function loadCloud(){
     S.files = [...cloudFiles, ...dirtyKept];
     if ($("emptyState")) $("emptyState").textContent = S.files.length ? "" : "Henüz bulutta veri yok. Admin girişi yapıp ilk ayı yükle.";
     renderFiles(); refreshPeriodOptions(); render(); updateSaveRow();
-    const diibSt = $("diibCloudStatus");
-    if (diibSt && cloudFiles.length) diibSt.innerHTML = `<span class="dot"></span> ${cloudFiles.length} ay bulutta yüklü`;
     maybeAutoLocation();
     // Şube girişinde konum veri gelmeden önce ayarlanmış olabilir; veri gelince mesafeleri tazele
     if (S.branch && S.userLoc) geocodeVisible();
@@ -2613,24 +2750,27 @@ function loadCloud(){
   }, ()=>{});
   // Şubelere atanmış yıldız firmaları buluttan yükle (herkese açık okuma; sadece admin yazar)
   fbDB.ref("starred").on("value", snap=>{
-    if (!S.starredDirty){ S.starred = snap.val() || {}; render(); renderAdminStats(); if(S.isAdmin)renderBranchGrid(); }
+    if (!S.starredDirty){ S.starred = snap.val() || {}; render(); renderAdminStats(); }
   }, ()=>{});
   // Şubelerin kendi işaretlediği "Önemli" firmaları buluttan yükle
   fbDB.ref("important").on("value", snap=>{
-    S.important = snap.val() || {}; render(); renderAdminStats(); if(S.isAdmin)renderBranchGrid();
+    S.important = snap.val() || {}; render(); renderAdminStats();
   }, ()=>{});
   // Şubelerin kendi Ziyaret Listesi'ni buluttan yükle
   fbDB.ref("visits").on("value", snap=>{
-    S.visits = snap.val() || {}; render(); renderAdminStats(); if(S.isAdmin)renderBranchGrid();
+    S.visits = snap.val() || {}; render(); renderAdminStats();
   }, ()=>{});
   // Şube giriş kayıtlarını buluttan yükle (sadece Yönetim panelinde kullanılır)
   fbDB.ref("loginLogs").on("value", snap=>{
     S.loginLogs = snap.val() || {};
     renderAdminStats();
-    if (S.isAdmin) renderBranchGrid();
   }, ()=>{});
-  // Firma birleştirmelerini yükle
-  loadMerges();
+  // Admin'in elle birleştirdiği firma eşleşmelerini buluttan yükle (herkese açık okuma; sadece admin yazar)
+  fbDB.ref("manualMerges").on("value", snap=>{
+    S.manualMerges = snap.val() || {};
+    render();
+    if ($("adminAudiencesScreen") && !$("adminAudiencesScreen").hidden) renderMergeFirmList();
+  }, ()=>{});
 }
 
 $("saveCloudBtn").onclick = async ()=>{
@@ -2686,317 +2826,12 @@ $("saveTqBtn").onclick = async ()=>{
   }
 };
 
-/* ================= ADMIN V2 — Sekme, Şube Grid, Firma Birleştirme ================= */
-
-// Sekme geçiş
-document.querySelectorAll(".admin-tab-btn").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    document.querySelectorAll(".admin-tab-btn").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll(".admin-tab-content").forEach(c=>c.classList.remove("active"));
-    const tabId = btn.dataset.adminTab==="branches" ? "adminTabBranches" : "adminTabTargets";
-    const tabEl = $(tabId);
-    if (tabEl) tabEl.classList.add("active");
-    if (btn.dataset.adminTab==="targets") renderFirmMergeTable();
-  });
-});
-
-// Şube sınıflandırma
-function classifyBranch(name){
-  const up = name.toLocaleUpperCase("tr-TR");
-  if (up.includes("TİCARİ") || up.includes("TICARI")) return "ticari";
-  if (up.includes("KURUMSAL")) return "kurumsal";
-  return "kobi";
-}
-function classifyBranches(){
-  const groups = {ticari:[], kurumsal:[], kobi:[]};
-  for (const [uname, rec] of Object.entries(SUBE_TABLE)){
-    const type = classifyBranch(rec[0]);
-    groups[type].push({uname, name:rec[0], lat:rec[1], lon:rec[2], type});
-  }
-  // Her grup içinde alfabetik sırala
-  for (const g of Object.values(groups)) g.sort((a,b)=>a.name.localeCompare(b.name,"tr"));
-  return groups;
-}
-
-// Admin V2 ana render
-function renderAdminV2(){
-  renderBranchGrid();
-  fillAdminBranchSelect();
-  const badge = $("branchCountBadge");
-  if (badge) badge.textContent = Object.keys(SUBE_TABLE).length;
-}
-
-// Şube grid kartları
-function renderBranchGrid(){
-  const container = $("adminBranchGrid");
-  if (!container) return;
-  const groups = classifyBranches();
-  const typeLabels = {ticari: "Ticari Şubeler", kurumsal: "Kurumsal Şubeler", kobi: "Kobi Şubeler"};
-  const typeIcons = {ticari: "🏢", kurumsal: "🏛️", kobi: "🏪"};
-  let html = "";
-  for (const type of ["ticari","kurumsal","kobi"]){
-    const list = groups[type];
-    if (!list.length) continue;
-    html += `<div class="branch-type-section">
-      <div class="branch-type-header">
-        <span class="branch-type-dot ${type}"></span>
-        <span class="branch-type-name">${typeIcons[type]} ${typeLabels[type]}</span>
-        <span class="branch-type-count">${list.length} şube</span>
-      </div>
-      <div class="branch-grid">`;
-    for (const b of list){
-      const logs = S.loginLogs[b.uname] ? Object.values(S.loginLogs[b.uname]) : [];
-      const loginCount = logs.length;
-      const starCount = S.starred[b.uname] ? Object.keys(S.starred[b.uname]).length : 0;
-      const impCount = S.important[b.uname] ? Object.keys(S.important[b.uname]).length : 0;
-      const visitEntries = S.visits[b.uname] ? Object.values(S.visits[b.uname]) : [];
-      const visitPlanned = visitEntries.filter(v=>v.status==="planned").length;
-      const visitDone = visitEntries.filter(v=>v.status==="done").length;
-      const selected = S._adminDetailBranch === b.uname;
-      html += `<div class="branch-card${selected?" selected":""}" data-branch-uname="${b.uname}">
-        <div class="branch-card-name">${b.name} <span class="branch-card-type-tag ${type}">${type}</span></div>
-        <div class="branch-card-stats">
-          <span class="branch-card-stat">🔑 <b>${loginCount}</b> giriş</span>
-          <span class="branch-card-stat">⭐ <b>${starCount}</b></span>
-          <span class="branch-card-stat">📌 <b>${impCount}</b></span>
-          <span class="branch-card-stat">🔖 <b>${visitPlanned}</b></span>
-          <span class="branch-card-stat">✅ <b>${visitDone}</b></span>
-        </div>
-      </div>`;
-    }
-    html += `</div></div>`;
-  }
-  container.innerHTML = html;
-  // Kart tıklama
-  container.querySelectorAll(".branch-card").forEach(card=>{
-    card.addEventListener("click", ()=>{
-      const uname = card.dataset.branchUname;
-      S._adminDetailBranch = (S._adminDetailBranch===uname) ? null : uname;
-      renderBranchGrid();
-      renderBranchDetailV2();
-    });
-  });
-}
-
-// Şube detay paneli
-function renderBranchDetailV2(){
-  const panel = $("adminBranchDetail");
-  if (!panel) return;
-  const uname = S._adminDetailBranch;
-  if (!uname){ panel.hidden = true; return; }
-  panel.hidden = false;
-  const rec = SUBE_TABLE[uname];
-  const name = rec ? rec[0] : uname;
-  const logs = S.loginLogs[uname] ? Object.values(S.loginLogs[uname]) : [];
-  const timestamps = logs.map(l=>l.ts).filter(Boolean).sort((a,b)=>b-a);
-  const starCount = S.starred[uname] ? Object.keys(S.starred[uname]).length : 0;
-  const impCount = S.important[uname] ? Object.keys(S.important[uname]).length : 0;
-  const visitEntries = S.visits[uname] ? Object.entries(S.visits[uname]) : [];
-  const visitPlanned = visitEntries.filter(([,v])=>v.status==="planned");
-  const visitDone = visitEntries.filter(([,v])=>v.status==="done");
-  const fmtDate = ts => ts ? new Date(ts).toLocaleString("tr-TR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}) : "—";
-  // Firma adlarını çözmek için aggregate
-  const allFirms = aggregate();
-  const firmByKey = {}; for (const a of allFirms) firmByKey[a.key] = a;
-
-  let html = `<div class="branch-detail-header">
-    <div class="branch-detail-title">${name}</div>
-    <button class="branch-detail-close" id="branchDetailCloseBtn" type="button">✕</button>
-  </div>
-  <div class="branch-detail-stats-row">
-    <div class="branch-detail-stat-card"><div class="k">Toplam Giriş</div><div class="v">${timestamps.length}</div></div>
-    <div class="branch-detail-stat-card"><div class="k">Son Giriş</div><div class="v" style="font-size:13px">${timestamps.length?fmtDate(timestamps[0]):"—"}</div></div>
-    <div class="branch-detail-stat-card"><div class="k">⭐ Yıldız</div><div class="v">${starCount}</div></div>
-    <div class="branch-detail-stat-card"><div class="k">📌 Önemli</div><div class="v">${impCount}</div></div>
-    <div class="branch-detail-stat-card"><div class="k">🔖 Plan</div><div class="v">${visitPlanned.length}</div></div>
-    <div class="branch-detail-stat-card"><div class="k">✅ Yapıldı</div><div class="v">${visitDone.length}</div></div>
-  </div>`;
-
-  // Yıldız firma atama
-  html += `<div class="branch-star-section">
-    <button class="btn${S._starTargetBranch===uname?" primary":""}" id="branchDetailStarBtn" style="width:100%;margin-bottom:14px">${S._starTargetBranch===uname?"✕ Yıldızlama modunu kapat":"⭐ Bu şube için yıldız firma ata"}</button>
-  </div>`;
-
-  // Ziyaret listesi
-  if (visitPlanned.length || visitDone.length){
-    html += `<div class="branch-detail-section">
-      <div class="branch-detail-section-title">Ziyaret Listesi</div>
-      <div class="branch-visit-list">`;
-    const allVisits = [...visitPlanned, ...visitDone].sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
-    for (const [key, v] of allVisits){
-      const firm = firmByKey[key];
-      const fname = firm ? firm.firma : key;
-      html += `<div class="branch-visit-item">
-        <span class="vname">${v.status==="done"?"✅":"🔖"} ${fname}</span>
-        <span class="vstatus">${fmtDate(v.ts)}</span>
-      </div>`;
-    }
-    html += `</div></div>`;
-  }
-
-  // Son girişler
-  if (timestamps.length){
-    html += `<div class="branch-detail-section">
-      <div class="branch-detail-section-title">Giriş Geçmişi (Son 20)</div>
-      <div class="branch-visit-list">`;
-    for (const ts of timestamps.slice(0,20)){
-      html += `<div class="branch-visit-item"><span class="vname">Giriş</span><span class="vstatus">${fmtDate(ts)}</span></div>`;
-    }
-    if (timestamps.length>20) html += `<div class="branch-visit-item"><span class="vname" style="color:var(--faint)">…ve ${timestamps.length-20} giriş daha</span><span></span></div>`;
-    html += `</div></div>`;
-  }
-
-  panel.innerHTML = html;
-  // Kapat butonu
-  const closeBtn = $("branchDetailCloseBtn");
-  if (closeBtn) closeBtn.onclick = ()=>{ S._adminDetailBranch=null; panel.hidden=true; renderBranchGrid(); };
-  // Yıldız modu
-  const starBtn = $("branchDetailStarBtn");
-  if (starBtn) starBtn.onclick = ()=>{
-    if (S._starTargetBranch===uname){
-      S._starTargetBranch=null;
-      S._adminViewBranch=null;
-    } else {
-      S._starTargetBranch=uname;
-      applyAdminBranchPreview(uname);
-    }
-    renderBranchDetailV2();
-    render();
-  };
-}
-
-// ---- Firma Birleştirme Tablosu ----
-S.merges = {}; // { kaynak_key: hedef_key } — iki firma birleştirilmişse
-
-function renderFirmMergeTable(){
-  const wrap = $("mergeTableWrap");
-  const countEl = $("mergeResultCount");
-  if (!wrap) return;
-  const allFirms = aggregate();
-  const q = trUp(($("mergeSearchBox")||{}).value||"").trim();
-  const filter = ($("mergeFilterSel")||{}).value||"";
-  // Her firma için kaynak bilgisi
-  let list = allFirms.map(a=>{
-    const srcCount = (a.src.diib?1:0) + (a.src.tim?1:0) + (a.src.tq?1:0);
-    const mergedTo = S.merges[a.key] || null;
-    return {...a, srcCount, mergedTo};
-  });
-  // Filtrele
-  if (q) list = list.filter(a=>trUp(a.firma).includes(q));
-  if (filter==="unmatched") list = list.filter(a=>a.srcCount===1 && !a.mergedTo);
-  else if (filter==="diib") list = list.filter(a=>a.src.diib && !a.src.tim && !a.src.tq);
-  else if (filter==="tim") list = list.filter(a=>a.src.tim && !a.src.diib);
-  else if (filter==="tq") list = list.filter(a=>a.src.tq && !a.src.diib);
-  else if (filter==="merged") list = list.filter(a=>a.mergedTo || Object.values(S.merges).includes(a.key));
-  // Sırala: tek kaynaklılar önce, sonra ada göre
-  list.sort((a,b)=> (a.srcCount - b.srcCount) || a.firma.localeCompare(b.firma,"tr"));
-  const shown = list.slice(0,200);
-  let html = `<table class="merge-table"><thead><tr>
-    <th>Firma</th><th>İl</th><th>Kaynaklar</th><th>İşlem</th>
-  </tr></thead><tbody>`;
-  for (const a of shown){
-    const badges = [
-      `<span class="src-badge ${a.src.diib?"on":"off"}">DİİB</span>`,
-      `<span class="src-badge ${a.src.tim?"on":"off"}">İlk 1000</span>`,
-      `<span class="src-badge ${a.src.tq?"on":"off"}">Turquality</span>`
-    ].join("");
-    const mergeInfo = a.mergedTo ? `<span class="merge-linked"><span class="link-icon">🔗</span> Birleştirildi</span>` :
-      `<button class="merge-btn" data-merge-key="${a.key}">Birleştir</button>`;
-    html += `<tr><td>${a.firma}</td><td>${a.il||"—"}</td><td><div class="src-badges">${badges}</div></td><td>${mergeInfo}</td></tr>`;
-  }
-  html += `</tbody></table>`;
-  wrap.innerHTML = html;
-  if (countEl) countEl.textContent = `${list.length} firma${list.length>200?" (ilk 200 gösteriliyor)":""}`;
-  // Birleştir butonları
-  wrap.querySelectorAll(".merge-btn").forEach(btn=>{
-    btn.addEventListener("click", ()=>openMergeModal(btn.dataset.mergeKey));
-  });
-}
-
-// Birleştirme arama/filtre tetikleme
-$("mergeSearchBox") && $("mergeSearchBox").addEventListener("input", ()=>renderFirmMergeTable());
-$("mergeFilterSel") && $("mergeFilterSel").addEventListener("change", ()=>renderFirmMergeTable());
-
-// Birleştirme modal
-function openMergeModal(sourceKey){
-  const overlay = $("mergeModalOverlay"), modal = $("mergeModal");
-  if (!overlay || !modal) return;
-  const allFirms = aggregate();
-  const source = allFirms.find(a=>a.key===sourceKey);
-  if (!source) return;
-  overlay.hidden = false;
-  S._mergeSource = sourceKey;
-  S._mergeTarget = null;
-  modal.innerHTML = `
-    <div class="merge-modal-title">Firma Birleştir</div>
-    <div class="merge-modal-hint">Aşağıdaki firmayı başka bir firmayla eşleştir. İsim farklılığından otomatik eşleşmeyen firmalar için kullanışlıdır.</div>
-    <div class="merge-modal-firm">
-      <div class="merge-modal-firm-name">${source.firma}</div>
-      <div class="merge-modal-firm-meta">${source.il||"İl yok"} · ${[source.src.diib?"DİİB":null,source.src.tim?"İlk 1000":null,source.src.tq?"Turquality":null].filter(Boolean).join(", ")}</div>
-    </div>
-    <div class="merge-modal-search"><input type="search" id="mergeModalSearch" placeholder="Hedef firma ara…" autofocus></div>
-    <div class="merge-modal-results" id="mergeModalResults"></div>
-    <div class="merge-modal-actions">
-      <button class="btn" id="mergeModalCancel">İptal</button>
-      <button class="btn primary" id="mergeModalConfirm" disabled>Birleştir</button>
-    </div>`;
-  $("mergeModalCancel").onclick = closeMergeModal;
-  $("mergeModalConfirm").onclick = ()=>completeMerge();
-  $("mergeModalSearch").addEventListener("input", ()=>renderMergeResults(allFirms, sourceKey));
-  overlay.addEventListener("click", e=>{ if(e.target===overlay) closeMergeModal(); });
-}
-
-function renderMergeResults(allFirms, sourceKey){
-  const q = trUp(($("mergeModalSearch")||{}).value||"").trim();
-  const container = $("mergeModalResults");
-  if (!container || !q) { if(container) container.innerHTML=""; return; }
-  const results = allFirms.filter(a=>a.key!==sourceKey && trUp(a.firma).includes(q)).slice(0,20);
-  container.innerHTML = results.map(a=>`
-    <div class="merge-modal-result${S._mergeTarget===a.key?" selected":""}" data-merge-target="${a.key}">
-      <div class="rname">${a.firma}</div>
-      <div class="rmeta">${a.il||"İl yok"} · ${[a.src.diib?"DİİB":null,a.src.tim?"İlk 1000":null,a.src.tq?"Turquality":null].filter(Boolean).join(", ")}</div>
-    </div>`).join("") || `<div style="color:var(--faint);font-size:12px;padding:10px">Sonuç bulunamadı</div>`;
-  container.querySelectorAll(".merge-modal-result").forEach(el=>{
-    el.addEventListener("click", ()=>{
-      S._mergeTarget = el.dataset.mergeTarget;
-      container.querySelectorAll(".merge-modal-result").forEach(r=>r.classList.remove("selected"));
-      el.classList.add("selected");
-      $("mergeModalConfirm").disabled = false;
-    });
-  });
-}
-
-function closeMergeModal(){
-  const overlay = $("mergeModalOverlay");
-  if (overlay) overlay.hidden = true;
-  S._mergeSource = null; S._mergeTarget = null;
-}
-
-async function completeMerge(){
-  if (!S._mergeSource || !S._mergeTarget) return;
-  S.merges[S._mergeSource] = S._mergeTarget;
-  closeMergeModal();
-  renderFirmMergeTable();
-  toast("Firma birleştirildi ✓");
-  // Firebase'e kaydet
-  try{ await fbDB.ref("merges").set(S.merges); }
-  catch(e){ toast("Birleştirme kaydedilemedi: "+(e.message||e.code)); }
-}
-
-// Firebase'den birleştirmeleri yükle
-function loadMerges(){
-  fbDB.ref("merges").on("value", snap=>{
-    S.merges = snap.val() || {};
-  }, ()=>{});
-}
-
 // Filtre kutucukları değişince
 document.addEventListener("change", e=>{ if(e.target && (e.target.id==="diibOnly"||e.target.id==="timOnly"||e.target.id==="tqOnly")){ S.shown=50; render(); } });
 
 // Başlat
 if (window.firebase && firebaseConfig.apiKey){ initFirebase(); }
-else { $("authInfo").textContent="Firebase yüklenemedi."; }
+else { $("emptyState").textContent="Firebase yüklenemedi."; }
 </script>
 </body>
 </html>
