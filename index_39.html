@@ -2289,8 +2289,15 @@ function resetMapForNewLocation(){
 
 function requestLocation(){
   if (!navigator.geolocation){ toast("Tarayıcı konum desteklemiyor."); return; }
+  // GPS (özellikle enableHighAccuracy) birkaç saniye sürebilir. Bu sırada gerçek şube
+  // girişi (Firebase'in oturumu doğrulaması) çoktan tamamlanmış olabilir — bu isteğin
+  // BAŞLADIĞI andaki oturumu etiketleyip, sonuç geldiğinde hâlâ geçerli mi diye bakıyoruz.
+  // Değilse (yeni bir konum — ör. şube girişi — araya girmişse) sessizce yok sayıyoruz;
+  // yoksa geç gelen bir GPS sonucu, çoktan doğru yerleşmiş şube konumunun üzerine yazabilir.
+  const mySession = _locSession;
   $("locStatus").textContent="Konum alınıyor…";
   navigator.geolocation.getCurrentPosition(p=>{
+    if (mySession !== _locSession || S.branch){ return; } // bayatladı ya da bu arada şube girişi oldu
     S.userLoc = {lat:p.coords.latitude, lon:p.coords.longitude};
     $("locStatus").textContent = `Konum alındı. Yakın firmalar en üstte; mesafe önce ilçeye, sonra mahalleye göre hassaslaşır (nokta • = mahalle bazlı).`;
     $("locStatus").classList.add("on");
@@ -2298,6 +2305,7 @@ function requestLocation(){
     resetMapForNewLocation();
     initMap(); geocodeVisible();
   }, e=>{
+    if (mySession !== _locSession || S.branch) return;
     $("locStatus").textContent = "Konum alınamadı — 📍 düğmesiyle tekrar deneyebilirsin.";
     if (e.code!==e.PERMISSION_DENIED) toast("Konum alınamadı: "+e.message);
   }, {enableHighAccuracy:true, timeout:15000});
@@ -2471,7 +2479,14 @@ function initFirebase(){
     $("emptyState").textContent = "Bulut bağlantısı yok. Firebase config'i kontrol et.";
     return;
   }
+  let _authCallbackSeen = false;
   fbAuth.onAuthStateChanged(user=>{
+    // Firebase, kalıcı oturumu doğrulamadan ÖNCE genelde bir kez user=null ile çağırır,
+    // sonra gerçek (varsa) kullanıcıyla tekrar çağırır. Bu geçici ilk "null" anında GPS'i
+    // otomatik tetiklemiyoruz — yoksa yavaş biten bir GPS isteği, az sonra doğru şekilde
+    // yerleşecek şube konumunun üzerine geç yazabilir (bkz. requestLocation()'daki koruma da).
+    const isUnresolvedFirstCallback = !_authCallbackSeen && !user;
+    _authCallbackSeen = true;
     S.user = user;
     // Şube hesabı mı? (sahte e-posta alan adından anlaşılır) — ÖNCE bunu belirle
     const isBranch = !!user && user.email && user.email.endsWith("@"+SUBE_EMAIL_DOMAIN);
@@ -2495,7 +2510,7 @@ function initFirebase(){
       S.branch = null; // admin girişinde şube durumu temiz başlasın
     }
     renderAuth();
-    renderBranchUI();
+    renderBranchUI(isUnresolvedFirstCallback);
     updateSaveRow();
     renderGate(); // giriş yapılmadan platform hiç görünmesin
   });
@@ -2644,7 +2659,7 @@ function applyAdminBranchPreview(uname){
 }
 
 // Şube adı + çıkış rozetini (sağ üst) ve konum kaynağı seçicisini güncelle
-function renderBranchUI(){
+function renderBranchUI(skipAutoGps){
   const badge=$("branchBadge");
   const adminPicker = $("adminBranchPicker");
   const visitBtn = $("visitListBtn");
@@ -2660,7 +2675,7 @@ function renderBranchUI(){
     $("locSrcBranch").hidden = true;
     if (visitBtn) visitBtn.hidden = true;
     closeVisitListScreen();
-    setLocSource("gps");
+    if (!skipAutoGps) setLocSource("gps");
   }
 }
 
