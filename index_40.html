@@ -90,6 +90,9 @@ h1{font-family:'Sora',sans-serif;font-size:26px;letter-spacing:-.02em}
 .drop b{color:var(--text)}
 input[type=file]{display:none}
 .filelist{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.filelist-toggle{margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 12px;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;transition:.15s}
+.filelist-toggle:hover{border-color:var(--exp)}
+.filelist-toggle.open{border-color:var(--exp);color:var(--exp)}
 .filerow{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;flex-wrap:wrap}
 .filerow .fname{flex:1;min-width:140px;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .filerow .fcount{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)}
@@ -135,9 +138,6 @@ input[type=file]{display:none}
 .tim-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(90deg,rgba(232,163,61,.18),rgba(232,163,61,.08));color:var(--imp);border:1px solid rgba(232,163,61,.4);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:600;font-family:'IBM Plex Sans',sans-serif;margin-left:6px;vertical-align:1px}
 .tim-badge .rank{font-family:'IBM Plex Mono',monospace}
 .tq-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(90deg,rgba(124,131,253,.18),rgba(124,131,253,.07));color:#A9AEFF;border:1px solid rgba(124,131,253,.4);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:600;font-family:'IBM Plex Sans',sans-serif;margin-left:6px;vertical-align:1px;white-space:nowrap}
-/* "Yeni firma" rozetleri: bu ay ilk kez -> belirgin; son 12 ayda ilk kez -> narin/silik */
-.new-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(90deg,rgba(53,196,168,.22),rgba(53,196,168,.08));color:var(--exp);border:1px solid rgba(53,196,168,.45);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:6px;vertical-align:1px;white-space:nowrap}
-.new-badge-subtle{display:inline-block;color:var(--faint);font-size:10.5px;font-style:italic;font-weight:400;margin-left:6px;vertical-align:1px;white-space:nowrap}
 .only-tag{display:inline-block;margin-left:6px;font-size:10px;font-weight:600;color:var(--faint);border:1px solid var(--border);border-radius:6px;padding:1px 6px;vertical-align:2px;text-transform:uppercase;letter-spacing:.04em}
 .tq-inline{color:#A9AEFF;font-weight:600}
 .no-diib{margin-top:8px;font-size:12px;color:var(--faint);font-style:italic}
@@ -215,17 +215,27 @@ input[type=file]{display:none}
 
 /* Şube listesi tablosu */
 .branch-list-table{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto}
-.branch-list-row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:12.5px;cursor:pointer;transition:.12s}
-.branch-list-row:hover{border-color:var(--exp);background:rgba(53,196,168,.06)}
-.branch-list-geo{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);line-height:1.35}
-.branch-list-geo b{color:var(--exp);font-weight:600}
-.branch-list-geo .g-flow{white-space:nowrap}
+.branch-list-row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:12.5px}
 .branch-list-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
 .branch-list-tag{flex:0 0 auto;font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.03em}
 .branch-list-tag.ticari{background:rgba(124,131,253,.14);color:#A9AEFF}
 .branch-list-tag.kurumsal{background:rgba(232,163,61,.14);color:var(--imp)}
 .branch-list-tag.kobi{background:rgba(53,196,168,.14);color:var(--exp)}
 .branch-list-stat{flex:0 0 auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint);white-space:nowrap}
+.admin-subhead-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.admin-subhead-row .admin-subhead{margin-bottom:0}
+.admin-subhead-row select{background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 9px;font-family:inherit;font-size:12.5px}
+.branch-prox-table-wrap{margin-top:10px;max-height:360px;overflow:auto;border:1px solid var(--border);border-radius:10px}
+.branch-prox-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.branch-prox-table th{position:sticky;top:0;background:var(--panel2);text-align:left;padding:9px 12px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;border-bottom:1px solid var(--border)}
+.branch-prox-table th:hover{color:var(--text)}
+.branch-prox-table th.active{color:var(--exp)}
+.branch-prox-table th .sort-arrow{font-size:10px;margin-left:3px;opacity:.7}
+.branch-prox-table td{padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.branch-prox-table tbody tr{cursor:pointer;transition:.1s}
+.branch-prox-table tbody tr:hover{background:var(--panel2)}
+.branch-prox-table td.num{font-family:'IBM Plex Mono',monospace;text-align:right}
+.branch-prox-table td.name{max-width:220px;overflow:hidden;text-overflow:ellipsis;font-weight:500}
 
 /* Hedef Kitleleri Yönet: kaynak kartları */
 .audience-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:16px}
@@ -237,14 +247,6 @@ input[type=file]{display:none}
 .merge-toolbar input[type=search]{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 12px;font-family:inherit;font-size:13px}
 .merge-selected-hint{font-size:11.5px;color:var(--faint)}
 .merge-firm-list{display:flex;flex-direction:column;gap:5px;max-height:380px;overflow-y:auto}
-.audience-toggle-btn{width:100%;margin-top:10px;font-size:12.5px;padding:8px 10px}
-.audience-toggle-count{color:var(--muted);font-family:'IBM Plex Mono',monospace}
-.audience-loaded-list{margin-top:10px;animation:fade .15s ease}
-.audience-loaded-search{width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 11px;font-family:inherit;font-size:12.5px;margin-bottom:8px}
-.audience-loaded-list .merge-firm-list{max-height:260px}
-.audience-loaded-row{display:flex;flex-direction:column;gap:2px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px}
-.audience-loaded-row .alr-name{font-weight:500;color:var(--text)}
-.audience-loaded-row .alr-meta{color:var(--muted);font-size:11px}
 .merge-firm-row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12.5px;cursor:pointer;transition:.12s}
 .merge-firm-row:hover{border-color:var(--axis)}
 .merge-firm-row.selected{border-color:var(--exp);background:rgba(53,196,168,.08)}
@@ -304,14 +306,13 @@ select:focus,input:focus{border-color:var(--exp)}
 .admin-branch-picker select{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 11px;font-family:inherit;font-size:13px}
 .admin-branch-picker-hint{font-size:11.5px;color:var(--muted)}
 .map-row{display:flex;gap:12px;margin-top:12px;align-items:stretch}
-#map{height:340px;border-radius:12px;display:none;border:1px solid var(--border);overflow:hidden;position:relative;flex:1;min-width:0}
-.map-loading-overlay{position:absolute;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(ellipse at 50% 45%,rgba(13,18,32,.92) 0%,rgba(13,18,32,.97) 70%);backdrop-filter:blur(1px);animation:mlFadeIn .2s ease}
-.map-loading-overlay[hidden]{display:none!important}
-.map-loading-radar{width:84px;height:84px}
-.map-loading-text{color:#B8C2D9;font-size:12.5px;letter-spacing:.02em}
-@keyframes mlFadeIn{from{opacity:0}to{opacity:1}}
-[data-theme="light"] .map-loading-overlay{background:radial-gradient(ellipse at 50% 45%,rgba(245,247,250,.92) 0%,rgba(245,247,250,.97) 70%)}
-[data-theme="light"] .map-loading-text{color:#5C6B84}
+.map-container-wrap{position:relative;flex:1;min-width:0}
+#map{height:340px;width:100%;border-radius:12px;display:none;border:1px solid var(--border);overflow:hidden;position:relative}
+.map-loading-overlay{position:absolute;inset:0;z-index:1200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:color-mix(in srgb, var(--bg) 82%, transparent);border-radius:12px;backdrop-filter:blur(2px);transition:opacity .25s ease}
+.map-loading-overlay[hidden]{display:none}
+.map-loading-overlay .radar-spin{animation:radarspin 1.8s linear infinite;transform-origin:22px 22px}
+@keyframes radarspin{to{transform:rotate(360deg)}}
+.map-loading-text{font-size:12.5px;color:var(--muted);font-weight:500}
 .map-side-panel{flex:0 0 300px;min-width:0;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;max-height:340px;overflow-x:hidden}
 .map-side-panel[hidden]{display:none!important}
 .map-side-panel-header{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:600;font-size:13.5px;margin-bottom:6px}
@@ -355,6 +356,7 @@ select:focus,input:focus{border-color:var(--exp)}
 .firm-addr{color:var(--muted);font-size:12px;margin-top:3px}
 .firm-meta{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:2px}
 .tim-badge{display:inline-block;margin-left:8px;font-family:'IBM Plex Sans',sans-serif;font-size:10.5px;font-weight:600;color:#F0C560;background:rgba(240,197,96,.12);border:1px solid rgba(240,197,96,.35);border-radius:6px;padding:1px 7px;vertical-align:2px;white-space:nowrap}
+.new-badge{display:inline-block;margin-left:8px;font-family:'IBM Plex Sans',sans-serif;font-size:10.5px;font-weight:600;color:var(--exp);background:rgba(53,196,168,.12);border:1px solid rgba(53,196,168,.4);border-radius:6px;padding:1px 7px;vertical-align:2px;white-space:nowrap}
 .tim-inline{color:#F0C560;font-weight:600}
 .star-badge{display:inline-block;margin-right:6px;font-size:13px;filter:drop-shadow(0 0 4px rgba(240,197,96,.6))}
 .star-assign-btn{display:block;width:100%;margin-top:10px;background:var(--panel2);border:1px dashed var(--border);color:var(--muted);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;transition:.15s}
@@ -489,8 +491,8 @@ select:focus,input:focus{border-color:var(--exp)}
 .gate-pane input:focus{border-color:var(--exp);outline:none;background:rgba(255,255,255,.05)}
 .gate-btn{width:100%;padding:13px;font-size:14.5px;font-weight:700;background:linear-gradient(135deg,var(--exp),#2BAF95);color:#06251F;border:none;border-radius:10px;cursor:pointer;box-shadow:0 10px 30px rgba(53,196,168,.28);transition:.15s;display:flex;align-items:center;justify-content:center;gap:9px}
 .gate-btn:hover{filter:brightness(1.06)}
-.gate-btn.loading{cursor:default;opacity:.88}
-.gate-btn .btn-spinner{width:15px;height:15px;border:2px solid rgba(6,37,31,.3);border-top-color:#06251F;border-radius:50%;animation:btnspin .7s linear infinite;flex:0 0 auto}
+.gate-btn:disabled{cursor:default;filter:brightness(.92)}
+.btn-spinner{width:15px;height:15px;border-radius:50%;border:2px solid rgba(6,37,31,.3);border-top-color:#06251F;animation:btnspin .7s linear infinite;flex:0 0 auto}
 @keyframes btnspin{to{transform:rotate(360deg)}}
 .gate-status{margin-top:12px;font-size:12.5px;color:var(--danger);text-align:center;min-height:16px}
 .gate-status.ok{color:var(--exp)}
@@ -734,24 +736,17 @@ select:focus,input:focus{border-color:var(--exp)}
     <div class="locstatus" id="locStatus">Konumunu açarsan yakın firmalar en üste çıkar. Mesafeler ilçe merkezine göre yaklaşıktır.</div>
   </div>
   <div class="map-row">
-    <div id="map">
+    <div class="map-container-wrap">
+      <div id="map"></div>
       <div class="map-loading-overlay" id="mapLoadingOverlay" hidden>
-        <svg viewBox="0 0 120 120" class="map-loading-radar" aria-hidden="true">
-          <circle cx="60" cy="60" r="20" fill="none" stroke="#2C3A57" stroke-width="1.4"/>
-          <circle cx="60" cy="60" r="36" fill="none" stroke="#2C3A57" stroke-width="1.4"/>
-          <circle cx="60" cy="60" r="52" fill="none" stroke="#2C3A57" stroke-width="1.4"/>
-          <defs>
-            <linearGradient id="mlrSweep" x1="50%" y1="50%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#35C4A8" stop-opacity="0.9"/>
-              <stop offset="100%" stop-color="#35C4A8" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <path d="M60 60 L60 8 A52 52 0 0 1 96 24 Z" fill="url(#mlrSweep)">
-            <animateTransform attributeName="transform" type="rotate" from="0 60 60" to="360 60 60" dur="1.4s" repeatCount="indefinite"/>
-          </path>
-          <circle cx="60" cy="60" r="3" fill="#EAF0FA"/>
+        <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+          <circle cx="22" cy="22" r="19" fill="none" stroke="var(--border)" stroke-width="1.2"/>
+          <circle cx="22" cy="22" r="13" fill="none" stroke="var(--border)" stroke-width="1.2"/>
+          <circle cx="22" cy="22" r="6.5" fill="none" stroke="var(--border)" stroke-width="1.2"/>
+          <path class="radar-spin" d="M22 22 L22 3 A19 19 0 0 1 39.5 13.5 Z" fill="var(--exp)" opacity=".55"/>
+          <circle cx="22" cy="22" r="1.6" fill="var(--exp)"/>
         </svg>
-        <div class="map-loading-text">Firmalar haritaya yerleşiyor…</div>
+        <div class="map-loading-text">Konumlar yükleniyor…</div>
       </div>
     </div>
     <div class="map-side-panel" id="mapSidePanel" hidden>
@@ -901,6 +896,20 @@ select:focus,input:focus{border-color:var(--exp)}
           <button class="branch-class-tab" data-class="kobi" type="button">Kobi Şube <span class="bct-count" id="bctKobi">0</span></button>
         </div>
 
+        <div class="admin-subhead-row">
+          <div class="admin-subhead" style="margin-top:22px">Şube Yakınlık Analizi</div>
+          <select id="branchProxRadiusSel" style="width:auto">
+            <option value="5" selected>≤ 5 km</option>
+            <option value="10">≤ 10 km</option>
+            <option value="25">≤ 25 km</option>
+            <option value="50">≤ 50 km</option>
+          </select>
+        </div>
+        <div class="hint">Her şubenin seçilen yarıçapı içindeki firma sayısı ve öngörülen ihracat/ithalat toplamı. Bir şubeye tıklayınca o şubenin konumuna gidip yıldızlama moduna geçersin. Sütun başlıklarına tıklayarak sırala.</div>
+        <div id="branchProxTableWrap" class="branch-prox-table-wrap">
+          <div class="branch-stats-empty">Hesaplanıyor…</div>
+        </div>
+
         <div class="branch-mgmt-row">
           <select id="branchStatSelect"><option value="">— Şube seç —</option></select>
           <button class="btn" id="branchStarModeBtn" disabled>⭐ Bu şube için yıldız firma seç</button>
@@ -925,15 +934,11 @@ select:focus,input:focus{border-color:var(--exp)}
             <div class="hint">Belge Listeleri (D1, D3, H1) sayfasından her ayın <b>Dahilde İşleme İzin Belgeleri (D1)</b> Excel'ini indirip ekle. Ay otomatik algılanır.</div>
             <div class="drop small" id="drop"><b>Dosya seç</b> veya sürükle (.xlsx / .xls / .csv)</div>
             <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv">
-            <div class="filelist" id="fileList"></div>
+            <button class="filelist-toggle" id="fileListToggle" type="button">📂 Yüklenmiş kitleler (<span id="fileListCount">0</span>)</button>
+            <div class="filelist" id="fileList" hidden></div>
             <div class="saverow" id="saveRow" style="display:none">
               <button class="btn primary" id="saveCloudBtn">☁ Buluta kaydet</button>
               <span class="savestatus" id="saveStatus"></span>
-            </div>
-            <button class="btn audience-toggle-btn" id="diibListToggle" type="button">📋 Yüklenmiş olan kitle <span class="audience-toggle-count" id="diibListCount">(0)</span></button>
-            <div class="audience-loaded-list" id="diibLoadedList" hidden>
-              <input type="search" class="audience-loaded-search" id="diibLoadedSearch" placeholder="🔍 Firma ara…">
-              <div class="merge-firm-list" id="diibLoadedRows"></div>
             </div>
           </div>
 
@@ -947,10 +952,6 @@ select:focus,input:focus{border-color:var(--exp)}
               <button class="btn primary" id="saveTimBtn">☁ Buluta kaydet</button>
               <button class="btn" id="clearTimBtn">Listeyi temizle</button>
             </div>
-            <button class="btn audience-toggle-btn" id="timListToggle" type="button">📋 Yüklenmiş olan kitle <span class="audience-toggle-count" id="timListCount">(0)</span></button>
-            <div class="audience-loaded-list" id="timLoadedList" hidden>
-              <div class="merge-firm-list" id="timLoadedRows"></div>
-            </div>
           </div>
 
           <div class="audience-card">
@@ -962,10 +963,6 @@ select:focus,input:focus{border-color:var(--exp)}
             <div class="saverow" id="tqSaveRow" style="display:none">
               <button class="btn primary" id="saveTqBtn">☁ Buluta kaydet</button>
               <button class="btn" id="clearTqBtn">Listeyi temizle</button>
-            </div>
-            <button class="btn audience-toggle-btn" id="tqListToggle" type="button">📋 Yüklenmiş olan kitle <span class="audience-toggle-count" id="tqListCount">(0)</span></button>
-            <div class="audience-loaded-list" id="tqLoadedList" hidden>
-              <div class="merge-firm-list" id="tqLoadedRows"></div>
             </div>
           </div>
         </div>
@@ -1236,7 +1233,7 @@ function parseTim(wb){
       const expN = cExp>=0 ? parseNum(rows[r][cExp]) : 0;
       const key = normName(name);
       if (!key) continue;
-      const rec = { r: rank||9999, s: (sect||null), e: (expN||0), n:"", firma:name };
+      const rec = { r: rank||9999, s: (sect||null), e: (expN||0), n:"", nm:name };
       if (!(key in map) || (rank && rank < map[key].r)) map[key] = rec;
     }
     if (Object.keys(map).length) break;
@@ -1340,6 +1337,12 @@ $("tqInfoBtn").onclick = ()=>{
   else { p.setAttribute("hidden",""); b.setAttribute("aria-expanded","false"); }
 };
 $("drop").onclick = ()=>$("fileInput").click();
+// Yüklenmiş kitleler listesi kalabalık olmasın diye varsayılan kapalı — butonla aç/kapa
+$("fileListToggle").onclick = ()=>{
+  const open = $("fileList").hidden;
+  $("fileList").hidden = !open;
+  $("fileListToggle").classList.toggle("open", open);
+};
 $("fileInput").onchange = e => { handleFiles([...e.target.files]); e.target.value=""; };
 ["dragover","dragenter"].forEach(ev=>$("drop").addEventListener(ev,e=>{e.preventDefault();$("drop").classList.add("over");}));
 ["dragleave","drop"].forEach(ev=>$("drop").addEventListener(ev,e=>{e.preventDefault();$("drop").classList.remove("over");}));
@@ -1377,7 +1380,6 @@ function refreshTimChip(){
   const has = Object.keys(S.tim).length>0;
   $("timChip").style.display = has ? "" : "none";
   if (!has){ $("timOnly").checked=false; }
-  if ($("timListCount")) $("timListCount").textContent = `(${Object.keys(S.tim).length.toLocaleString("tr-TR")})`;
 }
 
 // Turquality listesi yükleme
@@ -1411,12 +1413,11 @@ function refreshTqChip(){
   const has = Object.keys(S.tq).length>0;
   $("tqChip").style.display = has ? "" : "none";
   if (!has){ $("tqOnly").checked=false; }
-  if ($("tqListCount")) $("tqListCount").textContent = `(${Object.keys(S.tq).length.toLocaleString("tr-TR")})`;
 }
 
 function renderFiles(){
-  if ($("diibListCount")) $("diibListCount").textContent = `(${diibAllUnique().length.toLocaleString("tr-TR")})`;
   const el = $("fileList"); el.innerHTML="";
+  const countEl = $("fileListCount"); if (countEl) countEl.textContent = S.files.length;
   for (const f of S.files){
     const row = document.createElement("div"); row.className="filerow";
     const tag = f.cloud && !f.dirty ? `<span class="cloudtag">☁ kayıtlı</span>` : (f.dirty ? `<span class="cloudtag" style="color:var(--imp)">● kaydedilmedi</span>` : "");
@@ -1455,9 +1456,26 @@ function updateSaveRow(){
 
 /* ================= PERIODS ================= */
 function loadedMonths(){ return [...new Set(S.files.filter(f=>f.month).map(f=>f.month))].sort().reverse(); }
+
+// Her firmanın (key) DİİB geçmişindeki EN ESKİ ayını verir — aktif dönem filtresinden
+// bağımsız, S.files'taki TÜM aylara bakar. "Yeni firma" rozeti için kullanılır.
+// S.files değişmediği sürece yeniden hesaplamaz (imza karşılaştırmalı basit önbellek).
+let _firstMonthCache = { sig:null, map:null };
+function firstMonthByKeyMap(){
+  const sig = S.files.map(f=>f.month+":"+f.records.length).join("|");
+  if (_firstMonthCache.sig === sig) return _firstMonthCache.map;
+  const map = new Map();
+  for (const f of S.files){
+    if (!f.month) continue;
+    for (const r of f.records){
+      const cur = map.get(r.key);
+      if (!cur || f.month < cur) map.set(r.key, f.month);
+    }
+  }
+  _firstMonthCache = { sig, map };
+  return map;
+}
 function monthLabel(m){ const [y,mm]=m.split("-"); return `${AY_ADI[+mm]} ${y}`; }
-// "YYYY-MM" -> karşılaştırılabilir tek sayı (yıl*12+ay) — "yeni firma" rozetleri için.
-function monthNum(m){ if(!m) return null; const [y,mm]=m.split("-").map(Number); return y*12+mm; }
 function loadedYears(){ return [...new Set(loadedMonths().map(m=>m.split("-")[0]))].sort().reverse(); }
 
 function refreshPeriodOptions(){
@@ -1538,19 +1556,6 @@ function aggregate(){
     if (!a.vkn && r.vkn) a.vkn=r.vkn;
     if (r.adres.length > a.adres.length){ a.adres=r.adres; a.il=r.il||a.il; }
   }
-
-  // Her firmanın İLK KEZ hangi ayda belge aldığını bul — dönem filtresinden bağımsız,
-  // yüklü TÜM aylara bakar (yoksa "son 12 ayda" görünümündeyken firma zaten yeniyse
-  // "ilk kez" olduğunu asla bilemeyiz). "Yeni firma" rozetleri bunu kullanır.
-  const firstMonthByKey = {};
-  for (const f of S.files){
-    if (!f.month) continue;
-    for (const r of f.records){
-      if (!firstMonthByKey[r.key] || f.month < firstMonthByKey[r.key]) firstMonthByKey[r.key] = f.month;
-    }
-  }
-  for (const a of map.values()) a.firstMonth = firstMonthByKey[a.key] || null;
-
   const hasTim = Object.keys(S.tim).length>0;
   const hasTq  = Object.keys(S.tq).length>0;
 
@@ -1572,18 +1577,22 @@ function aggregate(){
     }
   }
 
-  const out = [...map.values()];
-  if (hasTim) for (const a of out){ a.tim = timInfo(a.firma); if(a.tim) a.src.tim=true; }
-
-  // İlk 1000 İhracatçı'da olup DİİB/Turquality havuzunda hiç eşleşmeyen (kesişim dışı)
-  // firmaları da listeye kat — adresleri yok, haritada gösterilemezler ama listede görünürler.
+  // İlk 1000 İhracatçı (TİM) firmalarını havuza kat: DİİB/Turquality'de yoksa da
+  // yeni bir satır olarak eklenir — adres bilgisi TİM listesinde olmadığından bu
+  // satırlar haritada/konum filtresinde görünmez, ama arama ve "İlk 1000" filtresiyle bulunur.
   if (hasTim){
-    const matchedTimKeys = new Set(out.filter(a=>a.tim).map(a=>normName(a.firma)));
-    for (const [tKey, t] of Object.entries(S.tim)){
-      if (matchedTimKeys.has(tKey) || !t.firma) continue; // eşleşmiş ya da eski (adsız) kayıt
-      out.push({ firma:t.firma, key:tKey, adres:"", vkn:"", il:null, imp:0, exp:0, belge:0, src:{tim:true}, tim:t });
+    for (const [key, t] of Object.entries(S.tim)){
+      let a = map.get(key);
+      if (!a){
+        a = {firma:t.nm||key, key, adres:"", vkn:"", il:null, imp:0, exp:0, belge:0, src:{}};
+        map.set(key, a);
+      }
+      a.tim = t; a.src.tim = true;
     }
   }
+
+  const out = [...map.values()];
+  if (hasTim) for (const a of out){ if (!a.tim) a.tim = timInfo(a.firma); if(a.tim) a.src.tim=true; }
   return out;
 }
 
@@ -1787,8 +1796,11 @@ function render(){
   $("resultCount").textContent = `${list.length} firma · ${periodLabel()}`;
 
   const maxV = Math.max(1, ...list.slice(0,S.shown).map(a=>Math.max(a.imp,a.exp)));
-  // "Yeni firma" rozetleri için: en güncel yüklü ay ve "son 12 ay" eşiği
-  const _latestMonthNum = monthNum(loadedMonths()[0]);
+  // "Yeni firma" rozeti için: en son yüklenen ay + son-12-ay penceresinin alt sınırı
+  const firstMonthMap = firstMonthByKeyMap();
+  const latestMonth = loadedMonths()[0] || null;
+  let last12FloorIdx = null;
+  if (latestMonth){ const [ly,lm]=latestMonth.split("-").map(Number); last12FloorIdx = ly*12+lm-11; }
   const el = $("firmList"); el.innerHTML="";
   S._rendered = {};
   for (const a of list.slice(0,S.shown)){
@@ -1797,9 +1809,6 @@ function render(){
     const c = S.distByKey[a.key+"__c"];
     const exact = S.distByKey[a.key+"__addr"]; // tam adres hassasiyeti (scripts/geocode.js)
     const precise = S.distByKey[a.key+"__mh"]; // mahalle hassasiyeti
-    const fm = monthNum(a.firstMonth);
-    const isNewThisMonth = fm!==null && _latestMonthNum!==null && fm===_latestMonthNum;
-    const isNewLast12 = !isNewThisMonth && fm!==null && _latestMonthNum!==null && fm >= _latestMonthNum-11;
     // Yol tarifi doğrudan firmanın tam adresine gitsin (ilçe merkezine değil)
     const destText = [a.firma, a.adres, a.il].filter(Boolean).join(", ");
     const dest = encodeURIComponent(destText || (a.firma+" "+(a.il||"")));
@@ -1820,16 +1829,29 @@ function render(){
     const visitRec = visitRecBranch || visitRecAdminView;
     const visitIcon = visitRec ? (visitRec.status==="done" ? "✅" : "🔖") : "🔖";
     const visitLabel = visitRec ? (visitRec.status==="done" ? "Ziyaret edildi" : "Ziyaret planlandı") : "Ziyaret listesine ekle";
+    // "Yeni firma" rozeti: bu firmanın DİİB geçmişindeki ilk ayı...
+    const firmFirstMonth = firstMonthMap.get(a.key);
+    let newBadgeHTML = "";
+    if (firmFirstMonth && latestMonth){
+      if (firmFirstMonth === latestMonth){
+        newBadgeHTML = `<span class="new-badge" title="${monthLabel(latestMonth)} ayında ilk kez DİİB belgesi aldı">🆕 Yeni</span>`;
+      } else {
+        const [fy,fm] = firmFirstMonth.split("-").map(Number);
+        if (fy*12+fm >= last12FloorIdx){
+          newBadgeHTML = `<span class="only-tag new-tag-subtle" title="${monthLabel(firmFirstMonth)} ayında ilk kez DİİB belgesi aldı">son 12 ayda yeni</span>`;
+        }
+      }
+    }
     div.innerHTML = `
       <div class="firm-head" data-toggle="${a.key}">
-        <div class="firm-top"><div class="firm-name">${isStarredForBranch?`<span class="star-badge" title="Şubeniz için hedef firma">⭐</span>`:""}${isImportantForBranch?`<span class="important-badge" title="Sizin işaretlediğiniz önemli firma">📌</span>`:""}${adminViewImportant?`<span class="important-badge" title="Bu şube tarafından önemli işaretlenmiş">📌</span>`:""}${visitRec?`<span class="visit-badge visit-${visitRec.status}" title="${visitLabel}">${visitIcon}</span>`:""}${a.firma}${a.tim?`<span class="tim-badge" title="TİM İlk 1000 İhracatçı${S.timYear?' '+S.timYear:''}">🏆 İlk 1000${a.tim.r<9999?` · #${a.tim.r}`:''}</span>`:""}${a.tq?`<span class="tq-badge" title="${a.tq.prog||'Turquality/Marka Destek'}">🎖️ ${/TURQUALITY/i.test(a.tq.prog)?'Turquality':'Marka Destek'}</span>`:""}${(a.src&&a.src.tq&&!a.src.diib)?`<span class="only-tag" title="DİİB listesinde yok, Turquality havuzundan">Turquality</span>`:""}${(a.src&&a.src.tim&&!a.src.diib&&!a.src.tq)?`<span class="only-tag" title="DİİB/Turquality listesinde yok, sadece İlk 1000 havuzundan">İlk 1000</span>`:""}${isNewThisMonth?`<span class="new-badge" title="${monthLabel(a.firstMonth)} ayında ilk kez DİİB belgesi aldı">🆕 Bu ay ilk kez</span>`:(isNewLast12?`<span class="new-badge-subtle" title="${monthLabel(a.firstMonth)} ayında ilk kez DİİB belgesi aldı">son 12 ayda ilk kez</span>`:"")}</div>
+        <div class="firm-top"><div class="firm-name">${isStarredForBranch?`<span class="star-badge" title="Şubeniz için hedef firma">⭐</span>`:""}${isImportantForBranch?`<span class="important-badge" title="Sizin işaretlediğiniz önemli firma">📌</span>`:""}${adminViewImportant?`<span class="important-badge" title="Bu şube tarafından önemli işaretlenmiş">📌</span>`:""}${visitRec?`<span class="visit-badge visit-${visitRec.status}" title="${visitLabel}">${visitIcon}</span>`:""}${a.firma}${newBadgeHTML}${a.tim?`<span class="tim-badge" title="TİM İlk 1000 İhracatçı${S.timYear?' '+S.timYear:''}">🏆 İlk 1000${a.tim.r<9999?` · #${a.tim.r}`:''}</span>`:""}${a.tq?`<span class="tq-badge" title="${a.tq.prog||'Turquality/Marka Destek'}">🎖️ ${/TURQUALITY/i.test(a.tq.prog)?'Turquality':'Marka Destek'}</span>`:""}${(a.src&&a.src.tq&&!a.src.diib)?`<span class="only-tag" title="DİİB listesinde yok, Turquality havuzundan">Turquality</span>`:""}</div>
           <div class="firm-top-right">
             ${S.branch?`<button class="important-pin-toggle${isImportantForBranch?" marked":""}" data-important-key="${a.key}" title="${isImportantForBranch?'Önemli işaretini kaldır':'Önemli olarak işaretle'}">📌</button>`:""}
             ${d!==undefined?`<div class="firm-dist" title="${exact?'Tam adres':(precise?'Mahalle bazlı':'İlçe merkezine göre')}">≈ ${d<10?d.toFixed(1):Math.round(d)} km${exact?' <span class="prec exact">📍</span>':(precise?' <span class="prec">•</span>':'')}</div>`:""}
           </div>
         </div>
-        <div class="firm-addr">${a.adres|| (a.tq?(a.tq.web?a.tq.web:"Turquality kayıtlı firma"):"Adres yok")}</div>
-        <div class="firm-meta">${a.vkn?`VKN ${a.vkn} · `:""}${a.il||"İl —"}${a.belge?` · ${a.belge} belge`:(a.tq?" · Turquality":"")}${a.tq&&a.tq.marka?` · ${a.tq.markalar&&a.tq.markalar.length>1?a.tq.markalar.length+' marka':a.tq.marka}`:""} <span class="firm-caret">⌄</span></div>
+        <div class="firm-addr">${a.adres|| (a.tq?(a.tq.web?a.tq.web:"Turquality kayıtlı firma"):(a.tim?"Adres yok — sadece İlk 1000 listesinde":"Adres yok"))}</div>
+        <div class="firm-meta">${a.vkn?`VKN ${a.vkn} · `:""}${a.il||"İl —"}${a.belge?` · ${a.belge} belge`:(a.tq?" · Turquality":(a.tim?" · İlk 1000":""))}${a.tq&&a.tq.marka?` · ${a.tq.markalar&&a.tq.markalar.length>1?a.tq.markalar.length+' marka':a.tq.marka}`:""} <span class="firm-caret">⌄</span></div>
         ${(a.imp||a.exp)?`<div class="flow">
           <div class="bar bimp" style="width:${(a.imp/maxV*100).toFixed(1)}%"></div>
           <div class="axis"></div>
@@ -1838,7 +1860,7 @@ function render(){
         <div class="flow-nums">
           <span class="fn"><span class="fn-tag tag-imp">↓ İthalat</span> <span class="n-imp">${fmt$(a.imp)}</span></span>
           <span class="fn fn-r"><span class="n-exp">${fmt$(a.exp)}</span> <span class="fn-tag tag-exp">İhracat ↑</span></span>
-        </div>`:`<div class="no-diib">DİİB belgesi bu dönemde yok · ${a.src&&a.src.tq?"Turquality":(a.src&&a.src.tim?"İlk 1000 havuzundan":"")}</div>`}
+        </div>`:`<div class="no-diib">DİİB belgesi bu dönemde yok${a.tq?" · Turquality havuzundan":(a.tim?" · İlk 1000 havuzundan":"")}</div>`}
         ${starAssignMode?`<button class="star-assign-btn${isStarredForTarget?" starred":""}" data-star-key="${a.key}">${isStarredForTarget?"⭐ Yıldızlı (kaldırmak için tıkla)":"☆ Bu şube için yıldızla"}</button>`:""}
       </div>
       ${open?firmDetailHTML(a, mapsUrl):""}`;
@@ -1947,13 +1969,7 @@ document.addEventListener("click", e=>{
   const row = e.target.closest(".mp-f");
   if (!row) return;
   const key = row.dataset.firmKey;
-  if (key) openFirmDirect(key);
-});
-
-// Bir firmayı, aşağıdaki ana listede aç(ıl)mış hâlde öne çıkarıp oraya kaydırır —
-// harita üzerinde tek firmalı bir noktaya tıklanınca ya da yandaki panelde bir
-// firmaya tıklanınca "popup gibi" hemen görünür olmasını sağlayan ortak yol.
-function openFirmDirect(key){
+  if (!key) return;
   S._openFirm = key;
   // Tıklanan firma, gösterilen ilk S.shown kayıt dışında kalmasın diye gerektiği kadar genişlet
   const list = applyManualMerges(applyStarPriority(filtered()));
@@ -1964,7 +1980,7 @@ function openFirmDirect(key){
     const card = document.querySelector(`.firm[data-key="${CSS.escape(key)}"]`);
     if (card) card.scrollIntoView({behavior:"smooth", block:"center"});
   });
-}
+});
 
 // Yönetim panelinde seçili şube için firmayı yıldızla/kaldır, buluta kaydet
 async function toggleStarForTarget(firmKey){
@@ -2166,6 +2182,7 @@ async function geocodeVisible(){
   }
   $("geoProgress").textContent = "";
   render();
+  hideMapLoadingOverlay(); // ana konumlandırma bitti — mahalle inceltmesi arka planda sessizce sürer
   refineMahalle(); // görünen firmalar için mahalle hassasiyeti (arka planda)
 }
 
@@ -2220,6 +2237,7 @@ function requestLocation(){
   if (!navigator.geolocation){ toast("Tarayıcı konum desteklemiyor."); return; }
   $("locStatus").textContent="Konum alınıyor…";
   navigator.geolocation.getCurrentPosition(p=>{
+    showMapLoadingOverlay();
     S.userLoc = {lat:p.coords.latitude, lon:p.coords.longitude};
     $("locStatus").textContent = `Konum alındı. Yakın firmalar en üstte; mesafe önce ilçeye, sonra mahalleye göre hassaslaşır (nokta • = mahalle bazlı).`;
     $("locStatus").classList.add("on");
@@ -2247,29 +2265,28 @@ function currentMapTileUrl(){
     : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 }
 
+// Harita/konum hazırlanırken (ilk kurulum, şube değişimi) dönen radar animasyonu göster —
+// initMap()/drawMap()/geocodeVisible()'ın kendi mantığına dokunmadan, saf katkı (additive) bir katman.
+let _mapOverlayShownAt = 0;
+function showMapLoadingOverlay(){
+  const el = $("mapLoadingOverlay"); if (!el) return;
+  el.hidden = false;
+  _mapOverlayShownAt = Date.now();
+}
+function hideMapLoadingOverlay(){
+  const el = $("mapLoadingOverlay"); if (!el || el.hidden) return;
+  const MIN_MS = 500; // çok hızlı yüklenirse bile göze "yanıp sönme" gibi gelmesin
+  const elapsed = Date.now() - _mapOverlayShownAt;
+  const doHide = ()=>{ el.hidden = true; };
+  if (elapsed >= MIN_MS) doHide(); else setTimeout(doHide, MIN_MS - elapsed);
+}
+
 function initMap(){
   if (S.map){ setTimeout(()=>S.map.invalidateSize(), 60); return; }
-  showMapLoadingOverlay();
   S.map = L.map("map", {scrollWheelZoom:true}).setView([S.userLoc.lat,S.userLoc.lon], 9);
   S.mapTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S.map);
   // Konteyner display:none iken oluşturulduysa boyutu 0 kalır; görünür olunca düzelt.
   setTimeout(()=>S.map.invalidateSize(), 120);
-}
-
-// Giriş sonrası harita + firma konumları oturana kadar radar animasyonu göster —
-// kullanıcıya "henüz hazır değil" hissi versin. drawMap() ilk kez pin çizince kapanır.
-function showMapLoadingOverlay(){
-  const overlay = $("mapLoadingOverlay");
-  if (!overlay) return;
-  overlay.hidden = false;
-  overlay.dataset.shownAt = Date.now();
-}
-function hideMapLoadingOverlay(){
-  const overlay = $("mapLoadingOverlay");
-  if (!overlay || overlay.hidden) return;
-  const elapsed = Date.now() - (+overlay.dataset.shownAt || 0);
-  const wait = Math.max(0, 500 - elapsed); // en az 500ms göster — sweep bir tur atsın, ani "flash" olmasın
-  setTimeout(()=>{ overlay.hidden = true; }, wait);
 }
 
 // Tema değiştiğinde harita zaten açıksa karo setini de güncelle (koyu <-> açık)
@@ -2303,11 +2320,7 @@ function drawMap(list){
     const glow = L.circleMarker([c.lat,c.lon],{radius:r+5,color:"#35C4A8",weight:0,fillColor:"#35C4A8",fillOpacity:.12,interactive:false}).addTo(S.map);
     const m = L.circleMarker([c.lat,c.lon],{radius:r, color:"#0D1220", fillColor:"#35C4A8", fillOpacity:.85, weight:1.5})
       .addTo(S.map)
-      .on("click", ()=> {
-        // Tek firma varsa ara panel adımını atla, doğrudan o firmayı öne çıkar (popup gibi)
-        if (firms.length === 1) openFirmDirect(firms[0].key);
-        else openMapSidePanel(firms.length, dir, top);
-      });
+      .on("click", ()=> openMapSidePanel(firms.length, dir, top));
     S.mapLayers.push(glow, m);
   }
   // Tüm noktaları kapsayacak şekilde haritayı ayarla
@@ -2315,7 +2328,6 @@ function drawMap(list){
     try{ S.map.fitBounds(pts, {padding:[30,30], maxZoom:11}); }catch(e){}
   }
   setTimeout(()=>S.map.invalidateSize(), 60);
-  hideMapLoadingOverlay();
 }
 
 // Bir harita noktasına tıklanınca: Leaflet popup yerine haritanın yanındaki SABİT panel dolar.
@@ -2412,6 +2424,9 @@ function renderGate(){
   } else {
     gate.style.display = "flex";
     app.hidden = true;
+    // Kapı ekranına her dönüşte (ör. çıkış yapınca) giriş butonları temiz halde başlasın
+    setGateBtnLoading($("gateBranchBtn"), false, "Giriş yap");
+    setGateBtnLoading($("gateAdminBtn"), false, "Giriş yap");
   }
 }
 
@@ -2423,17 +2438,15 @@ $("gateTabAdmin").onclick = ()=>{
   $("gateTabAdmin").textContent = showingAdmin ? "Yönetim Giriş" : "← Şube Girişine Dön";
 };
 
-// Giriş butonunu "yükleniyor" durumuna al/çıkar — spinner göster, tekrar tıklamayı engelle
+// Giriş butonuna tıklanınca döner spinner + pasif hale getir; bitince eski haline döndür.
 function setGateBtnLoading(btn, loading, idleLabel){
   if (loading){
-    btn.dataset.idleLabel = btn.dataset.idleLabel || idleLabel || btn.textContent;
     btn.disabled = true;
-    btn.classList.add("loading");
+    btn.dataset.idleLabel = idleLabel;
     btn.innerHTML = `<span class="btn-spinner"></span> Giriş yapılıyor…`;
   } else {
     btn.disabled = false;
-    btn.classList.remove("loading");
-    btn.textContent = btn.dataset.idleLabel || idleLabel || "Giriş yap";
+    btn.textContent = btn.dataset.idleLabel || idleLabel;
   }
 }
 
@@ -2444,12 +2457,13 @@ $("gateBranchBtn").onclick = ()=>{
   const st = $("gateBranchStatus");
   const btn = $("gateBranchBtn");
   if (!uname || !pass){ st.textContent="Kullanıcı adı ve şifre gerekli."; st.className="gate-status"; return; }
-  st.textContent = ""; st.className="gate-status"; setGateBtnLoading(btn, true);
+  st.textContent = ""; st.className="gate-status";
+  setGateBtnLoading(btn, true, "Giriş yap");
   const email = uname + "@" + SUBE_EMAIL_DOMAIN;
   fbAuth.signInWithEmailAndPassword(email, pass)
     .then(()=>{ st.textContent="Giriş başarılı ✓"; st.className="gate-status ok"; logBranchLogin(uname); })
     .catch(e=>{
-      setGateBtnLoading(btn, false);
+      setGateBtnLoading(btn, false, "Giriş yap");
       st.className="gate-status";
       if (e.code==="auth/wrong-password"||e.code==="auth/invalid-credential") st.textContent="Kullanıcı adı veya şifre hatalı.";
       else if (e.code==="auth/user-not-found") st.textContent="Bu kullanıcı adı bulunamadı.";
@@ -2474,12 +2488,13 @@ $("gateAdminBtn").onclick = ()=>{
   const st = $("gateAdminStatus");
   const btn = $("gateAdminBtn");
   if (!uname || !pass){ st.textContent="Kullanıcı adı ve şifre gerekli."; st.className="gate-status"; return; }
-  st.textContent = ""; st.className="gate-status"; setGateBtnLoading(btn, true);
+  st.textContent = ""; st.className="gate-status";
+  setGateBtnLoading(btn, true, "Giriş yap");
   const email = uname + "@" + ADMIN_EMAIL_DOMAIN;
   fbAuth.signInWithEmailAndPassword(email, pass)
     .then(()=>{ st.textContent="Giriş başarılı ✓"; st.className="gate-status ok"; })
     .catch(e=>{
-      setGateBtnLoading(btn, false);
+      setGateBtnLoading(btn, false, "Giriş yap");
       st.className="gate-status";
       if (e.code==="auth/wrong-password"||e.code==="auth/invalid-credential") st.textContent="Kullanıcı adı veya şifre hatalı.";
       else if (e.code==="auth/user-not-found") st.textContent="Bu kullanıcı adı bulunamadı.";
@@ -2493,6 +2508,7 @@ $("gateAdminUser").addEventListener("keydown", e=>{ if(e.key==="Enter") $("gateA
 // Şube girişinde konumu otomatik ayarla (GPS istemeden), harita ve mesafe hesapları o noktadan başlasın
 function applyBranchLocation(){
   if (!S.branch) return;
+  showMapLoadingOverlay();
   S.userLoc = {lat:S.branch.lat, lon:S.branch.lon};
   $("locStatus").textContent = `${S.branch.name} konumundasın. Yakın firmalar en üstte; mesafe önce ilçeye, sonra mahalleye göre hassaslaşır.`;
   $("locStatus").classList.add("on");
@@ -2500,37 +2516,12 @@ function applyBranchLocation(){
   initMap(); geocodeVisible();
 }
 
-// Yönetim > Şubeler ekranı için: HER şubenin ≤5km çevresinde kaç firma var, toplam
-// öngörülen ihracat/ithalat ne kadar — hesaplayıp şube listesi satırlarında gösterir.
-// ~400 şube × ~birkaç bin firma çarpımı olsa da (haversine ucuz) tarayıcıda anlık sürer;
-// bu yüzden ekran her açıldığında (showAdminScreen) taze hesaplanır, ayrı bir buton gerekmez.
-function computeBranchStats(){
-  const list = aggregate();
-  const coordByKey = {};
-  for (const a of list){
-    const geo = S.addrGeo && S.addrGeo[a.key];
-    const c = geo ? {lat:geo.lat, lon:geo.lon} : localCoord(a);
-    if (c) coordByKey[a.key] = c;
-  }
-  const stats = {};
-  for (const uname in SUBE_TABLE){
-    const [, lat, lon] = SUBE_TABLE[uname];
-    const branchPt = {lat, lon};
-    let count=0, exp=0, imp=0;
-    for (const a of list){
-      const c = coordByKey[a.key]; if (!c) continue;
-      if (haversine(branchPt, c) <= 5){ count++; exp+=a.exp; imp+=a.imp; }
-    }
-    stats[uname] = {count, exp, imp};
-  }
-  return stats;
-}
-
 // Admin bir şube seçtiğinde: S.branch'i DEĞİŞTİRMEZ (admin admin kalır),
 // sadece konumu o şubenin konumuna göre gösterir ve yıldızlama modunu otomatik açar.
 function applyAdminBranchPreview(uname){
   const rec = SUBE_TABLE[uname];
   if (!rec) return;
+  showMapLoadingOverlay();
   S._adminViewBranch = uname;
   S.userLoc = {lat:rec[1], lon:rec[2]};
   $("locStatus").textContent = `${rec[0]} konumunu görüntülüyorsun (Şube Seç). Yakın firmalar en üstte.`;
@@ -2634,8 +2625,8 @@ function showAdminScreen(targetId){
   if (targetId === "adminBranchesScreen"){
     fillBranchStatSelect();
     renderBranchClassCounts();
-    S._branchStats = computeBranchStats();
     renderBranchListTable();
+    renderBranchProxTable();
   } else if (targetId === "adminAudiencesScreen"){
     renderMergeFirmList();
   } else if (targetId === "adminOverviewScreen"){
@@ -2668,71 +2659,6 @@ function renderAdminOverview(){
 
 // ---- Manuel Birleştirme: tüm firmaları listele, iki tanesini seçip birleştir ----
 S._mergeSelected = []; // en fazla 2 key tutar
-
-/* ---- Hedef Kitleler: her kart altındaki "Yüklenmiş olan kitle" aç/kapa listeleri ----
-   Kartlar kalabalık olmasın diye varsayılan gizli; butona basılınca liste halinde açılır. */
-function wireAudienceToggle(toggleId, listId, renderFn){
-  const btn = $(toggleId), box = $(listId);
-  if (!btn || !box) return;
-  btn.addEventListener("click", ()=>{
-    const opening = box.hidden;
-    box.hidden = !opening;
-    if (opening) renderFn();
-  });
-}
-wireAudienceToggle("diibListToggle", "diibLoadedList", renderDiibLoadedList);
-wireAudienceToggle("timListToggle", "timLoadedList", renderTimLoadedList);
-wireAudienceToggle("tqListToggle", "tqLoadedList", renderTqLoadedList);
-$("diibLoadedSearch") && $("diibLoadedSearch").addEventListener("input", ()=>renderDiibLoadedList());
-
-// Bütün yüklü ayların DİİB kayıtlarını (dönem filtresinden bağımsız) benzersiz firmaya indirger.
-function diibAllUnique(){
-  const map = new Map();
-  for (const f of S.files){
-    for (const r of f.records){
-      let a = map.get(r.key);
-      if (!a){ a = {firma:r.firma, key:r.key, belge:0, imp:0, exp:0}; map.set(r.key,a); }
-      a.imp+=r.imp; a.exp+=r.exp; a.belge++;
-    }
-  }
-  return [...map.values()];
-}
-
-function renderDiibLoadedList(){
-  const box = $("diibLoadedRows"); if (!box) return;
-  const all = diibAllUnique();
-  if ($("diibListCount")) $("diibListCount").textContent = `(${all.length.toLocaleString("tr-TR")})`;
-  const q = trUp(($("diibLoadedSearch")?.value || "").trim());
-  let list = q ? all.filter(a=>trUp(a.firma).includes(q)) : all;
-  list = list.slice().sort((a,b)=>a.firma.localeCompare(b.firma,"tr")).slice(0,300);
-  box.innerHTML = list.length ? list.map(a=>`<div class="audience-loaded-row">
-      <span class="alr-name">${a.firma}</span>
-      <span class="alr-meta">${a.belge} belge · İhr ${fmt$(a.exp)} · İth ${fmt$(a.imp)}</span>
-    </div>`).join("") : `<div class="branch-stats-empty">Eşleşen firma yok.</div>`;
-  if (!q && all.length>300) box.innerHTML += `<div class="hint" style="margin-top:6px">…ve ${(all.length-300).toLocaleString("tr-TR")} firma daha. Aramak için yukarıdaki kutuyu kullan.</div>`;
-}
-
-function renderTimLoadedList(){
-  const box = $("timLoadedRows"); if (!box) return;
-  const entries = Object.values(S.tim).filter(t=>t.firma);
-  if ($("timListCount")) $("timListCount").textContent = `(${entries.length.toLocaleString("tr-TR")})`;
-  entries.sort((a,b)=>(a.r||9999)-(b.r||9999));
-  box.innerHTML = entries.length ? entries.map(t=>`<div class="audience-loaded-row">
-      <span class="alr-name">#${t.r<9999?t.r:'—'} · ${t.firma}</span>
-      <span class="alr-meta">${t.n?t.n+" · ":""}${t.e?fmtM(t.e):""}</span>
-    </div>`).join("") : `<div class="branch-stats-empty">Henüz İlk 1000 listesi yüklenmemiş.</div>`;
-}
-
-function renderTqLoadedList(){
-  const box = $("tqLoadedRows"); if (!box) return;
-  const entries = Object.values(S.tq);
-  if ($("tqListCount")) $("tqListCount").textContent = `(${entries.length.toLocaleString("tr-TR")})`;
-  entries.sort((a,b)=>a.firma.localeCompare(b.firma,"tr"));
-  box.innerHTML = entries.length ? entries.map(t=>`<div class="audience-loaded-row">
-      <span class="alr-name">${t.firma}</span>
-      <span class="alr-meta">${t.markalar&&t.markalar.length?t.markalar.join(", "):(t.marka||"")}${t.prog?" · "+t.prog:""}</span>
-    </div>`).join("") : `<div class="branch-stats-empty">Henüz Turquality listesi yüklenmemiş.</div>`;
-}
 
 function renderMergeFirmList(){
   const box = $("mergeFirmList");
@@ -2811,6 +2737,111 @@ function branchClassOf(subeAdi){
 }
 const BRANCH_CLASS_LABEL = {ticari:"Ticari Şube", kurumsal:"Kurumsal Şube", kobi:"Kobi Şube"};
 
+/* ---- Şube Yakınlık Analizi: her şube için Nkm içindeki firma sayısı + öngörülen ihracat/ithalat ---- */
+// Firma için TEK bir koordinat çöz: önce tam adres (addrGeo), yoksa il/ilçe offline tablosu
+// (localCoord). Mahalle inceltme (canlı Nominatim) katmanı BİLEREK atlanıyor — ~400 şube ×
+// binlerce firma için canlı ağ isteği pratik değil; addrGeo zaten çoğu firmayı kapsıyor.
+function resolveFirmCoord(a){
+  const geo = S.addrGeo && S.addrGeo[a.key];
+  if (geo && isFinite(geo.lat) && isFinite(geo.lon)) return {lat:geo.lat, lon:geo.lon};
+  return localCoord(a);
+}
+
+let _branchProxCache = null; // {sig, rows} — yarıçap/dönem değişmediyse yeniden hesaplamaz
+function computeBranchProximityStats(radiusKm){
+  const list = aggregate();
+  const sig = radiusKm+":"+list.length+":"+$("yearSel").value+":"+$("monthSel").value;
+  if (_branchProxCache && _branchProxCache.sig === sig) return _branchProxCache.rows;
+
+  const coords = [];
+  for (const a of list){
+    const c = resolveFirmCoord(a);
+    if (c) coords.push({c, imp:a.imp, exp:a.exp});
+  }
+  const rows = Object.entries(SUBE_TABLE).map(([uname, rec])=>{
+    const [name, lat, lon] = rec;
+    let count=0, imp=0, exp=0;
+    for (const f of coords){
+      if (haversine({lat,lon}, f.c) <= radiusKm){ count++; imp+=f.imp; exp+=f.exp; }
+    }
+    return {uname, name, cls:branchClassOf(name), count, imp, exp};
+  });
+  _branchProxCache = {sig, rows};
+  return rows;
+}
+
+S._branchProxSort = {col:"count", dir:"desc"};
+function renderBranchProxTable(){
+  const wrap = $("branchProxTableWrap"), radSel = $("branchProxRadiusSel");
+  if (!wrap || !radSel) return;
+  const radiusKm = +(radSel.value || 5);
+  wrap.innerHTML = `<div class="branch-stats-empty">Hesaplanıyor…</div>`;
+  // ~400 şube × binlerce firma tek seferde biraz sürebilir — "Hesaplanıyor…" görünsün diye bir sonraki frame'e ertele
+  setTimeout(()=>{
+    const rows = computeBranchProximityStats(radiusKm);
+    const {col, dir} = S._branchProxSort;
+    const sorted = [...rows].sort((a,b)=>{
+      const va=a[col], vb=b[col];
+      if (typeof va === "string") return dir==="asc" ? va.localeCompare(vb,"tr") : vb.localeCompare(va,"tr");
+      return dir==="asc" ? va-vb : vb-va;
+    });
+    const arrow = c => S._branchProxSort.col===c ? (S._branchProxSort.dir==="asc"?"▲":"▼") : "";
+    const th = (c,label) => `<th data-col="${c}" class="${S._branchProxSort.col===c?"active":""}">${label} <span class="sort-arrow">${arrow(c)}</span></th>`;
+    wrap.innerHTML = `<table class="branch-prox-table">
+      <thead><tr>
+        ${th("name","Şube")}
+        ${th("cls","Sınıf")}
+        ${th("count",`≤${radiusKm}km Firma`)}
+        ${th("exp","Öngörülen İhracat")}
+        ${th("imp","Öngörülen İthalat")}
+      </tr></thead>
+      <tbody>
+        ${sorted.map(r=>`<tr data-uname="${r.uname}">
+          <td class="name">${r.name}</td>
+          <td><span class="branch-list-tag ${r.cls}">${BRANCH_CLASS_LABEL[r.cls]}</span></td>
+          <td class="num">${r.count}</td>
+          <td class="num">${fmt$(r.exp)}</td>
+          <td class="num">${fmt$(r.imp)}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>`;
+    wrap.querySelectorAll("th").forEach(el=>{
+      el.onclick = ()=>{
+        const c = el.dataset.col;
+        if (S._branchProxSort.col===c) S._branchProxSort.dir = S._branchProxSort.dir==="asc"?"desc":"asc";
+        else S._branchProxSort = {col:c, dir:(c==="name"||c==="cls")?"asc":"desc"};
+        renderBranchProxTable();
+      };
+    });
+    wrap.querySelectorAll("tbody tr").forEach(tr=>{
+      tr.onclick = ()=> goToBranchFromProxTable(tr.dataset.uname);
+    });
+  }, 0);
+}
+$("branchProxRadiusSel") && $("branchProxRadiusSel").addEventListener("change", ()=>{ _branchProxCache=null; renderBranchProxTable(); });
+
+// Yakınlık tablosunda bir şubeye tıklayınca: var olan applyAdminBranchPreview akışını tetikle
+// (konum + yıldızlama modu otomatik açılır), üstteki/Şubeler'deki seçicileri senkronla, sonra
+// admin'i doğrudan o şubenin harita+firma görünümüne geçir. Yeni bir yıldızlama mekanizması
+// icat edilmiyor — var olan "☆ Bu şube için yıldızla" akışı (render() içindeki starAssignMode).
+function goToBranchFromProxTable(uname){
+  if (!uname || !SUBE_TABLE[uname]) return;
+  applyAdminBranchPreview(uname);
+  const name = SUBE_TABLE[uname][0];
+  const adminSel = $("adminBranchSelect");
+  if (adminSel){ adminSel.value = uname; const hint=$("adminBranchPickerHint"); if(hint) hint.textContent = `Konum ve yıldızlama "${name}" için aktif.`; }
+  const statSel = $("branchStatSelect");
+  if (statSel){
+    fillBranchStatSelect(); statSel.value = uname;
+    $("branchStarModeBtn").disabled = false;
+    $("branchStarModeBtn").classList.add("active");
+    $("branchStarModeBtn").textContent = "✕ Yıldızlama modunu kapat";
+    $("branchStarModeStatus").textContent = `Aşağıdaki firma listesinde "${name}" için yıldız işaretleyebilirsin.`;
+    renderAdminStats();
+  }
+  showAdminScreen("adminFirmViewScreen");
+}
+
 function renderBranchClassCounts(){
   const counts = {ticari:0, kurumsal:0, kobi:0};
   for (const uname in SUBE_TABLE){ counts[branchClassOf(SUBE_TABLE[uname][0])]++; }
@@ -2840,39 +2871,17 @@ function renderBranchListTable(){
   if (S._branchClassFilter !== "all") entries = entries.filter(e=>e.cls===S._branchClassFilter);
   entries.sort((a,b)=>a.name.localeCompare(b.name,"tr"));
   if (!entries.length){ box.innerHTML = `<div class="branch-stats-empty">Bu sınıfta şube yok.</div>`; return; }
-  const stats = S._branchStats || {};
   box.innerHTML = entries.map(e=>{
     const loginCount = S.loginLogs[e.uname] ? Object.keys(S.loginLogs[e.uname]).length : 0;
     const visitEntries = S.visits[e.uname] ? Object.values(S.visits[e.uname]) : [];
-    const st = stats[e.uname];
-    const geoHTML = st
-      ? `<span class="branch-list-geo" title="≤5 km çevredeki firmalar (öngörülen)">
-           <span><b>${st.count}</b> firma · ≤5km</span>
-           <span class="g-flow">İhr ${fmt$(st.exp)} · İth ${fmt$(st.imp)}</span>
-         </span>`
-      : "";
-    return `<div class="branch-list-row" data-branch-uname="${e.uname}">
+    return `<div class="branch-list-row">
       <span class="branch-list-tag ${e.cls}">${BRANCH_CLASS_LABEL[e.cls]}</span>
       <span class="branch-list-name">${e.name}</span>
       <span class="branch-list-stat">${loginCount} giriş</span>
       <span class="branch-list-stat">🔖 ${visitEntries.length} ziyaret</span>
-      ${geoHTML}
     </div>`;
   }).join("");
 }
-
-// Şube satırına tıklanınca: o şubenin ≤5km çevresini haritada/listede göster, yıldızlama
-// modu otomatik açılsın — admin panelinden çıkmadan doğrudan firma görünümüne geçilir.
-$("branchListTable") && $("branchListTable").addEventListener("click", e=>{
-  const row = e.target.closest(".branch-list-row");
-  if (!row) return;
-  const uname = row.dataset.branchUname;
-  if (!uname) return;
-  applyAdminBranchPreview(uname);
-  const statSel = $("branchStatSelect");
-  if (statSel){ fillBranchStatSelect(); statSel.value = uname; }
-  showAdminScreen("adminFirmViewScreen");
-});
 
 function fillBranchStatSelect(){
   const sel = $("branchStatSelect");
