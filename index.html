@@ -233,6 +233,14 @@ input[type=file]{display:none}
 .merge-toolbar input[type=search]{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 12px;font-family:inherit;font-size:13px}
 .merge-selected-hint{font-size:11.5px;color:var(--faint)}
 .merge-firm-list{display:flex;flex-direction:column;gap:5px;max-height:380px;overflow-y:auto}
+.audience-toggle-btn{width:100%;margin-top:10px;font-size:12.5px;padding:8px 10px}
+.audience-toggle-count{color:var(--muted);font-family:'IBM Plex Mono',monospace}
+.audience-loaded-list{margin-top:10px;animation:fade .15s ease}
+.audience-loaded-search{width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 11px;font-family:inherit;font-size:12.5px;margin-bottom:8px}
+.audience-loaded-list .merge-firm-list{max-height:260px}
+.audience-loaded-row{display:flex;flex-direction:column;gap:2px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px}
+.audience-loaded-row .alr-name{font-weight:500;color:var(--text)}
+.audience-loaded-row .alr-meta{color:var(--muted);font-size:11px}
 .merge-firm-row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12.5px;cursor:pointer;transition:.12s}
 .merge-firm-row:hover{border-color:var(--axis)}
 .merge-firm-row.selected{border-color:var(--exp);background:rgba(53,196,168,.08)}
@@ -918,6 +926,11 @@ select:focus,input:focus{border-color:var(--exp)}
               <button class="btn primary" id="saveCloudBtn">☁ Buluta kaydet</button>
               <span class="savestatus" id="saveStatus"></span>
             </div>
+            <button class="btn audience-toggle-btn" id="diibListToggle" type="button">📋 Yüklenmiş olan kitle <span class="audience-toggle-count" id="diibListCount">(0)</span></button>
+            <div class="audience-loaded-list" id="diibLoadedList" hidden>
+              <input type="search" class="audience-loaded-search" id="diibLoadedSearch" placeholder="🔍 Firma ara…">
+              <div class="merge-firm-list" id="diibLoadedRows"></div>
+            </div>
           </div>
 
           <div class="audience-card">
@@ -930,6 +943,10 @@ select:focus,input:focus{border-color:var(--exp)}
               <button class="btn primary" id="saveTimBtn">☁ Buluta kaydet</button>
               <button class="btn" id="clearTimBtn">Listeyi temizle</button>
             </div>
+            <button class="btn audience-toggle-btn" id="timListToggle" type="button">📋 Yüklenmiş olan kitle <span class="audience-toggle-count" id="timListCount">(0)</span></button>
+            <div class="audience-loaded-list" id="timLoadedList" hidden>
+              <div class="merge-firm-list" id="timLoadedRows"></div>
+            </div>
           </div>
 
           <div class="audience-card">
@@ -941,6 +958,10 @@ select:focus,input:focus{border-color:var(--exp)}
             <div class="saverow" id="tqSaveRow" style="display:none">
               <button class="btn primary" id="saveTqBtn">☁ Buluta kaydet</button>
               <button class="btn" id="clearTqBtn">Listeyi temizle</button>
+            </div>
+            <button class="btn audience-toggle-btn" id="tqListToggle" type="button">📋 Yüklenmiş olan kitle <span class="audience-toggle-count" id="tqListCount">(0)</span></button>
+            <div class="audience-loaded-list" id="tqLoadedList" hidden>
+              <div class="merge-firm-list" id="tqLoadedRows"></div>
             </div>
           </div>
         </div>
@@ -1352,6 +1373,7 @@ function refreshTimChip(){
   const has = Object.keys(S.tim).length>0;
   $("timChip").style.display = has ? "" : "none";
   if (!has){ $("timOnly").checked=false; }
+  if ($("timListCount")) $("timListCount").textContent = `(${Object.keys(S.tim).length.toLocaleString("tr-TR")})`;
 }
 
 // Turquality listesi yükleme
@@ -1385,9 +1407,11 @@ function refreshTqChip(){
   const has = Object.keys(S.tq).length>0;
   $("tqChip").style.display = has ? "" : "none";
   if (!has){ $("tqOnly").checked=false; }
+  if ($("tqListCount")) $("tqListCount").textContent = `(${Object.keys(S.tq).length.toLocaleString("tr-TR")})`;
 }
 
 function renderFiles(){
+  if ($("diibListCount")) $("diibListCount").textContent = `(${diibAllUnique().length.toLocaleString("tr-TR")})`;
   const el = $("fileList"); el.innerHTML="";
   for (const f of S.files){
     const row = document.createElement("div"); row.className="filerow";
@@ -2668,6 +2692,71 @@ function renderAdminOverview(){
 
 // ---- Manuel Birleştirme: tüm firmaları listele, iki tanesini seçip birleştir ----
 S._mergeSelected = []; // en fazla 2 key tutar
+
+/* ---- Hedef Kitleler: her kart altındaki "Yüklenmiş olan kitle" aç/kapa listeleri ----
+   Kartlar kalabalık olmasın diye varsayılan gizli; butona basılınca liste halinde açılır. */
+function wireAudienceToggle(toggleId, listId, renderFn){
+  const btn = $(toggleId), box = $(listId);
+  if (!btn || !box) return;
+  btn.addEventListener("click", ()=>{
+    const opening = box.hidden;
+    box.hidden = !opening;
+    if (opening) renderFn();
+  });
+}
+wireAudienceToggle("diibListToggle", "diibLoadedList", renderDiibLoadedList);
+wireAudienceToggle("timListToggle", "timLoadedList", renderTimLoadedList);
+wireAudienceToggle("tqListToggle", "tqLoadedList", renderTqLoadedList);
+$("diibLoadedSearch") && $("diibLoadedSearch").addEventListener("input", ()=>renderDiibLoadedList());
+
+// Bütün yüklü ayların DİİB kayıtlarını (dönem filtresinden bağımsız) benzersiz firmaya indirger.
+function diibAllUnique(){
+  const map = new Map();
+  for (const f of S.files){
+    for (const r of f.records){
+      let a = map.get(r.key);
+      if (!a){ a = {firma:r.firma, key:r.key, belge:0, imp:0, exp:0}; map.set(r.key,a); }
+      a.imp+=r.imp; a.exp+=r.exp; a.belge++;
+    }
+  }
+  return [...map.values()];
+}
+
+function renderDiibLoadedList(){
+  const box = $("diibLoadedRows"); if (!box) return;
+  const all = diibAllUnique();
+  if ($("diibListCount")) $("diibListCount").textContent = `(${all.length.toLocaleString("tr-TR")})`;
+  const q = trUp(($("diibLoadedSearch")?.value || "").trim());
+  let list = q ? all.filter(a=>trUp(a.firma).includes(q)) : all;
+  list = list.slice().sort((a,b)=>a.firma.localeCompare(b.firma,"tr")).slice(0,300);
+  box.innerHTML = list.length ? list.map(a=>`<div class="audience-loaded-row">
+      <span class="alr-name">${a.firma}</span>
+      <span class="alr-meta">${a.belge} belge · İhr ${fmt$(a.exp)} · İth ${fmt$(a.imp)}</span>
+    </div>`).join("") : `<div class="branch-stats-empty">Eşleşen firma yok.</div>`;
+  if (!q && all.length>300) box.innerHTML += `<div class="hint" style="margin-top:6px">…ve ${(all.length-300).toLocaleString("tr-TR")} firma daha. Aramak için yukarıdaki kutuyu kullan.</div>`;
+}
+
+function renderTimLoadedList(){
+  const box = $("timLoadedRows"); if (!box) return;
+  const entries = Object.values(S.tim).filter(t=>t.firma);
+  if ($("timListCount")) $("timListCount").textContent = `(${entries.length.toLocaleString("tr-TR")})`;
+  entries.sort((a,b)=>(a.r||9999)-(b.r||9999));
+  box.innerHTML = entries.length ? entries.map(t=>`<div class="audience-loaded-row">
+      <span class="alr-name">#${t.r<9999?t.r:'—'} · ${t.firma}</span>
+      <span class="alr-meta">${t.n?t.n+" · ":""}${t.e?fmtM(t.e):""}</span>
+    </div>`).join("") : `<div class="branch-stats-empty">Henüz İlk 1000 listesi yüklenmemiş.</div>`;
+}
+
+function renderTqLoadedList(){
+  const box = $("tqLoadedRows"); if (!box) return;
+  const entries = Object.values(S.tq);
+  if ($("tqListCount")) $("tqListCount").textContent = `(${entries.length.toLocaleString("tr-TR")})`;
+  entries.sort((a,b)=>a.firma.localeCompare(b.firma,"tr"));
+  box.innerHTML = entries.length ? entries.map(t=>`<div class="audience-loaded-row">
+      <span class="alr-name">${t.firma}</span>
+      <span class="alr-meta">${t.markalar&&t.markalar.length?t.markalar.join(", "):(t.marka||"")}${t.prog?" · "+t.prog:""}</span>
+    </div>`).join("") : `<div class="branch-stats-empty">Henüz Turquality listesi yüklenmemiş.</div>`;
+}
 
 function renderMergeFirmList(){
   const box = $("mergeFirmList");
