@@ -5,3 +5,7 @@ scripts/.env
 scripts/serviceAccountKey.json
 scripts/node_modules/
 scripts/not_found.json
+scripts/current_rules.json
+scripts/new_rules.json
+scripts/_extracted_geo.js
+scripts/geocode_run.log
