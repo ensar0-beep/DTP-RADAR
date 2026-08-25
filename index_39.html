@@ -1540,7 +1540,9 @@ function filtered(){
   if ($("diibOnly") && $("diibOnly").checked) list = list.filter(a=>a.belge>0);
   if ($("timOnly") && $("timOnly").checked) list = list.filter(a=>a.tim);
   if ($("tqOnly") && $("tqOnly").checked) list = list.filter(a=>a.tq);
-  if (S.userLoc){
+  // Harita açıldıktan sonra coğrafi daraltmayı harita görünümü (viewport) devralır — bkz. applyMapBoundsFilter().
+  // Yarıçap seçici artık bir filtre değil, "haritayı bu yarıçaba yakınlaştır" kısayoluna dönüştü.
+  if (S.userLoc && !S.map){
     const rad = $("radiusSel").value;
     if (rad) list = list.filter(a=>S.distByKey[a.key]!==undefined && S.distByKey[a.key]<=+rad);
   }
@@ -1552,6 +1554,27 @@ function filtered(){
   else if (s==="dist") list.sort((a,b)=> ((S.distByKey[a.key]??1e9)-(S.distByKey[b.key]??1e9)) || alpha(a,b));
   else list.sort((a,b)=> (b.exp-a.exp) || alpha(a,b));
   return list;
+}
+
+// render() ve openFirmDirect() gibi ekranda GÖSTERİLEN listeyi ihtiyaç duyan her yerin
+// kullandığı tek, tutarlı liste — filtre + öncelik + birleştirme + harita-viewport daraltması.
+function renderableList(){
+  return applyMapBoundsFilter(applyManualMerges(applyStarPriority(filtered())));
+}
+
+// Harita açıkken listeyi haritanın o an gösterdiği alana (viewport) göre daraltır —
+// harita kaydırılıp/yakınlaştırılınca liste "haritada görüneni" yansıtsın diye.
+// Adres/konumu çözülemeyen (haritada hiç pin'i olmayan) firmalar bu daraltmaya girmez,
+// yoksa hiçbir zaman listede görünemezler.
+function applyMapBoundsFilter(list){
+  if (!S.map || !S._boundsReady) return list;
+  let bounds;
+  try{ bounds = S.map.getBounds(); }catch(e){ return list; }
+  if (!bounds) return list;
+  return list.filter(a=>{
+    const c = S.distByKey[a.key+"__c"];
+    return !c || bounds.contains([c.lat, c.lon]);
+  });
 }
 
 // Şube girişinde, o şubeye atanmış "yıldız" (admin) ve "önemli" (şubenin kendi işareti) firmaları
@@ -1703,7 +1726,7 @@ function renderActiveFilterTags(){
   if (clearAll) clearAll.onclick = ()=>{ tags.forEach(t=>t.clear()); S.shown=50; render(); };
 }
 
-function render(){
+function render(skipDraw){
   const has = S.files.length>0 || Object.keys(S.tq).length>0;
   const visitScreenOpen = $("visitListScreen") && !$("visitListScreen").hidden;
   const filtersOpen = !!S._filtersOpen;
@@ -1718,7 +1741,7 @@ function render(){
   $("emptyState").style.display = has?"none":"";
   if (!has) return;
   renderIlOptions();
-  const list = applyManualMerges(applyStarPriority(filtered()));
+  const list = renderableList();
   renderActiveFilterTags();
   const tImp = list.reduce((s,a)=>s+a.imp,0), tExp = list.reduce((s,a)=>s+a.exp,0);
   $("stats").innerHTML = `
@@ -1728,7 +1751,8 @@ function render(){
     <div class="stat-strip-sep"></div>
     <div class="stat-strip-item"><div class="k">İhracat <button class="stat-info-btn" id="statInfoExp" type="button" aria-label="Açıklama">?</button></div><div class="v exp">${fmt$(tExp)}</div></div>`;
   wireStatInfoButtons();
-  $("resultCount").textContent = `${list.length} firma · ${periodLabel()}`;
+  const boundsTag = (S.map && S._boundsReady) ? " · 🗺️ haritada görünen alan" : "";
+  $("resultCount").textContent = `${list.length} firma · ${periodLabel()}${boundsTag}`;
 
   const maxV = Math.max(1, ...list.slice(0,S.shown).map(a=>Math.max(a.imp,a.exp)));
   const el = $("firmList"); el.innerHTML="";
@@ -1784,7 +1808,7 @@ function render(){
     el.appendChild(div);
   }
   $("showMore").style.display = list.length>S.shown?"":"none";
-  if (S.userLoc) drawMap(list);
+  if (S.userLoc && !skipDraw) drawMap(list);
 }
 
 $("showMore").onclick = ()=>{ S.shown+=50; render(); refineMahalle(); };
@@ -1793,8 +1817,25 @@ $("showMore").onclick = ()=>{ S.shown+=50; render(); refineMahalle(); };
   if (id==="yearSel") rebuildMonthOptions();          // yıl değişince aylar yenilensin
   if ((id==="yearSel"||id==="monthSel") && S.userLoc) geocodeVisible();   // dönem değişince mesafeler baştan hesaplanır (kendi içinde refineMahalle çağırır)
   else if (S.userLoc) refineMahalle();                // il/sıralama/yarıçap değişince yeni görünen firmaları hassaslaştır
+  if (id==="radiusSel" && S.map) jumpMapToRadius($("radiusSel").value);
   render();
 });
+
+// Harita açıkken yarıçap seçici artık bir filtre değil, haritayı o yarıçaba (ya da
+// "Sınırsız" için çözülmüş tüm firmalara) yakınlaştıran bir kısayol — asıl liste
+// daralması her zaman haritanın o an gösterdiği alandan (applyMapBoundsFilter) gelir.
+function jumpMapToRadius(radiusVal){
+  if (!S.map || !S.userLoc) return;
+  const km = +radiusVal || 0;
+  if (km){
+    const dLat = km/111, dLon = km/(111*Math.cos(S.userLoc.lat*Math.PI/180));
+    try{ S.map.fitBounds([[S.userLoc.lat-dLat,S.userLoc.lon-dLon],[S.userLoc.lat+dLat,S.userLoc.lon+dLon]], {maxZoom:14}); }catch(e){}
+  } else {
+    const pts = [[S.userLoc.lat,S.userLoc.lon]];
+    for (const a of filtered()){ const c=S.distByKey[a.key+"__c"]; if(c) pts.push([c.lat,c.lon]); }
+    if (pts.length>1) try{ S.map.fitBounds(pts, {padding:[30,30]}); }catch(e){}
+  }
+}
 $("searchBox").oninput = ()=>{ S.shown=50; render(); };
 
 // Firma detay paneli (açıldığında gösterilir)
@@ -1886,10 +1927,16 @@ document.addEventListener("click", e=>{
   const row = e.target.closest(".mp-f");
   if (!row) return;
   const key = row.dataset.firmKey;
-  if (!key) return;
+  if (key) openFirmDirect(key);
+});
+
+// Bir firmayı, aşağıdaki ana listede aç(ıl)mış hâlde öne çıkarıp oraya kaydırır —
+// harita üzerinde tek firmalı bir noktaya tıklanınca ya da yandaki panelde bir
+// firmaya tıklanınca "popup gibi" hemen görünür olmasını sağlayan ortak yol.
+function openFirmDirect(key){
   S._openFirm = key;
   // Tıklanan firma, gösterilen ilk S.shown kayıt dışında kalmasın diye gerektiği kadar genişlet
-  const list = applyManualMerges(applyStarPriority(filtered()));
+  const list = renderableList();
   const idx = list.findIndex(a=>a.key===key);
   if (idx >= 0 && idx >= S.shown) S.shown = idx + 10;
   render();
@@ -1897,7 +1944,7 @@ document.addEventListener("click", e=>{
     const card = document.querySelector(`.firm[data-key="${CSS.escape(key)}"]`);
     if (card) card.scrollIntoView({behavior:"smooth", block:"center"});
   });
-});
+}
 
 // Yönetim panelinde seçili şube için firmayı yıldızla/kaldır, buluta kaydet
 async function toggleStarForTarget(firmKey){
@@ -2180,13 +2227,26 @@ function currentMapTileUrl(){
     : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 }
 
+const debounce = (fn, ms) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; };
+
 function initMap(){
   if (S.map){ setTimeout(()=>S.map.invalidateSize(), 60); return; }
   showMapLoadingOverlay();
+  // Yeni bir konum oturumu — viewport senkronu baştan başlasın
+  S._boundsReady = false;
+  S._mapInitialFitDone = false;
   S.map = L.map("map", {scrollWheelZoom:true}).setView([S.userLoc.lat,S.userLoc.lon], 9);
   S.mapTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S.map);
   // Konteyner display:none iken oluşturulduysa boyutu 0 kalır; görünür olunca düzelt.
   setTimeout(()=>S.map.invalidateSize(), 120);
+  // Harita kaydırılıp/yakınlaştırılınca aşağıdaki liste o an görünen alana göre güncellensin.
+  // İlk yerleşim (fitBounds) tamamlanana kadar tepki vermiyoruz — yoksa henüz oturmamış
+  // dar bir görünümle liste anlık boş/eksik görünür (bkz. drawMap()'teki _mapInitialFitDone).
+  S.map.on("moveend zoomend", debounce(()=>{
+    if (!S._mapInitialFitDone) return;
+    S._boundsReady = true;
+    render(true); // sadece listeyi güncelle — pinleri yeniden çizip fitBounds'u tetikleme
+  }, 250));
 }
 
 // Giriş sonrası harita + firma konumları oturana kadar radar animasyonu göster —
@@ -2236,13 +2296,18 @@ function drawMap(list){
     const glow = L.circleMarker([c.lat,c.lon],{radius:r+5,color:"#35C4A8",weight:0,fillColor:"#35C4A8",fillOpacity:.12,interactive:false}).addTo(S.map);
     const m = L.circleMarker([c.lat,c.lon],{radius:r, color:"#0D1220", fillColor:"#35C4A8", fillOpacity:.85, weight:1.5})
       .addTo(S.map)
-      .on("click", ()=> openMapSidePanel(firms.length, dir, top));
+      .on("click", ()=> {
+        // Tek firma varsa ara panel adımını atla, doğrudan o firmayı öne çıkar (popup gibi)
+        if (firms.length === 1) openFirmDirect(firms[0].key);
+        else openMapSidePanel(firms.length, dir, top);
+      });
     S.mapLayers.push(glow, m);
   }
   // Tüm noktaları kapsayacak şekilde haritayı ayarla
   if (pts.length>1){
     try{ S.map.fitBounds(pts, {padding:[30,30], maxZoom:11}); }catch(e){}
   }
+  S._mapInitialFitDone = true; // artık moveend/zoomend olayları listeyi güncelleyebilir
   setTimeout(()=>S.map.invalidateSize(), 60);
   hideMapLoadingOverlay();
 }
