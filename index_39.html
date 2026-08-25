@@ -290,6 +290,13 @@ select:focus,input:focus{border-color:var(--exp)}
 .admin-branch-picker-hint{font-size:11.5px;color:var(--muted)}
 .map-row{display:flex;gap:12px;margin-top:12px;align-items:stretch}
 #map{height:340px;border-radius:12px;display:none;border:1px solid var(--border);overflow:hidden;position:relative;flex:1;min-width:0}
+.map-loading-overlay{position:absolute;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(ellipse at 50% 45%,rgba(13,18,32,.92) 0%,rgba(13,18,32,.97) 70%);backdrop-filter:blur(1px);animation:mlFadeIn .2s ease}
+.map-loading-overlay[hidden]{display:none!important}
+.map-loading-radar{width:84px;height:84px}
+.map-loading-text{color:#B8C2D9;font-size:12.5px;letter-spacing:.02em}
+@keyframes mlFadeIn{from{opacity:0}to{opacity:1}}
+[data-theme="light"] .map-loading-overlay{background:radial-gradient(ellipse at 50% 45%,rgba(245,247,250,.92) 0%,rgba(245,247,250,.97) 70%)}
+[data-theme="light"] .map-loading-text{color:#5C6B84}
 .map-side-panel{flex:0 0 300px;min-width:0;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;max-height:340px;overflow-x:hidden}
 .map-side-panel[hidden]{display:none!important}
 .map-side-panel-header{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:600;font-size:13.5px;margin-bottom:6px}
@@ -465,8 +472,11 @@ select:focus,input:focus{border-color:var(--exp)}
 .gate-admin-link:hover{color:var(--muted);text-decoration-color:var(--muted)}
 .gate-pane input{width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09);color:var(--text);border-radius:10px;padding:13px 15px;font-family:inherit;font-size:14px;margin-bottom:11px;backdrop-filter:blur(6px)}
 .gate-pane input:focus{border-color:var(--exp);outline:none;background:rgba(255,255,255,.05)}
-.gate-btn{width:100%;padding:13px;font-size:14.5px;font-weight:700;background:linear-gradient(135deg,var(--exp),#2BAF95);color:#06251F;border:none;border-radius:10px;cursor:pointer;box-shadow:0 10px 30px rgba(53,196,168,.28);transition:.15s}
+.gate-btn{width:100%;padding:13px;font-size:14.5px;font-weight:700;background:linear-gradient(135deg,var(--exp),#2BAF95);color:#06251F;border:none;border-radius:10px;cursor:pointer;box-shadow:0 10px 30px rgba(53,196,168,.28);transition:.15s;display:flex;align-items:center;justify-content:center;gap:9px}
 .gate-btn:hover{filter:brightness(1.06)}
+.gate-btn.loading{cursor:default;opacity:.88}
+.gate-btn .btn-spinner{width:15px;height:15px;border:2px solid rgba(6,37,31,.3);border-top-color:#06251F;border-radius:50%;animation:btnspin .7s linear infinite;flex:0 0 auto}
+@keyframes btnspin{to{transform:rotate(360deg)}}
 .gate-status{margin-top:12px;font-size:12.5px;color:var(--danger);text-align:center;min-height:16px}
 .gate-status.ok{color:var(--exp)}
 .gate-hint{color:var(--muted);font-size:12.5px;margin-bottom:16px;text-align:center;line-height:1.5}
@@ -709,7 +719,26 @@ select:focus,input:focus{border-color:var(--exp)}
     <div class="locstatus" id="locStatus">Konumunu açarsan yakın firmalar en üste çıkar. Mesafeler ilçe merkezine göre yaklaşıktır.</div>
   </div>
   <div class="map-row">
-    <div id="map"></div>
+    <div id="map">
+      <div class="map-loading-overlay" id="mapLoadingOverlay" hidden>
+        <svg viewBox="0 0 120 120" class="map-loading-radar" aria-hidden="true">
+          <circle cx="60" cy="60" r="20" fill="none" stroke="#2C3A57" stroke-width="1.4"/>
+          <circle cx="60" cy="60" r="36" fill="none" stroke="#2C3A57" stroke-width="1.4"/>
+          <circle cx="60" cy="60" r="52" fill="none" stroke="#2C3A57" stroke-width="1.4"/>
+          <defs>
+            <linearGradient id="mlrSweep" x1="50%" y1="50%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#35C4A8" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#35C4A8" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M60 60 L60 8 A52 52 0 0 1 96 24 Z" fill="url(#mlrSweep)">
+            <animateTransform attributeName="transform" type="rotate" from="0 60 60" to="360 60 60" dur="1.4s" repeatCount="indefinite"/>
+          </path>
+          <circle cx="60" cy="60" r="3" fill="#EAF0FA"/>
+        </svg>
+        <div class="map-loading-text">Firmalar haritaya yerleşiyor…</div>
+      </div>
+    </div>
     <div class="map-side-panel" id="mapSidePanel" hidden>
       <div class="map-side-panel-header">
         <span id="mapSidePanelTitle"></span>
@@ -2153,10 +2182,27 @@ function currentMapTileUrl(){
 
 function initMap(){
   if (S.map){ setTimeout(()=>S.map.invalidateSize(), 60); return; }
+  showMapLoadingOverlay();
   S.map = L.map("map", {scrollWheelZoom:true}).setView([S.userLoc.lat,S.userLoc.lon], 9);
   S.mapTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S.map);
   // Konteyner display:none iken oluşturulduysa boyutu 0 kalır; görünür olunca düzelt.
   setTimeout(()=>S.map.invalidateSize(), 120);
+}
+
+// Giriş sonrası harita + firma konumları oturana kadar radar animasyonu göster —
+// kullanıcıya "henüz hazır değil" hissi versin. drawMap() ilk kez pin çizince kapanır.
+function showMapLoadingOverlay(){
+  const overlay = $("mapLoadingOverlay");
+  if (!overlay) return;
+  overlay.hidden = false;
+  overlay.dataset.shownAt = Date.now();
+}
+function hideMapLoadingOverlay(){
+  const overlay = $("mapLoadingOverlay");
+  if (!overlay || overlay.hidden) return;
+  const elapsed = Date.now() - (+overlay.dataset.shownAt || 0);
+  const wait = Math.max(0, 500 - elapsed); // en az 500ms göster — sweep bir tur atsın, ani "flash" olmasın
+  setTimeout(()=>{ overlay.hidden = true; }, wait);
 }
 
 // Tema değiştiğinde harita zaten açıksa karo setini de güncelle (koyu <-> açık)
@@ -2198,6 +2244,7 @@ function drawMap(list){
     try{ S.map.fitBounds(pts, {padding:[30,30], maxZoom:11}); }catch(e){}
   }
   setTimeout(()=>S.map.invalidateSize(), 60);
+  hideMapLoadingOverlay();
 }
 
 // Bir harita noktasına tıklanınca: Leaflet popup yerine haritanın yanındaki SABİT panel dolar.
@@ -2305,17 +2352,33 @@ $("gateTabAdmin").onclick = ()=>{
   $("gateTabAdmin").textContent = showingAdmin ? "Yönetim Giriş" : "← Şube Girişine Dön";
 };
 
+// Giriş butonunu "yükleniyor" durumuna al/çıkar — spinner göster, tekrar tıklamayı engelle
+function setGateBtnLoading(btn, loading, idleLabel){
+  if (loading){
+    btn.dataset.idleLabel = btn.dataset.idleLabel || idleLabel || btn.textContent;
+    btn.disabled = true;
+    btn.classList.add("loading");
+    btn.innerHTML = `<span class="btn-spinner"></span> Giriş yapılıyor…`;
+  } else {
+    btn.disabled = false;
+    btn.classList.remove("loading");
+    btn.textContent = btn.dataset.idleLabel || idleLabel || "Giriş yap";
+  }
+}
+
 // Kapı ekranı: şube girişi
 $("gateBranchBtn").onclick = ()=>{
   const uname = $("gateBranchUser").value.trim().toLocaleLowerCase("tr-TR").replace(/[^a-z0-9._-]/g,"");
   const pass = $("gateBranchPass").value;
   const st = $("gateBranchStatus");
+  const btn = $("gateBranchBtn");
   if (!uname || !pass){ st.textContent="Kullanıcı adı ve şifre gerekli."; st.className="gate-status"; return; }
-  st.textContent = "Giriş yapılıyor…"; st.className="gate-status";
+  st.textContent = ""; st.className="gate-status"; setGateBtnLoading(btn, true);
   const email = uname + "@" + SUBE_EMAIL_DOMAIN;
   fbAuth.signInWithEmailAndPassword(email, pass)
     .then(()=>{ st.textContent="Giriş başarılı ✓"; st.className="gate-status ok"; logBranchLogin(uname); })
     .catch(e=>{
+      setGateBtnLoading(btn, false);
       st.className="gate-status";
       if (e.code==="auth/wrong-password"||e.code==="auth/invalid-credential") st.textContent="Kullanıcı adı veya şifre hatalı.";
       else if (e.code==="auth/user-not-found") st.textContent="Bu kullanıcı adı bulunamadı.";
@@ -2338,12 +2401,14 @@ $("gateAdminBtn").onclick = ()=>{
   const uname = $("gateAdminUser").value.trim().toLocaleLowerCase("tr-TR").replace(/[^a-z0-9._-]/g,"");
   const pass = $("gateAdminPass").value;
   const st = $("gateAdminStatus");
+  const btn = $("gateAdminBtn");
   if (!uname || !pass){ st.textContent="Kullanıcı adı ve şifre gerekli."; st.className="gate-status"; return; }
-  st.textContent = "Giriş yapılıyor…"; st.className="gate-status";
+  st.textContent = ""; st.className="gate-status"; setGateBtnLoading(btn, true);
   const email = uname + "@" + ADMIN_EMAIL_DOMAIN;
   fbAuth.signInWithEmailAndPassword(email, pass)
     .then(()=>{ st.textContent="Giriş başarılı ✓"; st.className="gate-status ok"; })
     .catch(e=>{
+      setGateBtnLoading(btn, false);
       st.className="gate-status";
       if (e.code==="auth/wrong-password"||e.code==="auth/invalid-credential") st.textContent="Kullanıcı adı veya şifre hatalı.";
       else if (e.code==="auth/user-not-found") st.textContent="Bu kullanıcı adı bulunamadı.";
