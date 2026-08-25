@@ -215,7 +215,11 @@ input[type=file]{display:none}
 
 /* Şube listesi tablosu */
 .branch-list-table{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto}
-.branch-list-row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:12.5px}
+.branch-list-row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:12.5px;cursor:pointer;transition:.12s}
+.branch-list-row:hover{border-color:var(--exp);background:rgba(53,196,168,.06)}
+.branch-list-geo{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);line-height:1.35}
+.branch-list-geo b{color:var(--exp);font-weight:600}
+.branch-list-geo .g-flow{white-space:nowrap}
 .branch-list-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
 .branch-list-tag{flex:0 0 auto;font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.03em}
 .branch-list-tag.ticari{background:rgba(124,131,253,.14);color:#A9AEFF}
@@ -2360,9 +2364,22 @@ function drawMap(list){
       });
     S.mapLayers.push(glow, m);
   }
-  // Tüm noktaları kapsayacak şekilde haritayı ayarla
-  if (pts.length>1){
-    try{ S.map.fitBounds(pts, {padding:[30,30], maxZoom:11}); }catch(e){}
+  // Haritayı noktaları kapsayacak şekilde ayarla. İLK yerleşimde (bu konum oturumunda henüz
+  // hiç pan/zoom olmadıysa) TÜM ülkeye değil, tercih edilen yarıçaba (varsayılan 5km) yakınlaş —
+  // yoksa yarıçap filtresi artık liste için zorunlu olmadığından harita tüm Türkiye'ye uzaklaşırdı.
+  // Tüm pinler yine de haritaya eklenmiş durumda; kullanıcı istediği yöne serbestçe kayabilir.
+  let fitPts = pts;
+  if (!S._mapInitialFitDone){
+    const km = +($("radiusSel") && $("radiusSel").value) || 5;
+    const nearPts = [[S.userLoc.lat,S.userLoc.lon]];
+    for (const a of list){
+      const dd = S.distByKey[a.key];
+      if (dd!==undefined && dd<=km){ const c=S.distByKey[a.key+"__c"]; if(c) nearPts.push([c.lat,c.lon]); }
+    }
+    if (nearPts.length>1) fitPts = nearPts;
+  }
+  if (fitPts.length>1){
+    try{ S.map.fitBounds(fitPts, {padding:[30,30], maxZoom:11}); }catch(e){}
   }
   S._mapInitialFitDone = true; // artık moveend/zoomend olayları listeyi güncelleyebilir
   setTimeout(()=>S.map.invalidateSize(), 60);
@@ -2551,6 +2568,32 @@ function applyBranchLocation(){
   initMap(); geocodeVisible();
 }
 
+// Yönetim > Şubeler ekranı için: HER şubenin ≤5km çevresinde kaç firma var, toplam
+// öngörülen ihracat/ithalat ne kadar — hesaplayıp şube listesi satırlarında gösterir.
+// ~400 şube × ~birkaç bin firma çarpımı olsa da (haversine ucuz) tarayıcıda anlık sürer;
+// bu yüzden ekran her açıldığında (showAdminScreen) taze hesaplanır, ayrı bir buton gerekmez.
+function computeBranchStats(){
+  const list = aggregate();
+  const coordByKey = {};
+  for (const a of list){
+    const geo = S.addrGeo && S.addrGeo[a.key];
+    const c = geo ? {lat:geo.lat, lon:geo.lon} : localCoord(a);
+    if (c) coordByKey[a.key] = c;
+  }
+  const stats = {};
+  for (const uname in SUBE_TABLE){
+    const [, lat, lon] = SUBE_TABLE[uname];
+    const branchPt = {lat, lon};
+    let count=0, exp=0, imp=0;
+    for (const a of list){
+      const c = coordByKey[a.key]; if (!c) continue;
+      if (haversine(branchPt, c) <= 5){ count++; exp+=a.exp; imp+=a.imp; }
+    }
+    stats[uname] = {count, exp, imp};
+  }
+  return stats;
+}
+
 // Admin bir şube seçtiğinde: S.branch'i DEĞİŞTİRMEZ (admin admin kalır),
 // sadece konumu o şubenin konumuna göre gösterir ve yıldızlama modunu otomatik açar.
 function applyAdminBranchPreview(uname){
@@ -2659,6 +2702,7 @@ function showAdminScreen(targetId){
   if (targetId === "adminBranchesScreen"){
     fillBranchStatSelect();
     renderBranchClassCounts();
+    S._branchStats = computeBranchStats();
     renderBranchListTable();
   } else if (targetId === "adminAudiencesScreen"){
     renderMergeFirmList();
@@ -2864,17 +2908,39 @@ function renderBranchListTable(){
   if (S._branchClassFilter !== "all") entries = entries.filter(e=>e.cls===S._branchClassFilter);
   entries.sort((a,b)=>a.name.localeCompare(b.name,"tr"));
   if (!entries.length){ box.innerHTML = `<div class="branch-stats-empty">Bu sınıfta şube yok.</div>`; return; }
+  const stats = S._branchStats || {};
   box.innerHTML = entries.map(e=>{
     const loginCount = S.loginLogs[e.uname] ? Object.keys(S.loginLogs[e.uname]).length : 0;
     const visitEntries = S.visits[e.uname] ? Object.values(S.visits[e.uname]) : [];
-    return `<div class="branch-list-row">
+    const st = stats[e.uname];
+    const geoHTML = st
+      ? `<span class="branch-list-geo" title="≤5 km çevredeki firmalar (öngörülen)">
+           <span><b>${st.count}</b> firma · ≤5km</span>
+           <span class="g-flow">İhr ${fmt$(st.exp)} · İth ${fmt$(st.imp)}</span>
+         </span>`
+      : "";
+    return `<div class="branch-list-row" data-branch-uname="${e.uname}">
       <span class="branch-list-tag ${e.cls}">${BRANCH_CLASS_LABEL[e.cls]}</span>
       <span class="branch-list-name">${e.name}</span>
       <span class="branch-list-stat">${loginCount} giriş</span>
       <span class="branch-list-stat">🔖 ${visitEntries.length} ziyaret</span>
+      ${geoHTML}
     </div>`;
   }).join("");
 }
+
+// Şube satırına tıklanınca: o şubenin ≤5km çevresini haritada/listede göster, yıldızlama
+// modu otomatik açılsın — admin panelinden çıkmadan doğrudan firma görünümüne geçilir.
+$("branchListTable") && $("branchListTable").addEventListener("click", e=>{
+  const row = e.target.closest(".branch-list-row");
+  if (!row) return;
+  const uname = row.dataset.branchUname;
+  if (!uname) return;
+  applyAdminBranchPreview(uname);
+  const statSel = $("branchStatSelect");
+  if (statSel){ fillBranchStatSelect(); statSel.value = uname; }
+  showAdminScreen("adminFirmViewScreen");
+});
 
 function fillBranchStatSelect(){
   const sel = $("branchStatSelect");
