@@ -700,8 +700,8 @@ select:focus,input:focus{border-color:var(--exp)}
   </div>
   <div class="locbar">
     <select id="radiusSel" style="width:auto">
-      <option value="5">≤ 5 km</option>
-      <option value="10" selected>≤ 10 km</option>
+      <option value="5" selected>≤ 5 km</option>
+      <option value="10">≤ 10 km</option>
       <option value="25">≤ 25 km</option>
       <option value="50">≤ 50 km</option>
       <option value="">Sınırsız</option>
@@ -1760,7 +1760,8 @@ $("showMore").onclick = ()=>{ S.shown+=50; render(); refineMahalle(); };
 ["yearSel","monthSel","ilSel","sortSel","radiusSel"].forEach(id=>$(id).onchange=()=>{
   S.shown=50;
   if (id==="yearSel") rebuildMonthOptions();          // yıl değişince aylar yenilensin
-  if ((id==="yearSel"||id==="monthSel") && S.userLoc) geocodeVisible();
+  if ((id==="yearSel"||id==="monthSel") && S.userLoc) geocodeVisible();   // dönem değişince mesafeler baştan hesaplanır (kendi içinde refineMahalle çağırır)
+  else if (S.userLoc) refineMahalle();                // il/sıralama/yarıçap değişince yeni görünen firmaları hassaslaştır
   render();
 });
 $("searchBox").oninput = ()=>{ S.shown=50; render(); };
@@ -2064,13 +2065,18 @@ async function geocodeVisible(){
 }
 
 // Ekrandaki firmaların mahallelerini bir kez konumlandırıp mesafeyi hassaslaştır.
-// Yalnızca görünür (sıralı ilk S.shown) firma + her mahalle tek sorgu → yavaşlatmaz.
+// Bir yarıçap filtresi aktifse (ör. ≤5km) o yarıçaptaki TÜM firmalar hassaslaştırılır
+// (harita, radius'la sınırlı olduğu için sayı zaten azdır — tek noktada yığılmayı önler).
+// Yarıçap "Sınırsız" ise (çok firma olabilir) sadece görünür (sıralı ilk S.shown) firmayla sınırlı kalınır.
 let _refineBusy = false;
 async function refineMahalle(){
   if (!S.userLoc || _refineBusy) return;
   _refineBusy = true;
   try{
-    const visible = filtered().slice(0, S.shown);
+    const rad = $("radiusSel") ? $("radiusSel").value : "";
+    const base = filtered();
+    // Güvenlik sınırı: yarıçap aktifken bile aşırı büyük bir listeyi Nominatim'e yığmayalım.
+    const visible = rad ? base.slice(0, 300) : base.slice(0, S.shown);
     // mahalle sorgusu -> o sorguya bağlı firma anahtarları
     const q2keys = new Map();
     for (const a of visible){
