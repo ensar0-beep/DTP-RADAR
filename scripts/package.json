@@ -1,0 +1,15 @@
+{
+  "name": "dtp-radar-geocode",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Tek seferlik/elle çalıştırılan yerel script: DİİB + Turquality firmalarının tam adresini Google Geocoding ile çözüp Firebase'e (addrGeo/) yazar. Deploy edilen siteye dahil değildir.",
+  "type": "commonjs",
+  "main": "geocode.js",
+  "scripts": {
+    "geocode": "node geocode.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "firebase-admin": "^12.6.0"
+  }
+}

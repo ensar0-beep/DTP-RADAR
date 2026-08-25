@@ -991,6 +991,7 @@ const S = {
   visits: {},        // { subeKullaniciAdi: { firmaKey: {status:"planned"|"done", ts:number} } } — şubenin ziyaret listesi
   loginLogs: {},     // { subeKullaniciAdi: [ts, ts, ...] } — buluttan yüklenir (yönetim panelinde)
   manualMerges: {},  // { kucukKey: buyukKey } — admin'in elle "aynı firma" işaretlediği eşleşmeler, buluttan yüklenir
+  addrGeo: {},       // { firmaKey: {lat, lon, formatted, precision, ts} } — scripts/geocode.js ile önceden hesaplanmış TAM ADRES koordinatı (Google Geocoding). Varsa il/ilçe/mahalle tahmininden önceliklidir.
 };
 let fid = 0;
 
@@ -1707,6 +1708,7 @@ function render(){
     S._rendered[a.key]=a;
     const d = S.distByKey[a.key];
     const c = S.distByKey[a.key+"__c"];
+    const exact = S.distByKey[a.key+"__addr"]; // tam adres hassasiyeti (scripts/geocode.js)
     const precise = S.distByKey[a.key+"__mh"]; // mahalle hassasiyeti
     // Yol tarifi doğrudan firmanın tam adresine gitsin (ilçe merkezine değil)
     const destText = [a.firma, a.adres, a.il].filter(Boolean).join(", ");
@@ -1733,7 +1735,7 @@ function render(){
         <div class="firm-top"><div class="firm-name">${isStarredForBranch?`<span class="star-badge" title="Şubeniz için hedef firma">⭐</span>`:""}${isImportantForBranch?`<span class="important-badge" title="Sizin işaretlediğiniz önemli firma">📌</span>`:""}${adminViewImportant?`<span class="important-badge" title="Bu şube tarafından önemli işaretlenmiş">📌</span>`:""}${visitRec?`<span class="visit-badge visit-${visitRec.status}" title="${visitLabel}">${visitIcon}</span>`:""}${a.firma}${a.tim?`<span class="tim-badge" title="TİM İlk 1000 İhracatçı${S.timYear?' '+S.timYear:''}">🏆 İlk 1000${a.tim.r<9999?` · #${a.tim.r}`:''}</span>`:""}${a.tq?`<span class="tq-badge" title="${a.tq.prog||'Turquality/Marka Destek'}">🎖️ ${/TURQUALITY/i.test(a.tq.prog)?'Turquality':'Marka Destek'}</span>`:""}${(a.src&&a.src.tq&&!a.src.diib)?`<span class="only-tag" title="DİİB listesinde yok, Turquality havuzundan">Turquality</span>`:""}</div>
           <div class="firm-top-right">
             ${S.branch?`<button class="important-pin-toggle${isImportantForBranch?" marked":""}" data-important-key="${a.key}" title="${isImportantForBranch?'Önemli işaretini kaldır':'Önemli olarak işaretle'}">📌</button>`:""}
-            ${d!==undefined?`<div class="firm-dist" title="${precise?'Mahalle bazlı':'İlçe merkezine göre'}">≈ ${d<10?d.toFixed(1):Math.round(d)} km${precise?' <span class="prec">•</span>':''}</div>`:""}
+            ${d!==undefined?`<div class="firm-dist" title="${exact?'Tam adres':(precise?'Mahalle bazlı':'İlçe merkezine göre')}">≈ ${d<10?d.toFixed(1):Math.round(d)} km${exact?' <span class="prec exact">📍</span>':(precise?' <span class="prec">•</span>':'')}</div>`:""}
           </div>
         </div>
         <div class="firm-addr">${a.adres|| (a.tq?(a.tq.web?a.tq.web:"Turquality kayıtlı firma"):"Adres yok")}</div>
@@ -2033,9 +2035,16 @@ async function geocodeVisible(){
   $("sortSel").value="dist";
   const list = aggregate();
 
-  // 1) Gömülü koordinatlarla anlık çöz — internet yok, bekleme yok
+  // 1) Önce TAM ADRES koordinatı var mı bak (scripts/geocode.js ile önceden hesaplanmış), yoksa gömülü il/ilçe tablosuyla anlık çöz
   const unresolved = [];
   for (const a of list){
+    const geo = S.addrGeo && S.addrGeo[a.key];
+    if (geo && isFinite(geo.lat) && isFinite(geo.lon)){
+      S.distByKey[a.key]=haversine(S.userLoc,{lat:geo.lat,lon:geo.lon});
+      S.distByKey[a.key+"__c"]={lat:geo.lat,lon:geo.lon};
+      S.distByKey[a.key+"__addr"]=true; // tam adres hassasiyeti — mahalle sorgusuna gerek yok
+      continue;
+    }
     const c = localCoord(a);
     if (c){ S.distByKey[a.key]=haversine(S.userLoc,c); S.distByKey[a.key+"__c"]=c; }
     else if (a.il===null) { /* il bile yok, çözülemez */ }
@@ -2080,7 +2089,7 @@ async function refineMahalle(){
     // mahalle sorgusu -> o sorguya bağlı firma anahtarları
     const q2keys = new Map();
     for (const a of visible){
-      if (S.distByKey[a.key+"__mh"]) continue; // zaten mahalle hassasiyetinde
+      if (S.distByKey[a.key+"__addr"] || S.distByKey[a.key+"__mh"]) continue; // zaten tam adres ya da mahalle hassasiyetinde
       const mah = extractMahalle(a.adres);
       if (!mah || !a.il) continue;
       const ilce = extractIlce(a.adres, a.il);
@@ -2770,6 +2779,11 @@ function loadCloud(){
   fbDB.ref("loginLogs").on("value", snap=>{
     S.loginLogs = snap.val() || {};
     renderAdminStats();
+  }, ()=>{});
+  // Önceden hesaplanmış TAM ADRES koordinatlarını buluttan yükle (scripts/geocode.js yazar; herkese açık okuma)
+  fbDB.ref("addrGeo").on("value", snap=>{
+    S.addrGeo = snap.val() || {};
+    if (S.userLoc) geocodeVisible(); // yeni/güncel adres koordinatı geldiyse mesafeleri baştan hesapla
   }, ()=>{});
   // Admin'in elle birleştirdiği firma eşleşmelerini buluttan yükle (herkese açık okuma; sadece admin yazar)
   fbDB.ref("manualMerges").on("value", snap=>{

@@ -1,1 +1,7 @@
 .DS_Store
+
+# scripts/geocode.js — yerel çalıştırma, gizli bilgiler asla commit edilmez
+scripts/.env
+scripts/serviceAccountKey.json
+scripts/node_modules/
+scripts/not_found.json
