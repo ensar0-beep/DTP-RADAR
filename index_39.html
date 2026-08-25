@@ -135,6 +135,9 @@ input[type=file]{display:none}
 .tim-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(90deg,rgba(232,163,61,.18),rgba(232,163,61,.08));color:var(--imp);border:1px solid rgba(232,163,61,.4);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:600;font-family:'IBM Plex Sans',sans-serif;margin-left:6px;vertical-align:1px}
 .tim-badge .rank{font-family:'IBM Plex Mono',monospace}
 .tq-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(90deg,rgba(124,131,253,.18),rgba(124,131,253,.07));color:#A9AEFF;border:1px solid rgba(124,131,253,.4);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:600;font-family:'IBM Plex Sans',sans-serif;margin-left:6px;vertical-align:1px;white-space:nowrap}
+/* "Yeni firma" rozetleri: bu ay ilk kez -> belirgin; son 12 ayda ilk kez -> narin/silik */
+.new-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(90deg,rgba(53,196,168,.22),rgba(53,196,168,.08));color:var(--exp);border:1px solid rgba(53,196,168,.45);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:6px;vertical-align:1px;white-space:nowrap}
+.new-badge-subtle{display:inline-block;color:var(--faint);font-size:10.5px;font-style:italic;font-weight:400;margin-left:6px;vertical-align:1px;white-space:nowrap}
 .only-tag{display:inline-block;margin-left:6px;font-size:10px;font-weight:600;color:var(--faint);border:1px solid var(--border);border-radius:6px;padding:1px 6px;vertical-align:2px;text-transform:uppercase;letter-spacing:.04em}
 .tq-inline{color:#A9AEFF;font-weight:600}
 .no-diib{margin-top:8px;font-size:12px;color:var(--faint);font-style:italic}
@@ -1208,7 +1211,7 @@ function parseTim(wb){
       const expN = cExp>=0 ? parseNum(rows[r][cExp]) : 0;
       const key = normName(name);
       if (!key) continue;
-      const rec = { r: rank||9999, s: (sect||null), e: (expN||0), n:"" };
+      const rec = { r: rank||9999, s: (sect||null), e: (expN||0), n:"", firma:name };
       if (!(key in map) || (rank && rank < map[key].r)) map[key] = rec;
     }
     if (Object.keys(map).length) break;
@@ -1425,6 +1428,8 @@ function updateSaveRow(){
 /* ================= PERIODS ================= */
 function loadedMonths(){ return [...new Set(S.files.filter(f=>f.month).map(f=>f.month))].sort().reverse(); }
 function monthLabel(m){ const [y,mm]=m.split("-"); return `${AY_ADI[+mm]} ${y}`; }
+// "YYYY-MM" -> karşılaştırılabilir tek sayı (yıl*12+ay) — "yeni firma" rozetleri için.
+function monthNum(m){ if(!m) return null; const [y,mm]=m.split("-").map(Number); return y*12+mm; }
 function loadedYears(){ return [...new Set(loadedMonths().map(m=>m.split("-")[0]))].sort().reverse(); }
 
 function refreshPeriodOptions(){
@@ -1505,6 +1510,19 @@ function aggregate(){
     if (!a.vkn && r.vkn) a.vkn=r.vkn;
     if (r.adres.length > a.adres.length){ a.adres=r.adres; a.il=r.il||a.il; }
   }
+
+  // Her firmanın İLK KEZ hangi ayda belge aldığını bul — dönem filtresinden bağımsız,
+  // yüklü TÜM aylara bakar (yoksa "son 12 ayda" görünümündeyken firma zaten yeniyse
+  // "ilk kez" olduğunu asla bilemeyiz). "Yeni firma" rozetleri bunu kullanır.
+  const firstMonthByKey = {};
+  for (const f of S.files){
+    if (!f.month) continue;
+    for (const r of f.records){
+      if (!firstMonthByKey[r.key] || f.month < firstMonthByKey[r.key]) firstMonthByKey[r.key] = f.month;
+    }
+  }
+  for (const a of map.values()) a.firstMonth = firstMonthByKey[a.key] || null;
+
   const hasTim = Object.keys(S.tim).length>0;
   const hasTq  = Object.keys(S.tq).length>0;
 
@@ -1528,6 +1546,16 @@ function aggregate(){
 
   const out = [...map.values()];
   if (hasTim) for (const a of out){ a.tim = timInfo(a.firma); if(a.tim) a.src.tim=true; }
+
+  // İlk 1000 İhracatçı'da olup DİİB/Turquality havuzunda hiç eşleşmeyen (kesişim dışı)
+  // firmaları da listeye kat — adresleri yok, haritada gösterilemezler ama listede görünürler.
+  if (hasTim){
+    const matchedTimKeys = new Set(out.filter(a=>a.tim).map(a=>normName(a.firma)));
+    for (const [tKey, t] of Object.entries(S.tim)){
+      if (matchedTimKeys.has(tKey) || !t.firma) continue; // eşleşmiş ya da eski (adsız) kayıt
+      out.push({ firma:t.firma, key:tKey, adres:"", vkn:"", il:null, imp:0, exp:0, belge:0, src:{tim:true}, tim:t });
+    }
+  }
   return out;
 }
 
@@ -1755,6 +1783,8 @@ function render(skipDraw){
   $("resultCount").textContent = `${list.length} firma · ${periodLabel()}${boundsTag}`;
 
   const maxV = Math.max(1, ...list.slice(0,S.shown).map(a=>Math.max(a.imp,a.exp)));
+  // "Yeni firma" rozetleri için: en güncel yüklü ay ve "son 12 ay" eşiği
+  const _latestMonthNum = monthNum(loadedMonths()[0]);
   const el = $("firmList"); el.innerHTML="";
   S._rendered = {};
   for (const a of list.slice(0,S.shown)){
@@ -1763,6 +1793,9 @@ function render(skipDraw){
     const c = S.distByKey[a.key+"__c"];
     const exact = S.distByKey[a.key+"__addr"]; // tam adres hassasiyeti (scripts/geocode.js)
     const precise = S.distByKey[a.key+"__mh"]; // mahalle hassasiyeti
+    const fm = monthNum(a.firstMonth);
+    const isNewThisMonth = fm!==null && _latestMonthNum!==null && fm===_latestMonthNum;
+    const isNewLast12 = !isNewThisMonth && fm!==null && _latestMonthNum!==null && fm >= _latestMonthNum-11;
     // Yol tarifi doğrudan firmanın tam adresine gitsin (ilçe merkezine değil)
     const destText = [a.firma, a.adres, a.il].filter(Boolean).join(", ");
     const dest = encodeURIComponent(destText || (a.firma+" "+(a.il||"")));
@@ -1785,7 +1818,7 @@ function render(skipDraw){
     const visitLabel = visitRec ? (visitRec.status==="done" ? "Ziyaret edildi" : "Ziyaret planlandı") : "Ziyaret listesine ekle";
     div.innerHTML = `
       <div class="firm-head" data-toggle="${a.key}">
-        <div class="firm-top"><div class="firm-name">${isStarredForBranch?`<span class="star-badge" title="Şubeniz için hedef firma">⭐</span>`:""}${isImportantForBranch?`<span class="important-badge" title="Sizin işaretlediğiniz önemli firma">📌</span>`:""}${adminViewImportant?`<span class="important-badge" title="Bu şube tarafından önemli işaretlenmiş">📌</span>`:""}${visitRec?`<span class="visit-badge visit-${visitRec.status}" title="${visitLabel}">${visitIcon}</span>`:""}${a.firma}${a.tim?`<span class="tim-badge" title="TİM İlk 1000 İhracatçı${S.timYear?' '+S.timYear:''}">🏆 İlk 1000${a.tim.r<9999?` · #${a.tim.r}`:''}</span>`:""}${a.tq?`<span class="tq-badge" title="${a.tq.prog||'Turquality/Marka Destek'}">🎖️ ${/TURQUALITY/i.test(a.tq.prog)?'Turquality':'Marka Destek'}</span>`:""}${(a.src&&a.src.tq&&!a.src.diib)?`<span class="only-tag" title="DİİB listesinde yok, Turquality havuzundan">Turquality</span>`:""}</div>
+        <div class="firm-top"><div class="firm-name">${isStarredForBranch?`<span class="star-badge" title="Şubeniz için hedef firma">⭐</span>`:""}${isImportantForBranch?`<span class="important-badge" title="Sizin işaretlediğiniz önemli firma">📌</span>`:""}${adminViewImportant?`<span class="important-badge" title="Bu şube tarafından önemli işaretlenmiş">📌</span>`:""}${visitRec?`<span class="visit-badge visit-${visitRec.status}" title="${visitLabel}">${visitIcon}</span>`:""}${a.firma}${a.tim?`<span class="tim-badge" title="TİM İlk 1000 İhracatçı${S.timYear?' '+S.timYear:''}">🏆 İlk 1000${a.tim.r<9999?` · #${a.tim.r}`:''}</span>`:""}${a.tq?`<span class="tq-badge" title="${a.tq.prog||'Turquality/Marka Destek'}">🎖️ ${/TURQUALITY/i.test(a.tq.prog)?'Turquality':'Marka Destek'}</span>`:""}${(a.src&&a.src.tq&&!a.src.diib)?`<span class="only-tag" title="DİİB listesinde yok, Turquality havuzundan">Turquality</span>`:""}${(a.src&&a.src.tim&&!a.src.diib&&!a.src.tq)?`<span class="only-tag" title="DİİB/Turquality listesinde yok, sadece İlk 1000 havuzundan">İlk 1000</span>`:""}${isNewThisMonth?`<span class="new-badge" title="${monthLabel(a.firstMonth)} ayında ilk kez DİİB belgesi aldı">🆕 Bu ay ilk kez</span>`:(isNewLast12?`<span class="new-badge-subtle" title="${monthLabel(a.firstMonth)} ayında ilk kez DİİB belgesi aldı">son 12 ayda ilk kez</span>`:"")}</div>
           <div class="firm-top-right">
             ${S.branch?`<button class="important-pin-toggle${isImportantForBranch?" marked":""}" data-important-key="${a.key}" title="${isImportantForBranch?'Önemli işaretini kaldır':'Önemli olarak işaretle'}">📌</button>`:""}
             ${d!==undefined?`<div class="firm-dist" title="${exact?'Tam adres':(precise?'Mahalle bazlı':'İlçe merkezine göre')}">≈ ${d<10?d.toFixed(1):Math.round(d)} km${exact?' <span class="prec exact">📍</span>':(precise?' <span class="prec">•</span>':'')}</div>`:""}
@@ -1801,7 +1834,7 @@ function render(skipDraw){
         <div class="flow-nums">
           <span class="fn"><span class="fn-tag tag-imp">↓ İthalat</span> <span class="n-imp">${fmt$(a.imp)}</span></span>
           <span class="fn fn-r"><span class="n-exp">${fmt$(a.exp)}</span> <span class="fn-tag tag-exp">İhracat ↑</span></span>
-        </div>`:`<div class="no-diib">DİİB belgesi bu dönemde yok · Turquality havuzundan</div>`}
+        </div>`:`<div class="no-diib">DİİB belgesi bu dönemde yok · ${a.src&&a.src.tq?"Turquality":(a.src&&a.src.tim?"İlk 1000 havuzundan":"")}</div>`}
         ${starAssignMode?`<button class="star-assign-btn${isStarredForTarget?" starred":""}" data-star-key="${a.key}">${isStarredForTarget?"⭐ Yıldızlı (kaldırmak için tıkla)":"☆ Bu şube için yıldızla"}</button>`:""}
       </div>
       ${open?firmDetailHTML(a, mapsUrl):""}`;
