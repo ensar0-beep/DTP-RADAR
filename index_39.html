@@ -2257,6 +2257,16 @@ async function refineMahalle(){
   } finally { _refineBusy = false; }
 }
 
+// Konum değiştiğinde (şube girişi, admin'in şube önizlemesi, GPS yenileme) eski harita
+// nesnesini tamamen yok et — yoksa initMap() zaten var olan haritayı fark edip yeni
+// konuma hiç taşımaz, harita sayfa yenilenene kadar İLK açılan konumda "yapışık" kalır.
+function resetMapForNewLocation(){
+  if (S.map){
+    try{ S.map.remove(); }catch(e){}
+    S.map = null; S.mapTileLayer = null; S.mapLayers = [];
+  }
+}
+
 function requestLocation(){
   if (!navigator.geolocation){ toast("Tarayıcı konum desteklemiyor."); return; }
   $("locStatus").textContent="Konum alınıyor…";
@@ -2265,6 +2275,7 @@ function requestLocation(){
     $("locStatus").textContent = `Konum alındı. Yakın firmalar en üstte; mesafe önce ilçeye, sonra mahalleye göre hassaslaşır (nokta • = mahalle bazlı).`;
     $("locStatus").classList.add("on");
     $("map").style.display="block";
+    resetMapForNewLocation();
     initMap(); geocodeVisible();
   }, e=>{
     $("locStatus").textContent = "Konum alınamadı — 📍 düğmesiyle tekrar deneyebilirsin.";
@@ -2565,6 +2576,7 @@ function applyBranchLocation(){
   $("locStatus").textContent = `${S.branch.name} konumundasın. Yakın firmalar en üstte; mesafe önce ilçeye, sonra mahalleye göre hassaslaşır.`;
   $("locStatus").classList.add("on");
   $("map").style.display="block";
+  resetMapForNewLocation();
   initMap(); geocodeVisible();
 }
 
@@ -2604,6 +2616,7 @@ function applyAdminBranchPreview(uname){
   $("locStatus").textContent = `${rec[0]} konumunu görüntülüyorsun (Şube Seç). Yakın firmalar en üstte.`;
   $("locStatus").classList.add("on");
   $("map").style.display="block";
+  resetMapForNewLocation();
   initMap(); geocodeVisible();
   // Yıldızlama modunu otomatik aç
   S._starTargetBranch = uname;
