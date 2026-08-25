@@ -167,7 +167,16 @@ async function main() {
   const todo = all.filter(a => FORCE || !existingAddrGeo[a.key]);
   console.log(`Zaten çözülmüş, atlanacak: ${all.length - todo.length}`);
   console.log(`Bu çalıştırmada denenecek: ${Math.min(todo.length, LIMIT)}${LIMIT < todo.length ? ` (--limit=${LIMIT})` : ""}`);
-  if (DRY) console.log("(--dry: hiçbir şey yazılmayacak)");
+
+  if (DRY) {
+    // --dry: API'ye hiç gitme (ücretli), sadece rapor ver.
+    const n = Math.min(todo.length, LIMIT);
+    console.log(`(--dry: API'ye istek atılmadı, hiçbir şey yazılmadı)`);
+    console.log(`Tahmini maliyet (gerçek çalıştırılsaydı): ~$${(n * 0.005).toFixed(2)}`);
+    console.log("\nÖrnek firmalar:");
+    todo.slice(0, 10).forEach(a => console.log(`  - ${a.firma} | ${a.adres.slice(0, 70)}`));
+    process.exit(0);
+  }
 
   let done = 0, found = 0, notFound = 0;
   const notFoundList = [];
