@@ -1596,9 +1596,7 @@ function filtered(){
   if ($("diibOnly") && $("diibOnly").checked) list = list.filter(a=>a.belge>0);
   if ($("timOnly") && $("timOnly").checked) list = list.filter(a=>a.tim);
   if ($("tqOnly") && $("tqOnly").checked) list = list.filter(a=>a.tq);
-  // Harita açıldıktan sonra coğrafi daraltmayı harita görünümü (viewport) devralır — bkz. applyMapBoundsFilter().
-  // Yarıçap seçici artık bir filtre değil, "haritayı bu yarıçaba yakınlaştır" kısayoluna dönüştü.
-  if (S.userLoc && !S.map){
+  if (S.userLoc){
     const rad = $("radiusSel").value;
     if (rad) list = list.filter(a=>S.distByKey[a.key]!==undefined && S.distByKey[a.key]<=+rad);
   }
@@ -1610,27 +1608,6 @@ function filtered(){
   else if (s==="dist") list.sort((a,b)=> ((S.distByKey[a.key]??1e9)-(S.distByKey[b.key]??1e9)) || alpha(a,b));
   else list.sort((a,b)=> (b.exp-a.exp) || alpha(a,b));
   return list;
-}
-
-// render() ve openFirmDirect() gibi ekranda GÖSTERİLEN listeyi ihtiyaç duyan her yerin
-// kullandığı tek, tutarlı liste — filtre + öncelik + birleştirme + harita-viewport daraltması.
-function renderableList(){
-  return applyMapBoundsFilter(applyManualMerges(applyStarPriority(filtered())));
-}
-
-// Harita açıkken listeyi haritanın o an gösterdiği alana (viewport) göre daraltır —
-// harita kaydırılıp/yakınlaştırılınca liste "haritada görüneni" yansıtsın diye.
-// Adres/konumu çözülemeyen (haritada hiç pin'i olmayan) firmalar bu daraltmaya girmez,
-// yoksa hiçbir zaman listede görünemezler.
-function applyMapBoundsFilter(list){
-  if (!S.map || !S._boundsReady) return list;
-  let bounds;
-  try{ bounds = S.map.getBounds(); }catch(e){ return list; }
-  if (!bounds) return list;
-  return list.filter(a=>{
-    const c = S.distByKey[a.key+"__c"];
-    return !c || bounds.contains([c.lat, c.lon]);
-  });
 }
 
 // Şube girişinde, o şubeye atanmış "yıldız" (admin) ve "önemli" (şubenin kendi işareti) firmaları
@@ -1782,7 +1759,7 @@ function renderActiveFilterTags(){
   if (clearAll) clearAll.onclick = ()=>{ tags.forEach(t=>t.clear()); S.shown=50; render(); };
 }
 
-function render(skipDraw){
+function render(){
   const has = S.files.length>0 || Object.keys(S.tq).length>0;
   const visitScreenOpen = $("visitListScreen") && !$("visitListScreen").hidden;
   const filtersOpen = !!S._filtersOpen;
@@ -1797,7 +1774,7 @@ function render(skipDraw){
   $("emptyState").style.display = has?"none":"";
   if (!has) return;
   renderIlOptions();
-  const list = renderableList();
+  const list = applyManualMerges(applyStarPriority(filtered()));
   renderActiveFilterTags();
   const tImp = list.reduce((s,a)=>s+a.imp,0), tExp = list.reduce((s,a)=>s+a.exp,0);
   $("stats").innerHTML = `
@@ -1807,8 +1784,7 @@ function render(skipDraw){
     <div class="stat-strip-sep"></div>
     <div class="stat-strip-item"><div class="k">İhracat <button class="stat-info-btn" id="statInfoExp" type="button" aria-label="Açıklama">?</button></div><div class="v exp">${fmt$(tExp)}</div></div>`;
   wireStatInfoButtons();
-  const boundsTag = (S.map && S._boundsReady) ? " · 🗺️ haritada görünen alan" : "";
-  $("resultCount").textContent = `${list.length} firma · ${periodLabel()}${boundsTag}`;
+  $("resultCount").textContent = `${list.length} firma · ${periodLabel()}`;
 
   const maxV = Math.max(1, ...list.slice(0,S.shown).map(a=>Math.max(a.imp,a.exp)));
   // "Yeni firma" rozetleri için: en güncel yüklü ay ve "son 12 ay" eşiği
@@ -1869,7 +1845,7 @@ function render(skipDraw){
     el.appendChild(div);
   }
   $("showMore").style.display = list.length>S.shown?"":"none";
-  if (S.userLoc && !skipDraw) drawMap(list);
+  if (S.userLoc) drawMap(list);
 }
 
 $("showMore").onclick = ()=>{ S.shown+=50; render(); refineMahalle(); };
@@ -1878,25 +1854,8 @@ $("showMore").onclick = ()=>{ S.shown+=50; render(); refineMahalle(); };
   if (id==="yearSel") rebuildMonthOptions();          // yıl değişince aylar yenilensin
   if ((id==="yearSel"||id==="monthSel") && S.userLoc) geocodeVisible();   // dönem değişince mesafeler baştan hesaplanır (kendi içinde refineMahalle çağırır)
   else if (S.userLoc) refineMahalle();                // il/sıralama/yarıçap değişince yeni görünen firmaları hassaslaştır
-  if (id==="radiusSel" && S.map) jumpMapToRadius($("radiusSel").value);
   render();
 });
-
-// Harita açıkken yarıçap seçici artık bir filtre değil, haritayı o yarıçaba (ya da
-// "Sınırsız" için çözülmüş tüm firmalara) yakınlaştıran bir kısayol — asıl liste
-// daralması her zaman haritanın o an gösterdiği alandan (applyMapBoundsFilter) gelir.
-function jumpMapToRadius(radiusVal){
-  if (!S.map || !S.userLoc) return;
-  const km = +radiusVal || 0;
-  if (km){
-    const dLat = km/111, dLon = km/(111*Math.cos(S.userLoc.lat*Math.PI/180));
-    try{ S.map.fitBounds([[S.userLoc.lat-dLat,S.userLoc.lon-dLon],[S.userLoc.lat+dLat,S.userLoc.lon+dLon]], {maxZoom:14}); }catch(e){}
-  } else {
-    const pts = [[S.userLoc.lat,S.userLoc.lon]];
-    for (const a of filtered()){ const c=S.distByKey[a.key+"__c"]; if(c) pts.push([c.lat,c.lon]); }
-    if (pts.length>1) try{ S.map.fitBounds(pts, {padding:[30,30]}); }catch(e){}
-  }
-}
 $("searchBox").oninput = ()=>{ S.shown=50; render(); };
 
 // Firma detay paneli (açıldığında gösterilir)
@@ -1997,7 +1956,7 @@ document.addEventListener("click", e=>{
 function openFirmDirect(key){
   S._openFirm = key;
   // Tıklanan firma, gösterilen ilk S.shown kayıt dışında kalmasın diye gerektiği kadar genişlet
-  const list = renderableList();
+  const list = applyManualMerges(applyStarPriority(filtered()));
   const idx = list.findIndex(a=>a.key===key);
   if (idx >= 0 && idx >= S.shown) S.shown = idx + 10;
   render();
@@ -2165,18 +2124,8 @@ async function nominatim(q){
   return S.geoCache[q];
 }
 
-// Bir konum oturumunun (şube girişi, admin şube önizlemesi, GPS yenileme) "kimliği".
-// resetMapForNewLocation() her yeni konumda bunu artırır. geocodeVisible/refineMahalle
-// gibi yavaş async fonksiyonlar, her await sonrası kendi başladıkları oturumun HÂLÂ aktif
-// olduğunu kontrol eder — değilse sessizce durur. Bu olmadan: admin art arda hızlıca
-// farklı şubelere tıklarsa, ESKİ (yavaş biten) bir hesaplama YENİ konumun üzerine geç
-// yazıp haritayı yanlış yerde bırakabiliyordu (ör. Pendik'e geçilmişken Kırşehir'de kalma).
-let _locSession = 0;
-
 async function geocodeVisible(){
   if (!S.userLoc) return;
-  const mySession = _locSession;
-  const stale = () => mySession !== _locSession;
   // Yakınlık sıralamasını hemen aç ve varsayılan yap
   $("distOpt").disabled=false; $("distOpt").textContent="Yakınlık (en yakın önce)";
   $("sortSel").value="dist";
@@ -2197,7 +2146,6 @@ async function geocodeVisible(){
     else if (a.il===null) { /* il bile yok, çözülemez */ }
     else unresolved.push(a); // il var ama ilçe tabloda yok -> istenirse çevrimiçi tamamla
   }
-  if (stale()) return; // bu sırada yeni bir konum oturumu başladı — devam etme
   render();
 
   // 2) Tabloda olmayan ilçeler için (nadir) çevrimiçi tamamlama — arka planda, yavaş
@@ -2210,15 +2158,12 @@ async function geocodeVisible(){
   let done=0;
   const apply = ()=>{ for (const [q,keys] of queries){ const c=S.geoCache[q]; if(c) for(const k of keys){ S.distByKey[k]=haversine(S.userLoc,c); S.distByKey[k+"__c"]=c; } } };
   for (const q of pending){
-    if (stale()) return;
     $("geoProgress").textContent = `Ek ilçeler konumlandırılıyor ${++done}/${pending.length}…`;
     await nominatim(q);
-    if (stale()) return;
     apply();
     if (done%3===0||done===pending.length) render();
     await new Promise(r=>setTimeout(r,1100));
   }
-  if (stale()) return;
   $("geoProgress").textContent = "";
   render();
   refineMahalle(); // görünen firmalar için mahalle hassasiyeti (arka planda)
@@ -2232,8 +2177,6 @@ let _refineBusy = false;
 async function refineMahalle(){
   if (!S.userLoc || _refineBusy) return;
   _refineBusy = true;
-  const mySession = _locSession;
-  const stale = () => mySession !== _locSession;
   try{
     const rad = $("radiusSel") ? $("radiusSel").value : "";
     const base = filtered();
@@ -2253,13 +2196,11 @@ async function refineMahalle(){
     const pending = [...q2keys.keys()].filter(q=>!(q in S.geoCache));
     let done=0;
     for (const q of q2keys.keys()){
-      if (stale()) return;
       if (!(q in S.geoCache)){
         $("geoProgress").textContent = `Mahalleler konumlandırılıyor ${++done}/${pending.length}…`;
         await nominatim(q);
         await new Promise(r=>setTimeout(r,1100));
       }
-      if (stale()) return;
       const c = S.geoCache[q];
       if (c){
         for (const k of q2keys.get(q)){
@@ -2270,42 +2211,21 @@ async function refineMahalle(){
       }
       if (done%2===0) render();
     }
-    if (stale()) return;
     $("geoProgress").textContent = "";
     render();
   } finally { _refineBusy = false; }
 }
 
-// Konum değiştiğinde (şube girişi, admin'in şube önizlemesi, GPS yenileme) eski harita
-// nesnesini tamamen yok et — yoksa initMap() zaten var olan haritayı fark edip yeni
-// konuma hiç taşımaz, harita sayfa yenilenene kadar İLK açılan konumda "yapışık" kalır.
-function resetMapForNewLocation(){
-  _locSession++; // eski geocodeVisible()/refineMahalle() çalıştırmaları artık "bayat" sayılır ve kendiliğinden durur
-  if (S.map){
-    try{ S.map.remove(); }catch(e){}
-    S.map = null; S.mapTileLayer = null; S.mapLayers = [];
-  }
-}
-
 function requestLocation(){
   if (!navigator.geolocation){ toast("Tarayıcı konum desteklemiyor."); return; }
-  // GPS (özellikle enableHighAccuracy) birkaç saniye sürebilir. Bu sırada gerçek şube
-  // girişi (Firebase'in oturumu doğrulaması) çoktan tamamlanmış olabilir — bu isteğin
-  // BAŞLADIĞI andaki oturumu etiketleyip, sonuç geldiğinde hâlâ geçerli mi diye bakıyoruz.
-  // Değilse (yeni bir konum — ör. şube girişi — araya girmişse) sessizce yok sayıyoruz;
-  // yoksa geç gelen bir GPS sonucu, çoktan doğru yerleşmiş şube konumunun üzerine yazabilir.
-  const mySession = _locSession;
   $("locStatus").textContent="Konum alınıyor…";
   navigator.geolocation.getCurrentPosition(p=>{
-    if (mySession !== _locSession || S.branch){ return; } // bayatladı ya da bu arada şube girişi oldu
     S.userLoc = {lat:p.coords.latitude, lon:p.coords.longitude};
     $("locStatus").textContent = `Konum alındı. Yakın firmalar en üstte; mesafe önce ilçeye, sonra mahalleye göre hassaslaşır (nokta • = mahalle bazlı).`;
     $("locStatus").classList.add("on");
     $("map").style.display="block";
-    resetMapForNewLocation();
     initMap(); geocodeVisible();
   }, e=>{
-    if (mySession !== _locSession || S.branch) return;
     $("locStatus").textContent = "Konum alınamadı — 📍 düğmesiyle tekrar deneyebilirsin.";
     if (e.code!==e.PERMISSION_DENIED) toast("Konum alınamadı: "+e.message);
   }, {enableHighAccuracy:true, timeout:15000});
@@ -2327,26 +2247,13 @@ function currentMapTileUrl(){
     : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 }
 
-const debounce = (fn, ms) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; };
-
 function initMap(){
   if (S.map){ setTimeout(()=>S.map.invalidateSize(), 60); return; }
   showMapLoadingOverlay();
-  // Yeni bir konum oturumu — viewport senkronu baştan başlasın
-  S._boundsReady = false;
-  S._mapInitialFitDone = false;
   S.map = L.map("map", {scrollWheelZoom:true}).setView([S.userLoc.lat,S.userLoc.lon], 9);
   S.mapTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S.map);
   // Konteyner display:none iken oluşturulduysa boyutu 0 kalır; görünür olunca düzelt.
   setTimeout(()=>S.map.invalidateSize(), 120);
-  // Harita kaydırılıp/yakınlaştırılınca aşağıdaki liste o an görünen alana göre güncellensin.
-  // İlk yerleşim (fitBounds) tamamlanana kadar tepki vermiyoruz — yoksa henüz oturmamış
-  // dar bir görünümle liste anlık boş/eksik görünür (bkz. drawMap()'teki _mapInitialFitDone).
-  S.map.on("moveend zoomend", debounce(()=>{
-    if (!S._mapInitialFitDone) return;
-    S._boundsReady = true;
-    render(true); // sadece listeyi güncelle — pinleri yeniden çizip fitBounds'u tetikleme
-  }, 250));
 }
 
 // Giriş sonrası harita + firma konumları oturana kadar radar animasyonu göster —
@@ -2403,24 +2310,10 @@ function drawMap(list){
       });
     S.mapLayers.push(glow, m);
   }
-  // Haritayı noktaları kapsayacak şekilde ayarla. İLK yerleşimde (bu konum oturumunda henüz
-  // hiç pan/zoom olmadıysa) TÜM ülkeye değil, tercih edilen yarıçaba (varsayılan 5km) yakınlaş —
-  // yoksa yarıçap filtresi artık liste için zorunlu olmadığından harita tüm Türkiye'ye uzaklaşırdı.
-  // Tüm pinler yine de haritaya eklenmiş durumda; kullanıcı istediği yöne serbestçe kayabilir.
-  let fitPts = pts;
-  if (!S._mapInitialFitDone){
-    const km = +($("radiusSel") && $("radiusSel").value) || 5;
-    const nearPts = [[S.userLoc.lat,S.userLoc.lon]];
-    for (const a of list){
-      const dd = S.distByKey[a.key];
-      if (dd!==undefined && dd<=km){ const c=S.distByKey[a.key+"__c"]; if(c) nearPts.push([c.lat,c.lon]); }
-    }
-    if (nearPts.length>1) fitPts = nearPts;
+  // Tüm noktaları kapsayacak şekilde haritayı ayarla
+  if (pts.length>1){
+    try{ S.map.fitBounds(pts, {padding:[30,30], maxZoom:11}); }catch(e){}
   }
-  if (fitPts.length>1){
-    try{ S.map.fitBounds(fitPts, {padding:[30,30], maxZoom:11}); }catch(e){}
-  }
-  S._mapInitialFitDone = true; // artık moveend/zoomend olayları listeyi güncelleyebilir
   setTimeout(()=>S.map.invalidateSize(), 60);
   hideMapLoadingOverlay();
 }
@@ -2479,14 +2372,7 @@ function initFirebase(){
     $("emptyState").textContent = "Bulut bağlantısı yok. Firebase config'i kontrol et.";
     return;
   }
-  let _authCallbackSeen = false;
   fbAuth.onAuthStateChanged(user=>{
-    // Firebase, kalıcı oturumu doğrulamadan ÖNCE genelde bir kez user=null ile çağırır,
-    // sonra gerçek (varsa) kullanıcıyla tekrar çağırır. Bu geçici ilk "null" anında GPS'i
-    // otomatik tetiklemiyoruz — yoksa yavaş biten bir GPS isteği, az sonra doğru şekilde
-    // yerleşecek şube konumunun üzerine geç yazabilir (bkz. requestLocation()'daki koruma da).
-    const isUnresolvedFirstCallback = !_authCallbackSeen && !user;
-    _authCallbackSeen = true;
     S.user = user;
     // Şube hesabı mı? (sahte e-posta alan adından anlaşılır) — ÖNCE bunu belirle
     const isBranch = !!user && user.email && user.email.endsWith("@"+SUBE_EMAIL_DOMAIN);
@@ -2510,7 +2396,7 @@ function initFirebase(){
       S.branch = null; // admin girişinde şube durumu temiz başlasın
     }
     renderAuth();
-    renderBranchUI(isUnresolvedFirstCallback);
+    renderBranchUI();
     updateSaveRow();
     renderGate(); // giriş yapılmadan platform hiç görünmesin
   });
@@ -2607,18 +2493,10 @@ $("gateAdminUser").addEventListener("keydown", e=>{ if(e.key==="Enter") $("gateA
 // Şube girişinde konumu otomatik ayarla (GPS istemeden), harita ve mesafe hesapları o noktadan başlasın
 function applyBranchLocation(){
   if (!S.branch) return;
-  // Bu fonksiyon ayni giriste (auth callback'inde dogrudan + renderBranchUI() uzerinden
-  // dolayli olarak) art arda iki kez cagriliyor. Konum zaten AYNI subeyse haritayi
-  // bastan kurma — yoksa harita her seferinde yok edilip yeniden olusturuluyor,
-  // kullaniciya "surekli hareket ediyor" gibi goze carpiyor.
-  const locKey = "branch:"+S.branch.username;
-  if (S._activeLocKey === locKey && S.map){ return; }
-  S._activeLocKey = locKey;
   S.userLoc = {lat:S.branch.lat, lon:S.branch.lon};
   $("locStatus").textContent = `${S.branch.name} konumundasın. Yakın firmalar en üstte; mesafe önce ilçeye, sonra mahalleye göre hassaslaşır.`;
   $("locStatus").classList.add("on");
   $("map").style.display="block";
-  resetMapForNewLocation();
   initMap(); geocodeVisible();
 }
 
@@ -2654,21 +2532,18 @@ function applyAdminBranchPreview(uname){
   const rec = SUBE_TABLE[uname];
   if (!rec) return;
   S._adminViewBranch = uname;
-  const locKey = "admin-preview:"+uname;
-  const sameLoc = S._activeLocKey === locKey && S.map;
-  S._activeLocKey = locKey;
   S.userLoc = {lat:rec[1], lon:rec[2]};
   $("locStatus").textContent = `${rec[0]} konumunu görüntülüyorsun (Şube Seç). Yakın firmalar en üstte.`;
   $("locStatus").classList.add("on");
   $("map").style.display="block";
-  if (!sameLoc){ resetMapForNewLocation(); initMap(); geocodeVisible(); }
+  initMap(); geocodeVisible();
   // Yıldızlama modunu otomatik aç
   S._starTargetBranch = uname;
   render();
 }
 
 // Şube adı + çıkış rozetini (sağ üst) ve konum kaynağı seçicisini güncelle
-function renderBranchUI(skipAutoGps){
+function renderBranchUI(){
   const badge=$("branchBadge");
   const adminPicker = $("adminBranchPicker");
   const visitBtn = $("visitListBtn");
@@ -2684,7 +2559,7 @@ function renderBranchUI(skipAutoGps){
     $("locSrcBranch").hidden = true;
     if (visitBtn) visitBtn.hidden = true;
     closeVisitListScreen();
-    if (!skipAutoGps) setLocSource("gps");
+    setLocSource("gps");
   }
 }
 
@@ -2706,8 +2581,6 @@ $("branchBadgeLogout").onclick = ()=>{
   fbAuth.signOut();
   S.branch = null;
   S.userLoc = null;
-  S._activeLocKey = null; // yeniden girişte konum tazelensin
-  resetMapForNewLocation();
   $("map").style.display="none";
   $("locStatus").textContent = "Konumunu açarsan yakın firmalar en üste çıkar. Mesafeler ilçe merkezine göre yaklaşıktır.";
   $("locStatus").classList.remove("on");
