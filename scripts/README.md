@@ -68,6 +68,16 @@ yerden çok uzakta görünüyorsa), `addrGeo/<firmaKey>` düğümünü Firebase 
 yeterli — site otomatik olarak o firma için ilçe/il merkezi tahminine geri döner (yanlış
 konum göstermek yerine).
 
+**Bilinen sınır — Gaziantep OSB "NNNNN NOLU CADDE" adresleri:** Gaziantep Organize Sanayi
+Bölgesi'ndeki ~230 firma, adresi OSB'nin kendi iç numaralandırma sistemiyle veriyor (ör.
+"83521 NOLU CAD."). Bu numaralar Google Haritalar'ın kendi verisinde hiç mevcut değil —
+sorgu biçimini değiştirmek (nokta koymak, "NOLU"yu kaldırmak, "Sokak" yazmak) denendi,
+sonuç değişmedi. Google bu adresleri OSB içindeki birkaç genel referans noktasına
+(yanlışlıkla "ROOFTOP" etiketiyle) eşliyor, bu yüzden bu firmalar haritada birkaç noktada
+kümelenmiş görünür. Bilinçli olarak dokunulmadı (2026-08-25) — hepsi zaten aynı OSB
+içinde birkaç yüz metre farkla, pratikte önemli değil. Daha iyi bir çözüm için OSB'nin
+kendi GIS/koordinat verisi gerekir.
+
 ## Ne zaman tekrar çalıştırmalı?
 
 Yeni bir ay verisi yüklendiğinde ya da yeni firmalar eklendiğinde tekrar `node geocode.js`
