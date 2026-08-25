@@ -26,9 +26,14 @@
  *   node geocode.js
  *
  * Parametreler:
- *   --force      Daha önce çözülmüş firmaları da yeniden geocode eder.
- *   --limit=N    En fazla N yeni API çağrısı yapar (maliyet/test kontrolü).
- *   --dry        Hiçbir şey yazmaz, sadece ne yapılacağını raporlar.
+ *   --force        Daha önce çözülmüş firmaları da yeniden geocode eder.
+ *   --limit=N      En fazla N yeni API çağrısı yapar (maliyet/test kontrolü).
+ *   --dry          Hiçbir şey yazmaz, sadece ne yapılacağını raporlar.
+ *   --only=k1,k2   Sadece verilen firmaKey'leri (virgülle) işler, --force gibi zorlar.
+ *
+ * Adres sorgusuna, adresten çıkarılan İL bilgisi "administrative_area" olarak
+ * eklenir — bu, aynı isimli sokak/mahallenin başka bir ilde yanlış eşleşmesini
+ * (ör. "X Caddesi" hem Pendik'te hem Beylikdüzü'nde varsa) büyük ölçüde önler.
  */
 "use strict";
 require("dotenv").config();
@@ -42,6 +47,8 @@ const FORCE = argv.includes("--force");
 const DRY = argv.includes("--dry");
 const limitArg = argv.find(a => a.startsWith("--limit="));
 const LIMIT = limitArg ? parseInt(limitArg.split("=")[1], 10) : Infinity;
+const onlyArg = argv.find(a => a.startsWith("--only="));
+const ONLY = onlyArg ? new Set(onlyArg.slice(7).split(",").filter(Boolean)) : null;
 
 /* ---------------- Ortam değişkenleri ---------------- */
 const API_KEY = process.env.GOOGLE_MAPS_API_KEY;
@@ -75,6 +82,24 @@ function normName(s) {
   return toks.join(" ");
 }
 
+// Adresten İL çıkarımı — index_39.html'deki extractIl() ile birebir aynı olmalı.
+// Sorguyu bu ile kısıtlamak, aynı isimli sokağın başka bir ildeki yanlış eşleşmesini önler.
+const ILLER = ["ADANA","ADIYAMAN","AFYONKARAHİSAR","AFYON","AĞRI","AKSARAY","AMASYA","ANKARA","ANTALYA","ARDAHAN","ARTVİN","AYDIN","BALIKESİR","BARTIN","BATMAN","BAYBURT","BİLECİK","BİNGÖL","BİTLİS","BOLU","BURDUR","BURSA","ÇANAKKALE","ÇANKIRI","ÇORUM","DENİZLİ","DİYARBAKIR","DÜZCE","EDİRNE","ELAZIĞ","ERZİNCAN","ERZURUM","ESKİŞEHİR","GAZİANTEP","GİRESUN","GÜMÜŞHANE","HAKKARİ","HATAY","IĞDIR","ISPARTA","İSTANBUL","İZMİR","KAHRAMANMARAŞ","KARABÜK","KARAMAN","KARS","KASTAMONU","KAYSERİ","KIRIKKALE","KIRKLARELİ","KIRŞEHİR","KİLİS","KOCAELİ","KONYA","KÜTAHYA","MALATYA","MANİSA","MARDİN","MERSİN","İÇEL","MUĞLA","MUŞ","NEVŞEHİR","NİĞDE","ORDU","OSMANİYE","RİZE","SAKARYA","SAMSUN","SİİRT","SİNOP","SİVAS","ŞANLIURFA","ŞIRNAK","TEKİRDAĞ","TOKAT","TRABZON","TUNCELİ","UŞAK","VAN","YALOVA","YOZGAT","ZONGULDAK"];
+function extractIl(adres) {
+  const u = trUp(adres);
+  let best = null, pos = -1;
+  for (const il of ILLER) {
+    const i = u.lastIndexOf(il);
+    if (i > pos) {
+      const before = i === 0 ? " " : u[i - 1], after = u[i + il.length] || " ";
+      if (!/[A-ZÇĞİÖŞÜ]/.test(before) && !/[A-ZÇĞİÖŞÜ]/.test(after)) { pos = i; best = il; }
+    }
+  }
+  if (best === "AFYON") best = "AFYONKARAHİSAR";
+  if (best === "İÇEL") best = "MERSİN";
+  return best;
+}
+
 /* ---------------- Firebase Admin ---------------- */
 admin.initializeApp({
   credential: admin.credential.cert(require(path.resolve(SA_PATH))),
@@ -85,8 +110,9 @@ const db = admin.database();
 /* ---------------- Yardımcılar ---------------- */
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-async function geocodeOne(query) {
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&region=tr&components=country:TR&key=${API_KEY}`;
+async function geocodeOne(query, il) {
+  const components = il ? `country:TR|administrative_area:${il}` : "country:TR";
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&region=tr&components=${encodeURIComponent(components)}&key=${API_KEY}`;
   for (let attempt = 1; attempt <= 3; attempt++) {
     let res, data;
     try {
@@ -164,8 +190,11 @@ async function main() {
   const all = [...baseMap.values()].filter(a => a.adres && a.adres.trim().length >= 6);
   console.log(`Toplam benzersiz firma (adresli): ${all.length}`);
 
-  const todo = all.filter(a => FORCE || !existingAddrGeo[a.key]);
-  console.log(`Zaten çözülmüş, atlanacak: ${all.length - todo.length}`);
+  const todo = ONLY
+    ? all.filter(a => ONLY.has(a.key))
+    : all.filter(a => FORCE || !existingAddrGeo[a.key]);
+  if (ONLY) console.log(`--only: ${ONLY.size} anahtar istendi, ${todo.length} tanesi bulundu.`);
+  console.log(`Zaten çözülmüş, atlanacak: ${ONLY ? 0 : all.length - todo.length}`);
   console.log(`Bu çalıştırmada denenecek: ${Math.min(todo.length, LIMIT)}${LIMIT < todo.length ? ` (--limit=${LIMIT})` : ""}`);
 
   if (DRY) {
@@ -191,10 +220,11 @@ async function main() {
   for (const a of todo) {
     if (done >= LIMIT) break;
     done++;
+    const il = extractIl(a.adres);
     const query = `${a.adres}, Türkiye`;
     process.stdout.write(`[${done}/${Math.min(todo.length, LIMIT)}] ${a.firma.slice(0, 40).padEnd(40)} `);
     let geo = null;
-    try { geo = await geocodeOne(query); }
+    try { geo = await geocodeOne(query, il); }
     catch (e) { console.log(`HATA: ${e.message}`); }
 
     if (geo) {

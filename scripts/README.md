@@ -54,10 +54,19 @@ Script:
 
 **Faydalı parametreler:**
 ```bash
-node geocode.js --dry           # hiçbir şey yazmaz, sadece rapor verir (önce bunu dene)
-node geocode.js --limit=50      # ilk 50 yeni firmayla test et (maliyet kontrolü)
-node geocode.js --force         # daha önce çözülmüş firmaları da yeniden dener
+node geocode.js --dry                # hiçbir şey yazmaz, sadece rapor verir (önce bunu dene)
+node geocode.js --limit=50           # ilk 50 yeni firmayla test et (maliyet kontrolü)
+node geocode.js --force              # daha önce çözülmüş firmaları da yeniden dener
+node geocode.js --only=KEY1,KEY2     # sadece belirli firmaKey'leri (yeniden) dener
 ```
+
+Sorgu, adresten çıkarılan İL bilgisiyle (`administrative_area`) kısıtlanır — bu, aynı
+isimli bir sokağın başka bir ilde yanlış eşleşmesini büyük ölçüde önler. Yine de nadiren
+(ör. adreste "D400" gibi birden çok ili kesen bir karayolu numarası geçiyorsa) Google
+yanlış ile geocode edebilir. Böyle bir kaydı fark edersen (firma haritada olması gereken
+yerden çok uzakta görünüyorsa), `addrGeo/<firmaKey>` düğümünü Firebase konsolundan silmen
+yeterli — site otomatik olarak o firma için ilçe/il merkezi tahminine geri döner (yanlış
+konum göstermek yerine).
 
 ## Ne zaman tekrar çalıştırmalı?
 
