@@ -2607,6 +2607,13 @@ $("gateAdminUser").addEventListener("keydown", e=>{ if(e.key==="Enter") $("gateA
 // Şube girişinde konumu otomatik ayarla (GPS istemeden), harita ve mesafe hesapları o noktadan başlasın
 function applyBranchLocation(){
   if (!S.branch) return;
+  // Bu fonksiyon ayni giriste (auth callback'inde dogrudan + renderBranchUI() uzerinden
+  // dolayli olarak) art arda iki kez cagriliyor. Konum zaten AYNI subeyse haritayi
+  // bastan kurma — yoksa harita her seferinde yok edilip yeniden olusturuluyor,
+  // kullaniciya "surekli hareket ediyor" gibi goze carpiyor.
+  const locKey = "branch:"+S.branch.username;
+  if (S._activeLocKey === locKey && S.map){ return; }
+  S._activeLocKey = locKey;
   S.userLoc = {lat:S.branch.lat, lon:S.branch.lon};
   $("locStatus").textContent = `${S.branch.name} konumundasın. Yakın firmalar en üstte; mesafe önce ilçeye, sonra mahalleye göre hassaslaşır.`;
   $("locStatus").classList.add("on");
@@ -2647,12 +2654,14 @@ function applyAdminBranchPreview(uname){
   const rec = SUBE_TABLE[uname];
   if (!rec) return;
   S._adminViewBranch = uname;
+  const locKey = "admin-preview:"+uname;
+  const sameLoc = S._activeLocKey === locKey && S.map;
+  S._activeLocKey = locKey;
   S.userLoc = {lat:rec[1], lon:rec[2]};
   $("locStatus").textContent = `${rec[0]} konumunu görüntülüyorsun (Şube Seç). Yakın firmalar en üstte.`;
   $("locStatus").classList.add("on");
   $("map").style.display="block";
-  resetMapForNewLocation();
-  initMap(); geocodeVisible();
+  if (!sameLoc){ resetMapForNewLocation(); initMap(); geocodeVisible(); }
   // Yıldızlama modunu otomatik aç
   S._starTargetBranch = uname;
   render();
@@ -2697,6 +2706,8 @@ $("branchBadgeLogout").onclick = ()=>{
   fbAuth.signOut();
   S.branch = null;
   S.userLoc = null;
+  S._activeLocKey = null; // yeniden girişte konum tazelensin
+  resetMapForNewLocation();
   $("map").style.display="none";
   $("locStatus").textContent = "Konumunu açarsan yakın firmalar en üste çıkar. Mesafeler ilçe merkezine göre yaklaşıktır.";
   $("locStatus").classList.remove("on");
