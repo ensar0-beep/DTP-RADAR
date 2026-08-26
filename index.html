@@ -220,6 +220,16 @@ input[type=file]{display:none}
 .ov-branch-detail-name{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;flex:1}
 .ov-branch-detail-close{flex:0 0 auto;background:var(--panel2);border:1px solid var(--border);color:var(--muted);width:26px;height:26px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .ov-branch-detail-close:hover{color:var(--text);border-color:var(--exp)}
+.ov-branch-detail-actions{display:flex;align-items:center;gap:10px}
+.ov-branch-detail-actions select{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:12.5px}
+.ov-branch-firmlist{margin-top:14px;max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.ov-firm-row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:8px 10px;font-size:12.5px}
+.ov-firm-row .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.ov-firm-row .dist{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--exp);white-space:nowrap}
+.ov-firm-row .flows{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);white-space:nowrap}
+.ov-firm-row .star-toggle{flex:0 0 auto;background:none;border:1px solid var(--border);border-radius:6px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--faint);cursor:pointer}
+.ov-firm-row .star-toggle.starred{color:#D9A227;border-color:rgba(217,162,39,.4);background:rgba(217,162,39,.1)}
+.ov-branch-firmlist-empty{color:var(--faint);font-size:12.5px;padding:10px 2px}
 /* Haritada yakınlaşınca beliren yumuşak şube adı etiketleri */
 .ov-branch-label{background:rgba(13,18,32,.72);border:none;box-shadow:none;color:#E9EDF6;font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:500;padding:2px 7px;border-radius:5px;opacity:.9}
 .ov-branch-label::before{display:none}
@@ -954,7 +964,16 @@ select:focus,input:focus{border-color:var(--exp)}
             <div class="ov-branch-detail-name" id="ovBranchDetailName"></div>
             <button class="ov-branch-detail-close" id="ovBranchDetailClose" aria-label="Kapat"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
           </div>
-          <button class="btn primary" id="ovBranchDetailGo" style="margin-top:12px">Bu şubeyi incele (firma listesi + yıldızlama)</button>
+          <div class="ov-branch-detail-actions" style="margin-top:12px">
+            <button class="btn primary" id="ovBranchDetailGo">Bu şubeyi incele</button>
+            <select id="ovBranchFirmRadius" style="width:auto">
+              <option value="5" selected>≤ 5 km</option>
+              <option value="10">≤ 10 km</option>
+              <option value="25">≤ 25 km</option>
+              <option value="50">≤ 50 km</option>
+            </select>
+          </div>
+          <div id="ovBranchFirmList" class="ov-branch-firmlist" hidden></div>
         </div>
 
         <div class="hint" style="margin-top:12px">Sol menüden bir bölüm seçerek devam et.</div>
@@ -2879,18 +2898,25 @@ function renderAdminOverviewMap(){
     S._adminOvMap = L.map("adminOverviewMap", {scrollWheelZoom:true, renderer:L.canvas({padding:0.5})}).setView([39.0, 35.2], 6);
     S._adminOvTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S._adminOvMap);
     S._adminOvMap.on("zoomend", updateOvBranchLabels);
-  } else {
+  } else if (el.offsetParent){
+    // Veri gerçekten değişmediyse (ör. months/tim/tq dinleyicisi aynı anlık görüntüyü tekrar
+    // gönderdiğinde) binlerce noktayı sıfırdan kurmayı atla — asıl yavaşlığın kaynağı buydu.
+    const sig = aggregate().length+":"+Object.keys(S.tim).length+":"+Object.keys(S.tq).length;
+    if (S._adminOvSig === sig) { setTimeout(()=>S._adminOvMap.invalidateSize(), 80); return; }
     (S._adminOvLayers||[]).forEach(l=>S._adminOvMap.removeLayer(l));
+  } else {
+    return; // harita zaten var ama şu an gizli — görünür olunca showAdminScreen zaten tazeleyecek
   }
   S._adminOvLayers = [];
+  S._adminOvSig = aggregate().length+":"+Object.keys(S.tim).length+":"+Object.keys(S.tq).length;
 
   // Her firmayı TEK TEK, küçük noktayla göster — kalabalık olsa da amaç bu: bir şubenin
-  // etrafındaki gerçek firma yoğunluğunu birebir görmek. Performans için canvas renderer + küçük yarıçap.
+  // etrafındaki gerçek firma yoğunluğunu birebir görmek. interactive:false + popup yok →
+  // Leaflet binlerce noktada tıklama/hover algılama yükü taşımaz, belirgin hızlanma sağlar.
   for (const a of aggregate()){
     const c = resolveFirmCoord(a);
     if (!c) continue;
-    const m = L.circleMarker([c.lat, c.lon], {radius:3, color:"#35C4A8", weight:0, fillColor:"#35C4A8", fillOpacity:.55}).addTo(S._adminOvMap);
-    m.bindPopup(`<div class="ov-firm-popup"><b>${a.firma}</b><br>${a.il||"—"}<br>İhr ${fmt$(a.exp)} · İth ${fmt$(a.imp)}</div>`);
+    const m = L.circleMarker([c.lat, c.lon], {radius:3, color:"#35C4A8", weight:0, fillColor:"#35C4A8", fillOpacity:.55, interactive:false}).addTo(S._adminOvMap);
     S._adminOvLayers.push(m);
   }
 
@@ -2924,7 +2950,8 @@ function updateOvBranchLabels(){
 }
 
 // Haritada bir şubeye tıklayınca: uzak bir ekrana atlamadan, Genel Bakış'ın hemen altında
-// adını/sınıfını gösteren panel — "İncele" butonuna basarsa asıl firma+yıldızlama görünümüne geçer.
+// adını/sınıfını gösteren panel — "Bu şubeyi incele" ile aynı sayfada, hemen altında yakın
+// firma listesi açılır (yıldızlama dahil) — ayrı bir ekrana geçmeye gerek kalmaz.
 function showOvBranchDetail(uname){
   const rec = SUBE_TABLE[uname]; if (!rec) return;
   const [name] = rec;
@@ -2932,10 +2959,50 @@ function showOvBranchDetail(uname){
   $("ovBranchDetailTag").textContent = BRANCH_CLASS_LABEL[cls];
   $("ovBranchDetailTag").className = "ov-branch-tag " + cls;
   $("ovBranchDetailName").textContent = name;
-  $("ovBranchDetailGo").onclick = ()=> goToBranchFromProxTable(uname);
+  $("ovBranchFirmList").hidden = true; // yeni şube seçilince eski liste kapansın, "İncele" ile yeniden açılır
+  S._ovActiveBranch = uname;
+  $("ovBranchDetailGo").onclick = ()=> renderOvBranchFirmList(uname);
   $("ovBranchDetail").hidden = false;
 }
-$("ovBranchDetailClose") && ($("ovBranchDetailClose").onclick = ()=>{ $("ovBranchDetail").hidden = true; });
+$("ovBranchDetailClose") && ($("ovBranchDetailClose").onclick = ()=>{ $("ovBranchDetail").hidden = true; $("ovBranchFirmList").hidden = true; });
+
+// "Bu şubeyi incele": aynı sayfada, panelin hemen altında yakın firmaları listeler.
+// Yıldızlama modu da otomatik açılır (S._starTargetBranch) — satırdaki ⭐ ile işaretlenebilir.
+function renderOvBranchFirmList(uname){
+  const rec = SUBE_TABLE[uname]; if (!rec) return;
+  const [, lat, lon] = rec;
+  const radiusKm = +($("ovBranchFirmRadius").value || 5);
+  S._starTargetBranch = uname; // toggleStarForTarget() bu şubeye yazsın
+  const box = $("ovBranchFirmList");
+  box.hidden = false;
+  box.innerHTML = `<div class="ov-branch-firmlist-empty">Hesaplanıyor…</div>`;
+  setTimeout(()=>{
+    const rows = [];
+    for (const a of aggregate()){
+      const c = resolveFirmCoord(a); if (!c) continue;
+      const d = haversine({lat,lon}, c);
+      if (d <= radiusKm) rows.push({a, d});
+    }
+    rows.sort((x,y)=>x.d-y.d);
+    if (!rows.length){ box.innerHTML = `<div class="ov-branch-firmlist-empty">Bu yarıçapta firma bulunamadı.</div>`; return; }
+    const shown = rows.slice(0, 150);
+    box.innerHTML = shown.map(({a,d})=>{
+      const starred = S.starred[uname] && S.starred[uname][a.key];
+      return `<div class="ov-firm-row">
+        <button class="star-toggle${starred?" starred":""}" data-star-key="${a.key}" title="${starred?'Yıldızı kaldır':'Bu şube için yıldızla'}">${ic(starred?'starFilled':'star')}</button>
+        <span class="name">${a.firma}</span>
+        <span class="dist">${d<10?d.toFixed(1):Math.round(d)} km</span>
+        <span class="flows">İhr ${fmt$(a.exp)} · İth ${fmt$(a.imp)}</span>
+      </div>`;
+    }).join("") + (rows.length>shown.length ? `<div class="ov-branch-firmlist-empty">…ve ${rows.length-shown.length} firma daha (yarıçapı daraltabilirsin)</div>` : "");
+    box.querySelectorAll(".star-toggle").forEach(btn=>{
+      btn.onclick = async ()=>{ await toggleStarForTarget(btn.dataset.starKey); renderOvBranchFirmList(uname); };
+    });
+  }, 0);
+}
+$("ovBranchFirmRadius") && $("ovBranchFirmRadius").addEventListener("change", ()=>{
+  if (S._ovActiveBranch && !$("ovBranchFirmList").hidden) renderOvBranchFirmList(S._ovActiveBranch);
+});
 
 // ---- Manuel Birleştirme: tüm firmaları listele, iki tanesini seçip birleştir ----
 S._mergeSelected = []; // en fazla 2 key tutar
