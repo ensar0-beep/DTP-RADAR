@@ -1796,11 +1796,9 @@ function render(){
   $("resultCount").textContent = `${list.length} firma · ${periodLabel()}`;
 
   const maxV = Math.max(1, ...list.slice(0,S.shown).map(a=>Math.max(a.imp,a.exp)));
-  // "Yeni firma" rozeti için: en son yüklenen ay + son-12-ay penceresinin alt sınırı
+  // "Yeni firma" rozeti için: en son yüklenen ay
   const firstMonthMap = firstMonthByKeyMap();
   const latestMonth = loadedMonths()[0] || null;
-  let last12FloorIdx = null;
-  if (latestMonth){ const [ly,lm]=latestMonth.split("-").map(Number); last12FloorIdx = ly*12+lm-11; }
   const el = $("firmList"); el.innerHTML="";
   S._rendered = {};
   for (const a of list.slice(0,S.shown)){
@@ -1829,17 +1827,12 @@ function render(){
     const visitRec = visitRecBranch || visitRecAdminView;
     const visitIcon = visitRec ? (visitRec.status==="done" ? "✅" : "🔖") : "🔖";
     const visitLabel = visitRec ? (visitRec.status==="done" ? "Ziyaret edildi" : "Ziyaret planlandı") : "Ziyaret listesine ekle";
-    // "Yeni firma" rozeti: bu firmanın DİİB geçmişindeki ilk ayı...
+    // "Yeni firma" rozeti: sadece bu ay ilk kez belge alanlar için (son-12-ay etiketi kaldırıldı)
     const firmFirstMonth = firstMonthMap.get(a.key);
     let newBadgeHTML = "";
     if (firmFirstMonth && latestMonth){
       if (firmFirstMonth === latestMonth){
         newBadgeHTML = `<span class="new-badge" title="${monthLabel(latestMonth)} ayında ilk kez DİİB belgesi aldı">🆕 Yeni</span>`;
-      } else {
-        const [fy,fm] = firmFirstMonth.split("-").map(Number);
-        if (fy*12+fm >= last12FloorIdx){
-          newBadgeHTML = `<span class="only-tag new-tag-subtle" title="${monthLabel(firmFirstMonth)} ayında ilk kez DİİB belgesi aldı">son 12 ayda yeni</span>`;
-        }
       }
     }
     div.innerHTML = `
@@ -2316,12 +2309,16 @@ function drawMap(list){
     const top = firms.slice().sort((a,b)=>b.exp-a.exp); // tüm firmalar — popup içi kaydırılabilir, artık 6 ile sınırlı değil
     const dir = `https://www.google.com/maps/dir/?api=1&origin=${S.userLoc.lat},${S.userLoc.lon}&destination=${c.lat},${c.lon}`;
     const r = Math.min(6+Math.sqrt(firms.length)*2.4, 22);
-    // dış hâle + iç dolu nokta (turkuaz)
-    const glow = L.circleMarker([c.lat,c.lon],{radius:r+5,color:"#35C4A8",weight:0,fillColor:"#35C4A8",fillOpacity:.12,interactive:false}).addTo(S.map);
-    const m = L.circleMarker([c.lat,c.lon],{radius:r, color:"#0D1220", fillColor:"#35C4A8", fillOpacity:.85, weight:1.5})
+    // Şu an listede açık/seçili firma bu grupta mı? Öyleyse haritada turuncu + daha büyük göster.
+    const isSelected = !!S._openFirm && firms.some(f=>f.key===S._openFirm);
+    const col = isSelected ? "#E8A33D" : "#35C4A8";
+    const rr = isSelected ? r+4 : r;
+    const glow = L.circleMarker([c.lat,c.lon],{radius:rr+6,color:col,weight:0,fillColor:col,fillOpacity:isSelected?.25:.12,interactive:false}).addTo(S.map);
+    const m = L.circleMarker([c.lat,c.lon],{radius:rr, color:isSelected?"#06251F":"#0D1220", fillColor:col, fillOpacity:isSelected?.95:.85, weight:isSelected?2.5:1.5})
       .addTo(S.map)
       .on("click", ()=> openMapSidePanel(firms.length, dir, top));
     S.mapLayers.push(glow, m);
+    if (isSelected) m.bringToFront();
   }
   // Tüm noktaları kapsayacak şekilde haritayı ayarla
   if (pts.length>1){
@@ -2427,7 +2424,24 @@ function renderGate(){
     // Kapı ekranına her dönüşte (ör. çıkış yapınca) giriş butonları temiz halde başlasın
     setGateBtnLoading($("gateBranchBtn"), false, "Giriş yap");
     setGateBtnLoading($("gateAdminBtn"), false, "Giriş yap");
+    // Çıkış yapıldı — bir sonraki girişte önceki kullanıcının filtreleri (mesafe, il, arama vb.)
+    // kalıntı olarak kalmasın diye varsayılana döndür.
+    resetFilterUIOnLogout();
   }
+}
+
+function resetFilterUIOnLogout(){
+  const set = (id, val) => { const el = $(id); if (el) el.value = val; };
+  set("radiusSel", "5");
+  set("ilSel", "");
+  set("sortSel", "exp");
+  set("searchBox", "");
+  const diib = $("diibOnly"); if (diib) diib.checked = false;
+  const tim = $("timOnly"); if (tim) tim.checked = false;
+  const tq = $("tqOnly"); if (tq) tq.checked = false;
+  S.shown = 50;
+  S._filtersOpen = false;
+  S._openFirm = null;
 }
 
 // Kapı ekranı: "Yönetim Giriş" bağlantısı — şube formunu gizleyip admin formunu gösterir
