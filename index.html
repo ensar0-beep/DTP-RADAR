@@ -2899,16 +2899,11 @@ function renderAdminOverviewMap(){
     S._adminOvTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S._adminOvMap);
     S._adminOvMap.on("zoomend", updateOvBranchLabels);
   } else if (el.offsetParent){
-    // Veri gerçekten değişmediyse (ör. months/tim/tq dinleyicisi aynı anlık görüntüyü tekrar
-    // gönderdiğinde) binlerce noktayı sıfırdan kurmayı atla — asıl yavaşlığın kaynağı buydu.
-    const sig = aggregate().length+":"+Object.keys(S.tim).length+":"+Object.keys(S.tq).length;
-    if (S._adminOvSig === sig) { setTimeout(()=>S._adminOvMap.invalidateSize(), 80); return; }
     (S._adminOvLayers||[]).forEach(l=>S._adminOvMap.removeLayer(l));
   } else {
     return; // harita zaten var ama şu an gizli — görünür olunca showAdminScreen zaten tazeleyecek
   }
   S._adminOvLayers = [];
-  S._adminOvSig = aggregate().length+":"+Object.keys(S.tim).length+":"+Object.keys(S.tq).length;
 
   // Her firmayı TEK TEK, küçük noktayla göster — kalabalık olsa da amaç bu: bir şubenin
   // etrafındaki gerçek firma yoğunluğunu birebir görmek. interactive:false + popup yok →
