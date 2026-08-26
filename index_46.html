@@ -2842,6 +2842,7 @@ function renderAdminOverview(){
 // Ülke geneli bir bakış olduğu için firmalar tek tek değil, il merkezinde toplanmış "yoğunluk"
 // olarak gösterilir (binlerce nokta yerine ~80 il balonu) — aksi halde harita okunamaz olurdu.
 function renderAdminOverviewMap(){
+  if (!S.isAdmin) return; // admin olmayan (şube) oturumlarda gizli admin haritasını gereksiz kurma
   const el = $("adminOverviewMap");
   if (!el || typeof L === "undefined") return;
   if (!S._adminOvMap){
@@ -3230,6 +3231,7 @@ function loadCloud(){
     S.files = [...cloudFiles, ...dirtyKept];
     if ($("emptyState")) $("emptyState").textContent = S.files.length ? "" : "Henüz bulutta veri yok. Admin girişi yapıp ilk ayı yükle.";
     renderFiles(); refreshPeriodOptions(); render(); updateSaveRow();
+    renderAdminOverview(); // Genel Bakış (Toplam Firma sayısı + harita) veri gelince tazelensin
     maybeAutoLocation();
     // Şube girişinde konum veri gelmeden önce ayarlanmış olabilir; veri gelince mesafeleri tazele
     if (S.branch && S.userLoc) geocodeVisible();
@@ -3239,12 +3241,12 @@ function loadCloud(){
   // İlk 1000 listesini buluttan yükle (herkese açık okuma)
   fbDB.ref("tim").on("value", snap=>{
     const v = snap.val();
-    if (v && v.map && !S.timDirty){ S.tim = v.map; S.timYear = v.year||""; refreshTimChip(); render(); if (S.branch && S.userLoc) geocodeVisible(); }
+    if (v && v.map && !S.timDirty){ S.tim = v.map; S.timYear = v.year||""; refreshTimChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
   }, ()=>{});
   // Turquality listesini buluttan yükle
   fbDB.ref("tq").on("value", snap=>{
     const v = snap.val();
-    if (v && v.map && !S.tqDirty){ S.tq = v.map; refreshTqChip(); render(); if (S.branch && S.userLoc) geocodeVisible(); }
+    if (v && v.map && !S.tqDirty){ S.tq = v.map; refreshTqChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
   }, ()=>{});
   // Şubelere atanmış yıldız firmaları buluttan yükle (herkese açık okuma; sadece admin yazar)
   fbDB.ref("starred").on("value", snap=>{
