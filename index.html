@@ -2600,11 +2600,12 @@ function renderBranchUI(){
     if (visitBtn) visitBtn.hidden = false;
     if (helpBtn) helpBtn.hidden = false;
     setLocSource("branch");
-    // Bu şube kullanıcısı bu tarayıcıda ilk kez giriş yapıyorsa kullanım rehberini göster
+    // Bu şube kullanıcısının bu taraycıdaki ilk 5 girişinde kullanım rehberini göster
     try{
-      const seenKey = "dtr-onboard-seen-"+S.branch.username;
-      if (!localStorage.getItem(seenKey)){
-        localStorage.setItem(seenKey, "1");
+      const countKey = "dtr-onboard-count-"+S.branch.username;
+      const n = parseInt(localStorage.getItem(countKey)||"0", 10);
+      if (n < 5){
+        localStorage.setItem(countKey, String(n+1));
         openOnboarding();
       }
     }catch(e){ /* localStorage yoksa (gizli sekme vb.) sessizce geç */ }
