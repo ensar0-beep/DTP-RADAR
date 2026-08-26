@@ -38,6 +38,8 @@
 }
 [data-theme="light"] body{background:var(--bg)}
 [data-theme="light"] .gate-screen{background:radial-gradient(ellipse at 50% 30%,#EEF2F8 0%,#F5F7FA 65%)}
+/* Tek karo kaynağı (OSM, her zaman açık renkli) kullanıyoruz; koyu temada CSS filtresiyle karartıyoruz */
+.leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.95) contrast(.9)}
 [data-theme="light"] .leaflet-tile-pane{filter:none}
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
@@ -2403,11 +2405,11 @@ function maybeAutoLocation(){
   setTimeout(requestLocation, 600);
 }
 
+// CARTO'nun ücretsiz karo servisi API anahtarı istemeye başladı (bkz. "API KEY REQUIRED" filigranı).
+// Anahtar gerektirmeyen standart OpenStreetMap karolarına geçildi — tek stil (koyu/açık ayrımı
+// CARTO'da değil artık CSS filtresiyle yapılıyor, bkz. .leaflet-tile-pane filter kuralları).
 function currentMapTileUrl(){
-  const isLight = document.documentElement.getAttribute("data-theme")==="light";
-  return isLight
-    ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  return "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 }
 
 // Harita/konum hazırlanırken (ilk kurulum, şube değişimi) dönen radar animasyonu göster —
@@ -2429,7 +2431,7 @@ function hideMapLoadingOverlay(){
 function initMap(){
   if (S.map){ setTimeout(()=>S.map.invalidateSize(), 60); return; }
   S.map = L.map("map", {scrollWheelZoom:true}).setView([S.userLoc.lat,S.userLoc.lon], 9);
-  S.mapTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S.map);
+  S.mapTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap contributors", maxZoom:19}).addTo(S.map);
   // Konteyner display:none iken oluşturulduysa boyutu 0 kalır; görünür olunca düzelt.
   setTimeout(()=>S.map.invalidateSize(), 120);
 }
@@ -2438,11 +2440,11 @@ function initMap(){
 function refreshMapTheme(){
   if (S.map && S.mapTileLayer){
     S.map.removeLayer(S.mapTileLayer);
-    S.mapTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S.map);
+    S.mapTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap contributors", maxZoom:19}).addTo(S.map);
   }
   if (S._adminOvMap && S._adminOvTileLayer){
     S._adminOvMap.removeLayer(S._adminOvTileLayer);
-    S._adminOvTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S._adminOvMap);
+    S._adminOvTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap contributors", maxZoom:19}).addTo(S._adminOvMap);
   }
 }
 
@@ -2896,7 +2898,7 @@ function renderAdminOverviewMap(){
     if (!el.offsetParent) return;
     // Binlerce firma noktası SVG ile yavaşlar — canvas renderer performansı ciddi artırır.
     S._adminOvMap = L.map("adminOverviewMap", {scrollWheelZoom:true, renderer:L.canvas({padding:0.5})}).setView([39.0, 35.2], 6);
-    S._adminOvTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S._adminOvMap);
+    S._adminOvTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap contributors", maxZoom:19}).addTo(S._adminOvMap);
     S._adminOvMap.on("zoomend", updateOvBranchLabels);
   } else if (el.offsetParent){
     (S._adminOvLayers||[]).forEach(l=>S._adminOvMap.removeLayer(l));
