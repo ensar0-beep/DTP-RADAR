@@ -208,13 +208,13 @@ input[type=file]{display:none}
 .ov-legend-dot.firm{background:var(--exp)}
 .ov-legend-dot.ticari{background:#7C83FD}
 .ov-legend-dot.kurumsal{background:#E8A33D}
-.ov-legend-dot.kobi{background:#35C4A8}
+.ov-legend-dot.kobi{background:#EC5FA3}
 .ov-firm-popup,.ov-branch-popup{font-family:'IBM Plex Sans',sans-serif;font-size:12.5px}
 .ov-firm-popup b,.ov-branch-popup b{font-family:'Sora',sans-serif;display:block;font-size:13.5px;margin-top:4px}
 .ov-branch-tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.03em}
 .ov-branch-tag.ticari{background:rgba(124,131,253,.14);color:#7C83FD}
 .ov-branch-tag.kurumsal{background:rgba(232,163,61,.14);color:#C97D14}
-.ov-branch-tag.kobi{background:rgba(53,196,168,.14);color:#1F9B82}
+.ov-branch-tag.kobi{background:rgba(236,95,163,.14);color:#EC5FA3}
 .overview-stat-label{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .overview-stat-label svg{width:12px;height:12px;flex:0 0 auto}
 .overview-stat-value{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;margin-top:6px}
@@ -2873,7 +2873,7 @@ function renderAdminOverviewMap(){
   }
 
   // Şubeleri firmaların ÜSTÜNDE, daha büyük ve belirgin noktalarla, sınıfına göre renkli göster
-  const BRANCH_CLASS_COLOR = {ticari:"#7C83FD", kurumsal:"#E8A33D", kobi:"#35C4A8"};
+  const BRANCH_CLASS_COLOR = {ticari:"#7C83FD", kurumsal:"#E8A33D", kobi:"#EC5FA3"};
   for (const [uname, rec] of Object.entries(SUBE_TABLE)){
     const [name, lat, lon] = rec;
     const cls = branchClassOf(name);
