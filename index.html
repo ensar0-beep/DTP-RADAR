@@ -448,6 +448,28 @@ select:focus,input:focus{border-color:var(--exp)}
 .savestatus.ok{color:var(--exp)} .savestatus.err{color:var(--danger)}
 .cloudtag{font-size:11px;color:var(--exp);font-family:'IBM Plex Mono',monospace}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.5);display:none;z-index:2000;max-width:92vw}
+
+/* Şube kullanım rehberi (giriş sonrası bir kere / 🎓 butonuyla istenince gösterilir) */
+.onboard-overlay{position:fixed;inset:0;z-index:3000;background:rgba(6,10,20,.62);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px;animation:onbfade .18s ease}
+.onboard-overlay[hidden]{display:none}
+@keyframes onbfade{from{opacity:0}to{opacity:1}}
+.onboard-card{position:relative;width:100%;max-width:420px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:32px 28px 24px;box-shadow:0 24px 70px rgba(0,0,0,.45);text-align:center}
+.onboard-close{position:absolute;top:12px;right:12px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}
+.onboard-close:hover{color:var(--text);border-color:var(--exp)}
+.onboard-icon{font-size:38px;line-height:1;margin-bottom:14px}
+.onboard-title{font-family:'Sora',sans-serif;font-weight:700;font-size:19px;margin-bottom:10px;color:var(--text)}
+.onboard-body{color:var(--muted);font-size:13.5px;line-height:1.6;min-height:76px}
+.onboard-body b{color:var(--text)}
+.onboard-dots{display:flex;justify-content:center;gap:6px;margin:20px 0 18px}
+.onboard-dots .dot{width:6px;height:6px;border-radius:50%;background:var(--border);transition:.2s}
+.onboard-dots .dot.active{background:var(--exp);width:16px;border-radius:3px}
+.onboard-actions{display:flex;gap:8px}
+.onboard-btn{flex:1;font-family:inherit;font-size:13px;font-weight:600;padding:11px;border-radius:10px;cursor:pointer;border:none;transition:.15s}
+.onboard-btn.primary{background:linear-gradient(135deg,var(--exp),#2BAF95);color:#06251F}
+.onboard-btn.primary:hover{filter:brightness(1.06)}
+.onboard-btn.ghost{background:var(--panel2);border:1px solid var(--border);color:var(--muted);flex:0 0 auto;padding:11px 14px}
+.onboard-btn.ghost:hover{color:var(--text)}
+.onboard-btn[hidden]{display:none}
 .showmore{margin:14px auto 0;display:block}
 .site-footer{margin-top:34px;padding:18px 0 6px;text-align:center;font-size:12px;color:var(--faint);letter-spacing:.08em;border-top:1px solid var(--border)}
 .site-footer span{color:var(--muted);font-weight:600;background:linear-gradient(90deg,var(--exp),#5FE0C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -659,6 +681,7 @@ select:focus,input:focus{border-color:var(--exp)}
       🛠️ Admin
       <button class="branch-badge-logout" id="adminHeaderLogout">Çıkış</button>
     </span>
+    <button class="theme-toggle" id="onboardHelpBtn" hidden title="Nasıl kullanılır?" aria-label="Kullanım rehberini aç">🎓</button>
     <button class="theme-toggle" id="themeToggle" title="Açık/koyu tema" aria-label="Tema değiştir">🌙</button>
   </div>
   <div class="brand">
@@ -985,6 +1008,22 @@ select:focus,input:focus{border-color:var(--exp)}
 </div>
 
 <footer class="site-footer">by <span>Ensar</span></footer>
+</div>
+
+<!-- Şube girişinde bir kere gösterilen kullanım rehberi (slider) -->
+<div class="onboard-overlay" id="onboardOverlay" hidden>
+  <div class="onboard-card">
+    <button class="onboard-close" id="onboardClose" aria-label="Kapat">✕</button>
+    <div class="onboard-icon" id="onboardIcon">📍</div>
+    <div class="onboard-title" id="onboardTitle"></div>
+    <div class="onboard-body" id="onboardBody"></div>
+    <div class="onboard-dots" id="onboardDots"></div>
+    <div class="onboard-actions">
+      <button class="onboard-btn ghost" id="onboardPrev">← Geri</button>
+      <button class="onboard-btn ghost" id="onboardSkip">Atla</button>
+      <button class="onboard-btn primary" id="onboardNext">İleri →</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -2552,21 +2591,74 @@ function renderBranchUI(){
   const badge=$("branchBadge");
   const adminPicker = $("adminBranchPicker");
   const visitBtn = $("visitListBtn");
+  const helpBtn = $("onboardHelpBtn");
   if (S.branch){
     badge.hidden = false;
     $("branchBadgeName").textContent = S.branch.name;
     $("locSrcBranch").hidden = false;
     if (adminPicker) adminPicker.hidden = true; // güvence: şube kullanıcısı Şube Seç'i asla görmesin
     if (visitBtn) visitBtn.hidden = false;
+    if (helpBtn) helpBtn.hidden = false;
     setLocSource("branch");
+    // Bu şube kullanıcısı bu tarayıcıda ilk kez giriş yapıyorsa kullanım rehberini göster
+    try{
+      const seenKey = "dtr-onboard-seen-"+S.branch.username;
+      if (!localStorage.getItem(seenKey)){
+        localStorage.setItem(seenKey, "1");
+        openOnboarding();
+      }
+    }catch(e){ /* localStorage yoksa (gizli sekme vb.) sessizce geç */ }
   } else {
     badge.hidden = true;
     $("locSrcBranch").hidden = true;
     if (visitBtn) visitBtn.hidden = true;
+    if (helpBtn) helpBtn.hidden = true;
     closeVisitListScreen();
     setLocSource("gps");
   }
 }
+
+/* ================= ŞUBE KULLANIM REHBERİ (giriş sonrası slider) ================= */
+const ONBOARD_SLIDES = [
+  { icon:"👋", title:"Hoş geldin!",
+    body:"Bu birkaç ekran, <b>Dış Ticaret Radar</b>'ı nasıl kullanacağını anlatıyor. İstersen sağ üstteki <b>🎓</b> butonuna basarak bunu istediğin an tekrar açabilirsin." },
+  { icon:"📍", title:"Şubene en yakın firmalar",
+    body:"Giriş yapınca harita otomatik olarak <b>şubenin konumuna</b> gelir. Üstteki mesafe kutusundan (≤5km, ≤10km…) çevrendeki firma çemberini genişletip daraltabilirsin." },
+  { icon:"🗺️", title:"Harita ve firma noktaları",
+    body:"Haritadaki her nokta bir veya birden çok firmayı temsil eder — büyük nokta, o bölgede çok firma var demektir. Bir firmayı listede açtığında haritada <b>turuncu</b> olarak öne çıkar." },
+  { icon:"🔍", title:"Arama ve filtreler",
+    body:"Üstteki arama kutusuyla firma adına göre ara. <b>Filtreler</b> butonundan il, sıralama ve DİİB / İlk 1000 / Turquality gibi kaynak filtrelerini aç." },
+  { icon:"⭐📌🔖", title:"Rozetlerin anlamı",
+    body:"⭐ = yönetimin şubene özel hedef gösterdiği firma · 📌 = senin işaretlediğin önemli firma · 🔖 = ziyaret listene eklediğin firma · 🆕 = bu ay ilk kez belge alan yeni firma." },
+  { icon:"🔖", title:"Ziyaret Listem",
+    body:"Sağ üstteki <b>Ziyaret Listem</b> butonundan, işaretlediğin firmaları planlanan/ziyaret edilen olarak takip edebilir, listeyi dışa aktarabilirsin." },
+];
+let _onboardIdx = 0;
+function openOnboarding(){
+  _onboardIdx = 0;
+  renderOnboardSlide();
+  $("onboardOverlay").hidden = false;
+}
+function closeOnboarding(){ $("onboardOverlay").hidden = true; }
+function renderOnboardSlide(){
+  const s = ONBOARD_SLIDES[_onboardIdx];
+  $("onboardIcon").textContent = s.icon;
+  $("onboardTitle").textContent = s.title;
+  $("onboardBody").innerHTML = s.body;
+  $("onboardDots").innerHTML = ONBOARD_SLIDES.map((_,i)=>`<span class="dot${i===_onboardIdx?" active":""}"></span>`).join("");
+  $("onboardPrev").hidden = _onboardIdx===0;
+  $("onboardSkip").hidden = _onboardIdx===ONBOARD_SLIDES.length-1;
+  $("onboardNext").textContent = _onboardIdx===ONBOARD_SLIDES.length-1 ? "Başla ✓" : "İleri →";
+}
+$("onboardNext").onclick = ()=>{
+  if (_onboardIdx < ONBOARD_SLIDES.length-1){ _onboardIdx++; renderOnboardSlide(); }
+  else closeOnboarding();
+};
+$("onboardPrev").onclick = ()=>{ if (_onboardIdx>0){ _onboardIdx--; renderOnboardSlide(); } };
+$("onboardSkip").onclick = closeOnboarding;
+$("onboardClose").onclick = closeOnboarding;
+$("onboardOverlay").addEventListener("click", e=>{ if (e.target.id==="onboardOverlay") closeOnboarding(); });
+$("onboardHelpBtn") && ($("onboardHelpBtn").onclick = openOnboarding);
 
 // Konum kaynağı seçici: "Şube konumu" / "Şu anki konumum" arasında geçiş
 function setLocSource(which){
