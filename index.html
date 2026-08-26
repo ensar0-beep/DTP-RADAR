@@ -926,7 +926,7 @@ select:focus,input:focus{border-color:var(--exp)}
         <div class="admin-subhead-row">
           <div class="admin-subhead" style="margin-top:22px">Türkiye Haritası</div>
           <span class="ov-map-legend">
-            <span class="ov-legend-item"><span class="ov-legend-dot firm"></span> Firma yoğunluğu (il bazlı)</span>
+            <span class="ov-legend-item"><span class="ov-legend-dot firm"></span> Firma (tek tek)</span>
             <span class="ov-legend-item"><span class="ov-legend-dot branch"></span> Şube</span>
           </span>
         </div>
@@ -2846,37 +2846,32 @@ function renderAdminOverviewMap(){
   const el = $("adminOverviewMap");
   if (!el || typeof L === "undefined") return;
   if (!S._adminOvMap){
-    S._adminOvMap = L.map("adminOverviewMap", {scrollWheelZoom:true}).setView([39.0, 35.2], 6);
+    // Binlerce firma noktası SVG ile yavaşlar — canvas renderer performansı ciddi artırır.
+    S._adminOvMap = L.map("adminOverviewMap", {scrollWheelZoom:true, renderer:L.canvas({padding:0.5})}).setView([39.0, 35.2], 6);
     S._adminOvTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S._adminOvMap);
   } else {
     (S._adminOvLayers||[]).forEach(l=>S._adminOvMap.removeLayer(l));
   }
   S._adminOvLayers = [];
 
-  // Firmaları il bazında topla (yoğunluk balonu için)
-  const byIl = new Map(); // il -> {count, exp, imp}
+  // Her firmayı TEK TEK, küçük noktayla göster — kalabalık olsa da amaç bu: bir şubenin
+  // etrafındaki gerçek firma yoğunluğunu birebir görmek. Performans için canvas renderer + küçük yarıçap.
   for (const a of aggregate()){
-    if (!a.il) continue;
-    let s = byIl.get(a.il);
-    if (!s){ s = {count:0, exp:0, imp:0}; byIl.set(a.il, s); }
-    s.count++; s.exp += a.exp; s.imp += a.imp;
-  }
-  for (const [il, s] of byIl.entries()){
-    const c = IL_COORD[il]; if (!c) continue;
-    const r = Math.min(6 + Math.sqrt(s.count) * 2, 34);
-    const glow = L.circleMarker([c[0],c[1]], {radius:r+4, color:"#35C4A8", weight:0, fillColor:"#35C4A8", fillOpacity:.12, interactive:false}).addTo(S._adminOvMap);
-    const m = L.circleMarker([c[0],c[1]], {radius:r, color:"#0D1220", fillColor:"#35C4A8", fillOpacity:.75, weight:1.2}).addTo(S._adminOvMap);
-    m.bindPopup(`<div class="ov-firm-popup"><b>${il}</b><br>${s.count.toLocaleString("tr-TR")} firma<br>İhr ${fmt$(s.exp)} · İth ${fmt$(s.imp)}</div>`);
-    S._adminOvLayers.push(glow, m);
+    const c = resolveFirmCoord(a);
+    if (!c) continue;
+    const m = L.circleMarker([c.lat, c.lon], {radius:3, color:"#35C4A8", weight:0, fillColor:"#35C4A8", fillOpacity:.55}).addTo(S._adminOvMap);
+    m.bindPopup(`<div class="ov-firm-popup"><b>${a.firma}</b><br>${a.il||"—"}<br>İhr ${fmt$(a.exp)} · İth ${fmt$(a.imp)}</div>`);
+    S._adminOvLayers.push(m);
   }
 
-  // Şubeleri tek tek noktayla göster
+  // Şubeleri firmaların ÜSTÜNDE, daha büyük ve belirgin noktalarla göster
   for (const [uname, rec] of Object.entries(SUBE_TABLE)){
     const [name, lat, lon] = rec;
-    const m = L.circleMarker([lat,lon], {radius:4.5, color:"#0D1220", fillColor:"#5B8DEF", fillOpacity:.95, weight:1}).addTo(S._adminOvMap);
+    const halo = L.circleMarker([lat,lon], {radius:9, color:"#5B8DEF", weight:0, fillColor:"#5B8DEF", fillOpacity:.18, interactive:false}).addTo(S._adminOvMap);
+    const m = L.circleMarker([lat,lon], {radius:5, color:"#0D1220", fillColor:"#5B8DEF", fillOpacity:1, weight:1.2}).addTo(S._adminOvMap);
     m.bindPopup(`<div class="ov-branch-popup"><b>${name}</b></div>`);
     m.on("click", ()=> goToBranchFromProxTable(uname));
-    S._adminOvLayers.push(m);
+    S._adminOvLayers.push(halo, m);
   }
 
   setTimeout(()=>S._adminOvMap.invalidateSize(), 80);
