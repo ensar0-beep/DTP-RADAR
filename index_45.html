@@ -201,6 +201,14 @@ input[type=file]{display:none}
 /* Genel Bakış */
 .overview-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:16px}
 .overview-stat{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.admin-overview-map{height:440px;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-top:10px}
+.ov-map-legend{display:flex;gap:14px;margin-left:auto;font-size:11.5px;color:var(--muted)}
+.ov-legend-item{display:inline-flex;align-items:center;gap:5px}
+.ov-legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.ov-legend-dot.firm{background:var(--exp)}
+.ov-legend-dot.branch{background:#5B8DEF}
+.ov-firm-popup,.ov-branch-popup{font-family:'IBM Plex Sans',sans-serif;font-size:12.5px}
+.ov-firm-popup b,.ov-branch-popup b{font-family:'Sora',sans-serif}
 .overview-stat-label{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .overview-stat-label svg{width:12px;height:12px;flex:0 0 auto}
 .overview-stat-value{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;margin-top:6px}
@@ -914,7 +922,16 @@ select:focus,input:focus{border-color:var(--exp)}
             <div class="overview-stat-value exp" id="ovStatLogins">—</div>
           </div>
         </div>
-        <div class="hint" style="margin-top:18px">Sol menüden bir bölüm seçerek devam et.</div>
+
+        <div class="admin-subhead-row">
+          <div class="admin-subhead" style="margin-top:22px">Türkiye Haritası</div>
+          <span class="ov-map-legend">
+            <span class="ov-legend-item"><span class="ov-legend-dot firm"></span> Firma yoğunluğu (il bazlı)</span>
+            <span class="ov-legend-item"><span class="ov-legend-dot branch"></span> Şube</span>
+          </span>
+        </div>
+        <div id="adminOverviewMap" class="admin-overview-map"></div>
+        <div class="hint" style="margin-top:12px">Sol menüden bir bölüm seçerek devam et.</div>
       </div>
 
       <!-- Şubeler -->
@@ -2374,9 +2391,14 @@ function initMap(){
 
 // Tema değiştiğinde harita zaten açıksa karo setini de güncelle (koyu <-> açık)
 function refreshMapTheme(){
-  if (!S.map || !S.mapTileLayer) return;
-  S.map.removeLayer(S.mapTileLayer);
-  S.mapTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S.map);
+  if (S.map && S.mapTileLayer){
+    S.map.removeLayer(S.mapTileLayer);
+    S.mapTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S.map);
+  }
+  if (S._adminOvMap && S._adminOvTileLayer){
+    S._adminOvMap.removeLayer(S._adminOvTileLayer);
+    S._adminOvTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S._adminOvMap);
+  }
 }
 
 function drawMap(list){
@@ -2813,6 +2835,50 @@ function renderAdminOverview(){
     for (const uname in S.loginLogs){ total += Object.keys(S.loginLogs[uname]).length; }
     $("ovStatLogins").textContent = total.toLocaleString("tr-TR");
   }
+  renderAdminOverviewMap();
+}
+
+// Genel Bakış haritası: firmalar (il bazlı yoğunluk balonu) + şubeler (tek tek nokta) aynı haritada.
+// Ülke geneli bir bakış olduğu için firmalar tek tek değil, il merkezinde toplanmış "yoğunluk"
+// olarak gösterilir (binlerce nokta yerine ~80 il balonu) — aksi halde harita okunamaz olurdu.
+function renderAdminOverviewMap(){
+  const el = $("adminOverviewMap");
+  if (!el || typeof L === "undefined") return;
+  if (!S._adminOvMap){
+    S._adminOvMap = L.map("adminOverviewMap", {scrollWheelZoom:true}).setView([39.0, 35.2], 6);
+    S._adminOvTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S._adminOvMap);
+  } else {
+    (S._adminOvLayers||[]).forEach(l=>S._adminOvMap.removeLayer(l));
+  }
+  S._adminOvLayers = [];
+
+  // Firmaları il bazında topla (yoğunluk balonu için)
+  const byIl = new Map(); // il -> {count, exp, imp}
+  for (const a of aggregate()){
+    if (!a.il) continue;
+    let s = byIl.get(a.il);
+    if (!s){ s = {count:0, exp:0, imp:0}; byIl.set(a.il, s); }
+    s.count++; s.exp += a.exp; s.imp += a.imp;
+  }
+  for (const [il, s] of byIl.entries()){
+    const c = IL_COORD[il]; if (!c) continue;
+    const r = Math.min(6 + Math.sqrt(s.count) * 2, 34);
+    const glow = L.circleMarker([c[0],c[1]], {radius:r+4, color:"#35C4A8", weight:0, fillColor:"#35C4A8", fillOpacity:.12, interactive:false}).addTo(S._adminOvMap);
+    const m = L.circleMarker([c[0],c[1]], {radius:r, color:"#0D1220", fillColor:"#35C4A8", fillOpacity:.75, weight:1.2}).addTo(S._adminOvMap);
+    m.bindPopup(`<div class="ov-firm-popup"><b>${il}</b><br>${s.count.toLocaleString("tr-TR")} firma<br>İhr ${fmt$(s.exp)} · İth ${fmt$(s.imp)}</div>`);
+    S._adminOvLayers.push(glow, m);
+  }
+
+  // Şubeleri tek tek noktayla göster
+  for (const [uname, rec] of Object.entries(SUBE_TABLE)){
+    const [name, lat, lon] = rec;
+    const m = L.circleMarker([lat,lon], {radius:4.5, color:"#0D1220", fillColor:"#5B8DEF", fillOpacity:.95, weight:1}).addTo(S._adminOvMap);
+    m.bindPopup(`<div class="ov-branch-popup"><b>${name}</b></div>`);
+    m.on("click", ()=> goToBranchFromProxTable(uname));
+    S._adminOvLayers.push(m);
+  }
+
+  setTimeout(()=>S._adminOvMap.invalidateSize(), 80);
 }
 
 // ---- Manuel Birleştirme: tüm firmaları listele, iki tanesini seçip birleştir ----
