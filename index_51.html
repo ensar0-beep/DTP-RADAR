@@ -215,6 +215,14 @@ input[type=file]{display:none}
 .ov-branch-tag.ticari{background:rgba(124,131,253,.14);color:#7C83FD}
 .ov-branch-tag.kurumsal{background:rgba(232,163,61,.14);color:#C97D14}
 .ov-branch-tag.kobi{background:rgba(204,122,165,.14);color:#CC7AA5}
+.ov-branch-detail{margin-top:12px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;animation:fade .15s ease}
+.ov-branch-detail-head{display:flex;align-items:center;gap:10px}
+.ov-branch-detail-name{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;flex:1}
+.ov-branch-detail-close{flex:0 0 auto;background:var(--panel2);border:1px solid var(--border);color:var(--muted);width:26px;height:26px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ov-branch-detail-close:hover{color:var(--text);border-color:var(--exp)}
+/* Haritada yakınlaşınca beliren yumuşak şube adı etiketleri */
+.ov-branch-label{background:rgba(13,18,32,.72);border:none;box-shadow:none;color:#E9EDF6;font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:500;padding:2px 7px;border-radius:5px;opacity:.9}
+.ov-branch-label::before{display:none}
 .overview-stat-label{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .overview-stat-label svg{width:12px;height:12px;flex:0 0 auto}
 .overview-stat-value{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;margin-top:6px}
@@ -939,6 +947,16 @@ select:focus,input:focus{border-color:var(--exp)}
           </span>
         </div>
         <div id="adminOverviewMap" class="admin-overview-map"></div>
+
+        <div class="ov-branch-detail" id="ovBranchDetail" hidden>
+          <div class="ov-branch-detail-head">
+            <span class="ov-branch-tag" id="ovBranchDetailTag"></span>
+            <div class="ov-branch-detail-name" id="ovBranchDetailName"></div>
+            <button class="ov-branch-detail-close" id="ovBranchDetailClose" aria-label="Kapat"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+          <button class="btn primary" id="ovBranchDetailGo" style="margin-top:12px">Bu şubeyi incele (firma listesi + yıldızlama)</button>
+        </div>
+
         <div class="hint" style="margin-top:12px">Sol menüden bir bölüm seçerek devam et.</div>
       </div>
 
@@ -2860,6 +2878,7 @@ function renderAdminOverviewMap(){
     // Binlerce firma noktası SVG ile yavaşlar — canvas renderer performansı ciddi artırır.
     S._adminOvMap = L.map("adminOverviewMap", {scrollWheelZoom:true, renderer:L.canvas({padding:0.5})}).setView([39.0, 35.2], 6);
     S._adminOvTileLayer = L.tileLayer(currentMapTileUrl(), {attribution:"© OpenStreetMap © CARTO", subdomains:"abcd", maxZoom:19}).addTo(S._adminOvMap);
+    S._adminOvMap.on("zoomend", updateOvBranchLabels);
   } else {
     (S._adminOvLayers||[]).forEach(l=>S._adminOvMap.removeLayer(l));
   }
@@ -2875,21 +2894,48 @@ function renderAdminOverviewMap(){
     S._adminOvLayers.push(m);
   }
 
-  // Şubeleri firmaların ÜSTÜNDE, daha büyük ve belirgin noktalarla, sınıfına göre renkli göster
+  // Şubeleri firmaların ÜSTÜNDE, daha büyük ve belirgin noktalarla, sınıfına göre renkli göster.
+  // Tıklayınca haritanın altındaki panelde adı/sınıfı görünür (uzağa atlamaz) — bkz. showOvBranchDetail().
+  // Ayrıca yeterince yakınlaşınca üstlerinde yumuşak, sabit isim etiketi belirir (bkz. updateOvBranchLabels()).
   const BRANCH_CLASS_COLOR = {ticari:"#7C83FD", kurumsal:"#E8A33D", kobi:"#CC7AA5"};
+  S._adminOvBranchMarkers = [];
   for (const [uname, rec] of Object.entries(SUBE_TABLE)){
     const [name, lat, lon] = rec;
     const cls = branchClassOf(name);
     const col = BRANCH_CLASS_COLOR[cls];
     const halo = L.circleMarker([lat,lon], {radius:9, color:col, weight:0, fillColor:col, fillOpacity:.2, interactive:false}).addTo(S._adminOvMap);
     const m = L.circleMarker([lat,lon], {radius:5, color:"#0D1220", fillColor:col, fillOpacity:1, weight:1.2}).addTo(S._adminOvMap);
-    m.bindPopup(`<div class="ov-branch-popup"><span class="ov-branch-tag ${cls}">${BRANCH_CLASS_LABEL[cls]}</span><b>${name}</b></div>`);
-    m.on("click", ()=> goToBranchFromProxTable(uname));
+    m.bindTooltip(name, {permanent:true, direction:"top", offset:[0,-7], className:"ov-branch-label", opacity:.9});
+    m.on("click", ()=> showOvBranchDetail(uname));
     S._adminOvLayers.push(halo, m);
+    S._adminOvBranchMarkers.push(m);
   }
+  updateOvBranchLabels();
 
   setTimeout(()=>S._adminOvMap.invalidateSize(), 80);
 }
+
+// Şube isim etiketleri sadece yeterince yakınlaşınca belirsin — 400 şube adı en uzak zoom'da
+// üst üste binip kalabalık yapar, zoom>=8 (il/ilçe seviyesi) itibarıyla okunur hâle gelir.
+function updateOvBranchLabels(){
+  if (!S._adminOvMap) return;
+  const zoom = S._adminOvMap.getZoom();
+  (S._adminOvBranchMarkers||[]).forEach(m => zoom >= 8 ? m.openTooltip() : m.closeTooltip());
+}
+
+// Haritada bir şubeye tıklayınca: uzak bir ekrana atlamadan, Genel Bakış'ın hemen altında
+// adını/sınıfını gösteren panel — "İncele" butonuna basarsa asıl firma+yıldızlama görünümüne geçer.
+function showOvBranchDetail(uname){
+  const rec = SUBE_TABLE[uname]; if (!rec) return;
+  const [name] = rec;
+  const cls = branchClassOf(name);
+  $("ovBranchDetailTag").textContent = BRANCH_CLASS_LABEL[cls];
+  $("ovBranchDetailTag").className = "ov-branch-tag " + cls;
+  $("ovBranchDetailName").textContent = name;
+  $("ovBranchDetailGo").onclick = ()=> goToBranchFromProxTable(uname);
+  $("ovBranchDetail").hidden = false;
+}
+$("ovBranchDetailClose") && ($("ovBranchDetailClose").onclick = ()=>{ $("ovBranchDetail").hidden = true; });
 
 // ---- Manuel Birleştirme: tüm firmaları listele, iki tanesini seçip birleştir ----
 S._mergeSelected = []; // en fazla 2 key tutar
