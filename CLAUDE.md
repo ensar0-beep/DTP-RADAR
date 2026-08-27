@@ -13,10 +13,13 @@ lets branch employees filter/sort companies by location, import/export volume, a
 ## Repository state (important, non-obvious)
 
 - The working file is versioned by hand as `index_NN.html` (e.g. `index_39.html`), incrementing NN on each
-  save. Only one `index_NN.html` should exist in the tree at a time — when starting work, check `git status`
-  and `ls` for the current highest-numbered file; don't assume a filename from a previous session.
-- There is no `index.html` — the numbered file is deployed directly (check how/where it's hosted before
-  assuming a deploy path).
+  save. Every past `index_NN.html` is kept in the tree as a history/backup — never delete or rename away an
+  older numbered file when saving a new one; copy forward to the next number instead. When starting work,
+  check `git status` and `ls` for the *highest*-numbered file (that's the current one); don't assume a
+  filename from a previous session, and don't edit an older-numbered file by mistake.
+- `index.html` (no number) is the file actually deployed — it's a plain copy of the current highest
+  `index_NN.html`, kept in sync on every save, since GitHub Pages/Netlify serve `index.html` by root convention.
+  After editing `index_NN.html`, always `cp` it over `index.html` before committing.
 - Git history is currently a single squashed commit; don't rely on file history for context.
 
 ## Running / testing
