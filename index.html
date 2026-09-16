@@ -3322,8 +3322,21 @@ function setGateBtnLoading(btn, loading, idleLabel){
 }
 
 // Kapı ekranı: şube girişi
+// Yazılan kullanıcı adını SUBE_TABLE'daki gerçek anahtara çevirir. Anahtarlar "İ/I" ile başlayan
+// isimlerde noktasız ı içeriyor (ınegolsubesi, ızmirsubesi, ıspartasubesi…); eski kod bu harfi
+// temizlerken siliyor ve 33 şube giriş yapamıyordu. Karşılaştırma ı/i ve büyük/küçük harf
+// gözetmeden yapılır; eşleşme yoksa eski davranış (temizlenmiş ad) korunur.
+function resolveBranchUsername(typed){
+  const raw = String(typed||"").trim();
+  if (!raw) return "";
+  if (SUBE_TABLE[raw]) return raw;
+  const fold = x => x.toLocaleLowerCase("tr-TR").replace(/ı/g,"i").replace(/[^a-z0-9._-]/g,"");
+  const f = fold(raw);
+  const hit = Object.keys(SUBE_TABLE).find(k => fold(k) === f);
+  return hit || raw.toLocaleLowerCase("tr-TR").replace(/[^a-z0-9._-]/g,"");
+}
 $("gateBranchBtn").onclick = ()=>{
-  const uname = $("gateBranchUser").value.trim().toLocaleLowerCase("tr-TR").replace(/[^a-z0-9._-]/g,"");
+  const uname = resolveBranchUsername($("gateBranchUser").value);
   const pass = $("gateBranchPass").value;
   const st = $("gateBranchStatus");
   const btn = $("gateBranchBtn");
