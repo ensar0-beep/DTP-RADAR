@@ -308,6 +308,18 @@ input[type=file]{display:none}
 .branch-prox-table td.name{max-width:220px;overflow:hidden;text-overflow:ellipsis;font-weight:500}
 
 /* Hedef Kitleleri Yönet: kaynak kartları */
+.bulk-star{margin-top:18px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.bulk-star-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.bulk-star-head .hint{margin-top:4px;max-width:70ch}
+.bulk-star-result{margin-top:12px;border-top:1px solid var(--border);padding-top:12px;font-size:13px}
+.bulk-star-result[hidden]{display:none}
+.bulk-star-stats{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.bulk-star-stats span{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px}
+.bulk-star-stats .ok{color:var(--exp)} .bulk-star-stats .warn{color:var(--imp)}
+.bulk-star-list{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:10px 12px;line-height:1.7;max-height:200px;overflow:auto;margin-bottom:10px}
+.bulk-star-list b{color:var(--imp);font-weight:600}
+.bulk-star-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.bulk-star-actions label{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
 .audience-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:16px}
 .audience-card{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:16px}
 .audience-card-title{font-family:'Sora',sans-serif;font-weight:600;font-size:13.5px;margin-bottom:6px}
@@ -1173,6 +1185,17 @@ select:focus,input:focus{border-color:var(--exp)}
           <button class="branch-class-tab" data-class="ticari" type="button">Ticari Şube <span class="bct-count" id="bctTicari">0</span></button>
           <button class="branch-class-tab" data-class="kurumsal" type="button">Kurumsal Şube <span class="bct-count" id="bctKurumsal">0</span></button>
           <button class="branch-class-tab" data-class="kobi" type="button">Kobi Şube <span class="bct-count" id="bctKobi">0</span></button>
+        </div>
+
+        <div class="bulk-star" id="bulkStarCard">
+          <div class="bulk-star-head">
+            <div>
+              <div class="admin-subhead" style="margin:0">Excel ile toplu yıldızlama</div>
+              <div class="hint">Sütunlar: <b>Şube</b> · <b>Vergi Numarası</b> (isteğe bağlı <b>Firma</b> — VKN yoksa ada göre eşleşir). Aynı VKN birden fazla şubede geçebilir.</div>
+            </div>
+            <button class="btn" type="button" id="bulkStarPick">Excel seç</button>
+          </div>
+          <div class="bulk-star-result" id="bulkStarResult" hidden></div>
         </div>
 
         <div class="admin-subhead-row">
@@ -2621,6 +2644,93 @@ document.addEventListener("click", e=>{
 });
 
 // Yönetim panelinde seçili şube için firmayı yıldızla/kaldır, buluta kaydet
+// ---- Excel ile toplu yıldızlama (admin) ----
+// Excel: Şube · Vergi Numarası · (isteğe bağlı) Firma. Şube adı sistemdeki adla esnek eşleşir
+// ("PENDİK ŞB." → Pendik Şubesi). Firma, VKN'siyle (yoksa adıyla) sistemdeki karta bağlanır;
+// "Kaydet" denince starred/<şube> düğümüne yazılır (mevcut yıldızlara eklenir; istenirse önce temizlenir).
+function normBranchName(x){ return trUp(x).replace(/ŞUBESİ|ŞUBE|ŞB\.?/g," ").replace(/[^A-ZÇĞİÖŞÜ0-9]/g,""); }
+function normVknStr(v){ let d = String(v??"").replace(/\D/g,""); if (!d) return ""; if (d.length>=8 && d.length<10) d = d.padStart(10,"0"); return (d.length===10||d.length===11) ? d : ""; }
+let _bulkStarPlan = null;
+$("bulkStarPick") && ($("bulkStarPick").onclick = ()=>{
+  const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".xlsx,.xls,.csv";
+  inp.onchange = async ()=>{
+    const f = inp.files && inp.files[0]; if (!f) return;
+    try{
+      const wb = XLSX.read(await f.arrayBuffer(), {type:"array"});
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:""});
+      buildBulkStarPlan(rows, f.name);
+    }catch(e){ toast("Dosya okunamadı: "+(e.message||e)); }
+  };
+  inp.click();
+});
+function buildBulkStarPlan(rows, fileName){
+  // Başlık satırı: ŞUBE + VERGİ/VKN (+ FİRMA); bulunamazsa 1. sütun şube, 2. sütun VKN
+  let hi=-1, cs=0, cv=1, cf=-1;
+  for (let r=0; r<Math.min(rows.length,10); r++){
+    const cells = rows[r].map(trUp);
+    const is = cells.findIndex(c=>/ŞUBE/.test(c)), iv = cells.findIndex(c=>/VERG|VKN/.test(c)), ifm = cells.findIndex(c=>/F[İI]RMA|UNVAN/.test(c));
+    if (is>=0 && (iv>=0 || ifm>=0)){ hi=r; cs=is; cv=iv; cf=ifm; break; }
+  }
+  const branchIndex = {};
+  for (const [u, rec] of Object.entries(SUBE_TABLE)){ const k = normBranchName(rec[0]); if (k && !branchIndex[k]) branchIndex[k] = u; }
+  // Sistemdeki firmalar: VKN → key ve normName → key (tüm aylar + Turquality/TİM havuzu)
+  const keyByVkn = {}, keyByNorm = {};
+  for (const fl of S.files) for (const r of fl.records){ const v = normVknStr(r.vkn); if (v && !keyByVkn[v]) keyByVkn[v] = r.key; const n = normName(r.firma); if (n && !keyByNorm[n]) keyByNorm[n] = r.key; }
+  for (const a of aggregate()){ const v = normVknStr(a.vkn); if (v && !keyByVkn[v]) keyByVkn[v] = a.key; const n = normName(a.firma); if (n && !keyByNorm[n]) keyByNorm[n] = a.key; }
+  const plan = {}; // uname -> Set(keys)
+  const unBranch = {}, unFirm = [];
+  let total = 0, matched = 0;
+  for (let r=hi+1; r<rows.length; r++){
+    const sube = String(rows[r][cs]??"").trim();
+    const vkn = cv>=0 ? normVknStr(rows[r][cv]) : "";
+    const firma = cf>=0 ? String(rows[r][cf]??"").trim() : "";
+    if (!sube || (!vkn && !firma)) continue;
+    total++;
+    const uname = branchIndex[normBranchName(sube)] || (SUBE_TABLE[sube] ? sube : null);
+    if (!uname){ unBranch[sube] = (unBranch[sube]||0)+1; continue; }
+    const key = (vkn && keyByVkn[vkn]) || (firma && keyByNorm[normName(firma)]) || null;
+    if (!key){ unFirm.push(vkn || firma); continue; }
+    if (!plan[uname]) plan[uname] = new Set();
+    plan[uname].add(key); matched++;
+  }
+  const stars = Object.values(plan).reduce((n,set)=>n+set.size,0);
+  _bulkStarPlan = {plan, total, matched, stars, unBranch, unFirm, fileName};
+  const box = $("bulkStarResult"); box.hidden = false;
+  const unB = Object.entries(unBranch).sort((a,b)=>b[1]-a[1]);
+  box.innerHTML = `
+    <div class="bulk-star-stats">
+      <span>${fileName} · ${total} satır</span>
+      <span class="ok">${ic('starFilled')} ${stars} yıldız · ${Object.keys(plan).length} şube</span>
+      ${unB.length?`<span class="warn">${unB.reduce((n,[,c])=>n+c,0)} satırda şube tanınmadı</span>`:""}
+      ${unFirm.length?`<span class="warn">${unFirm.length} firma sistemde bulunamadı</span>`:""}
+    </div>
+    ${unB.length?`<div class="bulk-star-list">${unB.map(([n,c])=>`<b>${n}</b> → şube tanınmadı · ${c} satır`).join("<br>")}</div>`:""}
+    ${unFirm.length?`<div class="bulk-star-list">${unFirm.slice(0,40).map(x=>`${x} → sistemde böyle bir VKN/firma yok`).join("<br>")}${unFirm.length>40?`<br>… ve ${unFirm.length-40} tane daha`:""}</div>`:""}
+    <div class="bulk-star-actions">
+      <button class="btn primary" type="button" id="bulkStarSave" ${stars?"":"disabled"}>${ic('starFilled')} ${stars} yıldızı kaydet</button>
+      <label><input type="checkbox" id="bulkStarClear"> Önce bu şubelerin mevcut yıldızlarını temizle</label>
+      <span class="hint">Şube adlarını ve VKN'leri Excel'de düzeltip yeniden seçebilirsin.</span>
+    </div>`;
+  $("bulkStarSave").onclick = saveBulkStars;
+}
+async function saveBulkStars(){
+  if (!_bulkStarPlan || !S.isAdmin) return;
+  const clear = $("bulkStarClear") && $("bulkStarClear").checked;
+  const btn = $("bulkStarSave"); btn.disabled = true; btn.textContent = "Kaydediliyor…";
+  let ok = 0, fail = 0;
+  const next = { ...S.starred };
+  for (const [uname, keys] of Object.entries(_bulkStarPlan.plan)){
+    const current = clear ? {} : { ...(S.starred[uname]||{}) };
+    for (const k of keys) current[k] = true;
+    try{ await fbDB.ref("starred/"+uname).set(current); next[uname] = current; ok++; }
+    catch(e){ fail++; }
+  }
+  S.starred = next; S.starredDirty = false;
+  render(); renderAdminStats();
+  toast(fail ? `${ok} şube kaydedildi, ${fail} şubede hata` : `${ok} şubeye yıldızlar kaydedildi`);
+  btn.textContent = "Kaydedildi ✓";
+}
+
 async function toggleStarForTarget(firmKey){
   const uname = S._starTargetBranch;
   if (!uname || !S.isAdmin) return;
