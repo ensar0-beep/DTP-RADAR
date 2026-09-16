@@ -3414,12 +3414,25 @@ function custBranchesOf(a){ if (!custActive()) return []; const v = normVkn(a.vk
 function custBranchNames(list){ return list.map(u=>SUBE_TABLE[u]?SUBE_TABLE[u][0]:u).join(", "); }
 async function loadCustomerFile(){
   if (S.cust && (S.cust.loading || S.cust.byVkn)) return;
-  if (location.protocol==="file:" || typeof XLSX==="undefined") return;
+  if (typeof XLSX==="undefined") return;
+  // Bilgisayardan çift tıklayarak (file://) açıldığında tarayıcı yanındaki dosyayı okutmaz;
+  // bu durumda admin ekranındaki "Dosyayı seç" düğmesiyle elle seçilir (parseCustomerWorkbook).
+  if (location.protocol==="file:"){ S.cust = {localOnly:true}; renderCustStatus(); return; }
   S.cust = {loading:true};
   try{
     const res = await fetch(CUSTOMER_FILE, {cache:"no-store"});
     if (!res.ok){ S.cust = null; return; }
-    const wb = XLSX.read(await res.arrayBuffer(), {type:"array"});
+    parseCustomerWorkbook(await res.arrayBuffer());
+  }catch(e){
+    S.cust = {error: e.message||String(e)};
+  }finally{
+    render(); renderCustStatus();
+  }
+}
+// Excel'i (ArrayBuffer) çözüp S.cust'ı doldurur — hem sunucudan hem elle seçilen dosyadan kullanılır
+function parseCustomerWorkbook(buffer){
+  try{
+    const wb = XLSX.read(buffer, {type:"array"});
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:""});
     // Başlık satırını bul (ŞUBE + VERGİ/VKN); bulunamazsa 1. sütun şube, 2. sütun VKN kabul edilir
     let hi = -1, cs = 0, cv = 1;
@@ -3450,9 +3463,18 @@ async function loadCustomerFile(){
     S.cust = {byVkn, total, matched, unmatched: unmatchedList, loadedAt: Date.now()};
   }catch(e){
     S.cust = {error: e.message||String(e)};
-  }finally{
-    render(); renderCustStatus();
   }
+}
+// Elle dosya seçimi (yerel test / sunucusuz kullanım): admin durum kutusundaki düğme
+function pickCustomerFile(){
+  const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".xlsx,.xls,.csv";
+  inp.onchange = async ()=>{
+    const f = inp.files && inp.files[0]; if (!f) return;
+    parseCustomerWorkbook(await f.arrayBuffer());
+    render(); renderCustStatus();
+    if (S.cust && S.cust.byVkn) toast(`Müşteri listesi okundu: ${S.cust.total} satır`);
+  };
+  inp.click();
 }
 function custFilterLabel(){
   const mineLabel = S.branch ? "Müşterim" : "Müşteri";
@@ -3481,12 +3503,17 @@ function renderCustStatus(){
   const box = $("custStatus"); if (!box) return;
   if (!S.isAdmin){ box.hidden = true; return; }
   box.hidden = false;
+  const pickBtn = `<button class="btn" type="button" onclick="pickCustomerFile()" style="margin-top:10px">${ic('folder')} Dosyayı seç</button>`;
+  if (S.cust && S.cust.localOnly){
+    box.innerHTML = `<h4>${ic('user')} Müşteri listesi <span class="warn">· elle seçilmeli</span></h4><p>Sayfa bilgisayardan doğrudan açıldığı için (adres <code>file://</code> ile başlıyor) tarayıcı yanındaki <code>${CUSTOMER_FILE}</code> dosyasını kendiliğinden okuyamıyor. Şirket bulutundan (<code>https://…</code>) açıldığında otomatik okunur; şimdilik dosyayı elle seçebilirsin — yine hiçbir yere gönderilmez, sadece bu sekmede kalır.</p>${pickBtn}`;
+    return;
+  }
   if (!S.cust || S.cust.loading){
-    box.innerHTML = `<h4>${ic('user')} Müşteri listesi <span class="warn">· bulunamadı</span></h4><p><code>${CUSTOMER_FILE}</code> dosyası <code>index.html</code> ile aynı klasörde değil ya da okunamadı. Dosya eklendiğinde (1. sütun Şube, 2. sütun Vergi Numarası) sayfa yenilenince otomatik devreye girer.</p>`;
+    box.innerHTML = `<h4>${ic('user')} Müşteri listesi <span class="warn">· bulunamadı</span></h4><p><code>${CUSTOMER_FILE}</code> dosyası HTML ile aynı klasörde değil ya da okunamadı. Dosya eklendiğinde (1. sütun Şube, 2. sütun Vergi Numarası) sayfa yenilenince otomatik devreye girer. Test için elle de seçebilirsin.</p>${pickBtn}`;
     return;
   }
   if (S.cust.error){
-    box.innerHTML = `<h4>${ic('user')} Müşteri listesi <span class="warn">· okunamadı</span></h4><p>${S.cust.error}</p>`;
+    box.innerHTML = `<h4>${ic('user')} Müşteri listesi <span class="warn">· okunamadı</span></h4><p>${S.cust.error}</p>${pickBtn}`;
     return;
   }
   const c = S.cust, firms = Object.keys(c.byVkn).length;
