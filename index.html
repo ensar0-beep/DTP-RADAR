@@ -3162,9 +3162,11 @@ function initFirebase(){
     updateSaveRow();
     renderGate(); // giriş yapılmadan platform hiç görünmesin
     if (user) loadCustomerFile(); else { S.cust = null; S._custFilter = "all"; }
+    // Bulut verisi yalnızca giriş yapılmışken okunabilir (güvenlik kuralları) — dinleyiciler burada kurulur,
+    // çıkışta sökülür ve bellek temizlenir. Şube hesabı sadece KENDİ düğümlerini dinler.
+    if (user){ if (!S._cloudOn) loadCloud(); } else detachCloud();
     hideInitialLoadOverlay(); // Firebase oturum durumu artık belli — kapı/uygulama kararı verildi
   });
-  loadCloud();
 }
 
 // Sayfa ilk açılışında Firebase oturum kontrolü bitene kadar gösterilen tam ekran radar —
@@ -4129,8 +4131,17 @@ $("authBtn").onclick = ()=>{
 };
 $("adminHeaderLogout") && ($("adminHeaderLogout").onclick = ()=> fbAuth.signOut());
 
+const CLOUD_REFS = [];
+function cloudOn(path, cb, errCb){ const r = fbDB.ref(path); r.on("value", cb, errCb||(()=>{})); CLOUD_REFS.push(r); return r; }
+function detachCloud(){
+  CLOUD_REFS.forEach(r=>{ try{ r.off(); }catch(e){} }); CLOUD_REFS.length = 0;
+  S._cloudOn = false;
+  S.files = S.files.filter(f=>f.dirty);
+  S.starred = {}; S.important = {}; S.visits = {}; S.loginLogs = {};
+}
 function loadCloud(){
-  fbDB.ref("months").on("value", snap=>{
+  S._cloudOn = true;
+  cloudOn("months", snap=>{
     const data = snap.val() || {};
     // Buluttaki her ayı S.files içine (cloud) olarak koy; elle yüklenmiş dirty dosyaları koru.
     const dirtyKept = S.files.filter(f=>f.dirty);
@@ -4151,44 +4162,40 @@ function loadCloud(){
   }, err=>{
     setEmptyState("Bulut okunamadı: "+err.message, false);
   });
-  // İlk 1000 listesini buluttan yükle (herkese açık okuma)
-  fbDB.ref("tim").on("value", snap=>{
+  // İlk 1000 listesini buluttan yükle
+  cloudOn("tim", snap=>{
     const v = snap.val();
     if (v && v.map && !S.timDirty){ S.tim = v.map; S.timYear = v.year||""; refreshTimChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
-  }, ()=>{});
+  });
   // Turquality listesini buluttan yükle
-  fbDB.ref("tq").on("value", snap=>{
+  cloudOn("tq", snap=>{
     const v = snap.val();
     if (v && v.map && !S.tqDirty){ S.tq = v.map; refreshTqChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
-  }, ()=>{});
-  // Şubelere atanmış yıldız firmaları buluttan yükle (herkese açık okuma; sadece admin yazar)
-  fbDB.ref("starred").on("value", snap=>{
-    if (!S.starredDirty){ S.starred = snap.val() || {}; render(); renderAdminStats(); }
-  }, ()=>{});
-  // Şubelerin kendi işaretlediği "Önemli" firmaları buluttan yükle
-  fbDB.ref("important").on("value", snap=>{
-    S.important = snap.val() || {}; render(); renderAdminStats();
-  }, ()=>{});
-  // Şubelerin kendi Ziyaret Listesi'ni buluttan yükle
-  fbDB.ref("visits").on("value", snap=>{
-    S.visits = snap.val() || {}; render(); renderAdminStats();
-  }, ()=>{});
-  // Şube giriş kayıtlarını buluttan yükle (sadece Yönetim panelinde kullanılır)
-  fbDB.ref("loginLogs").on("value", snap=>{
-    S.loginLogs = snap.val() || {};
-    renderAdminStats();
-  }, ()=>{});
-  // Önceden hesaplanmış TAM ADRES koordinatlarını buluttan yükle (scripts/geocode.js yazar; herkese açık okuma)
-  fbDB.ref("addrGeo").on("value", snap=>{
+  });
+  // Yıldız / Önemli / Ziyaret / Giriş kayıtları: admin tüm şubeleri, şube hesabı yalnızca KENDİ düğümünü
+  // dinler (kurallar başka şubenin verisini okumaya izin vermez).
+  const uname = S.branch ? S.branch.username : null;
+  if (S.isAdmin){
+    cloudOn("starred", snap=>{ if (!S.starredDirty){ S.starred = snap.val() || {}; render(); renderAdminStats(); } });
+    cloudOn("important", snap=>{ S.important = snap.val() || {}; render(); renderAdminStats(); });
+    cloudOn("visits", snap=>{ S.visits = snap.val() || {}; render(); renderAdminStats(); });
+    cloudOn("loginLogs", snap=>{ S.loginLogs = snap.val() || {}; renderAdminStats(); });
+  } else if (uname){
+    cloudOn("starred/"+uname, snap=>{ if (!S.starredDirty){ S.starred = {[uname]: snap.val() || {}}; render(); } });
+    cloudOn("important/"+uname, snap=>{ S.important = {[uname]: snap.val() || {}}; render(); });
+    cloudOn("visits/"+uname, snap=>{ S.visits = {[uname]: snap.val() || {}}; render(); if (!$("visitListScreen").hidden) renderVisitListScreen(); });
+  }
+  // Önceden hesaplanmış TAM ADRES koordinatlarını buluttan yükle (scripts/geocode.js yazar)
+  cloudOn("addrGeo", snap=>{
     S.addrGeo = snap.val() || {};
     if (S.userLoc) geocodeVisible(); // yeni/güncel adres koordinatı geldiyse mesafeleri baştan hesapla
-  }, ()=>{});
-  // Admin'in elle birleştirdiği firma eşleşmelerini buluttan yükle (herkese açık okuma; sadece admin yazar)
-  fbDB.ref("manualMerges").on("value", snap=>{
+  });
+  // Admin'in elle birleştirdiği firma eşleşmelerini buluttan yükle (sadece admin yazar)
+  cloudOn("manualMerges", snap=>{
     S.manualMerges = snap.val() || {};
     render();
     if ($("adminAudiencesScreen") && !$("adminAudiencesScreen").hidden) renderMergeFirmList();
-  }, ()=>{});
+  });
 }
 
 $("saveCloudBtn").onclick = async ()=>{
