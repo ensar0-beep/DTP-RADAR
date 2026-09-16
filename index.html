@@ -3437,11 +3437,12 @@ function renderBranchUI(){
     if (visitBtn) visitBtn.hidden = false;
     if (helpBtn) helpBtn.hidden = false;
     setLocSource("branch");
-    // Bu şube kullanıcısının bu taraycıdaki ilk 5 girişinde kullanım rehberini göster
+    // Kullanım rehberi yalnızca bu şubenin bu tarayıcıdaki İLK girişinde açılır; sonra sağ üstteki
+    // rehber (kep) düğmesinden istenince açılabilir.
     try{
       const countKey = "dtr-onboard-count-"+S.branch.username;
       const n = parseInt(localStorage.getItem(countKey)||"0", 10);
-      if (n < 5){
+      if (n < 1){
         localStorage.setItem(countKey, String(n+1));
         openOnboarding();
       }
