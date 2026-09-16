@@ -9,6 +9,3 @@ scripts/current_rules.json
 scripts/new_rules.json
 scripts/_extracted_geo.js
 scripts/geocode_run.log
-
-# Müşteri–şube listesi: şirket bulutuna index.html'in yanına konur, asla GitHub'a girmez
-musteri-subeleri.*

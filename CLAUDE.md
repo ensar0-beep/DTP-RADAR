@@ -21,9 +21,7 @@ lets branch employees filter/sort companies by location, import/export volume, a
   `index_NN.html`, kept in sync on every save, since GitHub Pages/Netlify serve `index.html` by root convention.
   After editing `index_NN.html`, always `cp` it over `index.html` before committing.
 - `bulutindex.html` is a second synced copy of the same file, kept for the company's own cloud hosting
-  (the user uploads it there by hand). Keep it identical to `index.html` on every save. That deployment
-  may also carry a `musteri-subeleri.xlsx` (branch ↔ tax-number customer list) next to the HTML; the page
-  fetches it at login (`loadCustomerFile()`). The file is gitignored and must never be committed.
+  (the user uploads it there by hand). Keep it identical to `index.html` on every save.
 - Git history is currently a single squashed commit; don't rely on file history for context.
 
 ## Running / testing

@@ -465,16 +465,6 @@ select:focus,input:focus{border-color:var(--exp)}
 .firm-meta{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:2px}
 /* Ticari unvan eki (SANAYİ VE TİCARET A.Ş. gibi) her ekranda ayrı satırda, küçük ve soluk;
    masaüstünde büyük harf, mobilde ilk harfi büyük (bkz. mobil bloğu) */
-/* Müşteri–şube eşleştirmesi (sunucudaki musteri-subeleri.xlsx'ten) */
-.cust-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(91,141,239,.14);color:#7FA6F5;border:1px solid rgba(91,141,239,.45);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:600;margin-left:6px;vertical-align:1px;white-space:nowrap;font-family:'IBM Plex Sans',sans-serif}
-.firm.cust{border-color:rgba(91,141,239,.45)}
-.cust-status{margin-top:14px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
-.cust-status[hidden]{display:none}
-.cust-status h4{margin:0 0 4px;font-size:13.5px;display:flex;align-items:center;gap:8px;font-family:'Sora',sans-serif}
-.cust-status p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5}
-.cust-status .ok{color:var(--exp)} .cust-status .warn{color:var(--imp)} .cust-status code{font-family:'IBM Plex Mono',monospace;font-size:12px}
-.cust-unmatched{margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:10px 12px;line-height:1.7;max-height:220px;overflow:auto}
-.cust-unmatched b{color:var(--imp);font-weight:600}
 .nm-suffix-full{display:none}
 .nm-suffix{display:inline;font-size:11.5px;font-weight:400;color:var(--faint);text-transform:uppercase;letter-spacing:.02em;margin:0 4px 0 7px;vertical-align:1px}
 .firm-loc{display:none;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:3px} /* sadece mobilde */
@@ -991,10 +981,6 @@ select:focus,input:focus{border-color:var(--exp)}
     <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
     <input type="search" id="searchBox" placeholder="Firma ara…">
   </div>
-  <div class="sort-wrap" id="custWrap" hidden>
-    <button class="filters-toggle-btn" id="custToggleBtn" type="button" aria-haspopup="true" aria-expanded="false">Müşteri <span class="sort-current" id="custCurrent"></span></button>
-    <div class="sort-menu" id="custMenu" hidden></div>
-  </div>
   <div class="sort-wrap" id="sortWrap" hidden>
     <button class="filters-toggle-btn" id="sortToggleBtn" type="button" aria-haspopup="true" aria-expanded="false">Sırala <span class="sort-current" id="sortCurrent"></span></button>
     <div class="sort-menu" id="sortMenu" hidden></div>
@@ -1214,7 +1200,6 @@ select:focus,input:focus{border-color:var(--exp)}
       <!-- Hedef Kitleler -->
       <div id="adminAudiencesScreen" class="admin-screen" hidden>
         <div class="admin-screen-title">Hedef Kitleler</div>
-        <div class="cust-status" id="custStatus" hidden></div>
 
         <div class="audience-grid">
           <div class="audience-card">
@@ -1403,7 +1388,6 @@ const ICONS = {
   cornerUpLeft:`<svg class="ic" viewBox="0 0 24 24" ${SW}><path d="M9 14L4 9l5-5M4 9h10a5 5 0 015 5v3"/></svg>`,
   externalLink:`<svg class="ic" viewBox="0 0 24 24" ${SW}><path d="M14 5h5v5M19 5l-9 9M6 5H5a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-1"/></svg>`,
   logIn:       `<svg class="ic" viewBox="0 0 24 24" ${SW}><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>`,
-  user:        `<svg class="ic" viewBox="0 0 24 24" ${SW}><path d="M20 21a8 8 0 10-16 0"/><circle cx="12" cy="8" r="4"/></svg>`,
   logOut:      `<svg class="ic" viewBox="0 0 24 24" ${SW}><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>`,
   cap:         `<svg class="ic" viewBox="0 0 24 24" ${SW}><path d="M2 9l10-4 10 4-10 4-10-4z"/><path d="M6 11v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>`,
   wave:        `<svg class="ic" viewBox="0 0 24 24" ${SW}><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z"/><path d="M8 13c1 1.5 2.3 2 4 2s3-.5 4-2"/></svg>`,
@@ -2062,12 +2046,6 @@ function filtered(){
   if ($("diibOnly") && $("diibOnly").checked) list = list.filter(a=>a.belge>0);
   if ($("timOnly") && $("timOnly").checked) list = list.filter(a=>a.tim);
   if ($("tqOnly") && $("tqOnly").checked) list = list.filter(a=>a.tq);
-  if (custActive()){
-    // Şube kullanıcısı: başka şubenin müşterisi olan firmalar hiç görünmez (kendi müşterisi + müşteri olmayanlar kalır)
-    if (S.branch){ const u = S.branch.username; list = list.filter(a=>{ const b = custBranchesOf(a); return b.length===0 || b.includes(u); }); }
-    if (S._custFilter==="mine"){ const u = S.branch ? S.branch.username : null; list = list.filter(a=>{ const b = custBranchesOf(a); return u ? b.includes(u) : b.length>0; }); }
-    else if (S._custFilter==="none"){ list = list.filter(a=>custBranchesOf(a).length===0); }
-  }
   if (S._visitView){
     // Ziyaret Listem görünümü: yalnızca listedeki firmalar; yarıçap sınırı uygulanmaz (liste tam görünsün)
     const vm = visitMapFor();
@@ -2329,7 +2307,6 @@ function render(){
   const list = applyManualMerges(applyStarPriority(filtered()));
   updateMapChips(list.length);
   updateVisitViewUI(list);
-  updateCustButtonUI();
   // Aktif filtre etiketleri (ör. "Yakınlık (en yakın önce)") Ziyaret Listem ekranında anlamsız —
   // o ekran ana filtrelerden bağımsız kendi sekmelerini (Tümü/Planlanan/Ziyaret Edilen) kullanıyor.
   if (visitScreenOpen){ $("activeFilterTags").hidden = true; }
@@ -2362,10 +2339,7 @@ function render(){
     const origin = S.userLoc ? `&origin=${S.userLoc.lat},${S.userLoc.lon}` : "";
     const mapsUrl = `https://www.google.com/maps/dir/?api=1${origin}&destination=${dest}`;
     const open = S._openFirm===a.key;
-    const custB = custBranchesOf(a);
-    const custMine = !!(S.branch && custB.includes(S.branch.username));
-    const custShow = S.branch ? custMine : custB.length>0;
-    const div = document.createElement("div"); div.className="firm"+(open?" open":"")+(custShow?" cust":"");
+    const div = document.createElement("div"); div.className="firm"+(open?" open":"");
     div.dataset.key = a.key;
     const isStarredForBranch = S.branch && S.starred[S.branch.username] && S.starred[S.branch.username][a.key];
     const isImportantForBranch = S.branch && S.important[S.branch.username] && S.important[S.branch.username][a.key];
@@ -2392,7 +2366,7 @@ function render(){
     const nameParts = splitFirmName(a.firma);
     div.innerHTML = `
       <div class="firm-head" data-toggle="${a.key}">
-        <div class="firm-top"><div class="firm-name">${isStarredForBranch?`<span class="star-badge" title="Şubeniz için hedef firma">${ic('starFilled')}</span>`:""}${isImportantForBranch?`<span class="important-badge" title="Sizin işaretlediğiniz önemli firma">${ic('pin')}</span>`:""}${adminViewImportant?`<span class="important-badge" title="Bu şube tarafından önemli işaretlenmiş">${ic('pin')}</span>`:""}${visitRec?`<span class="visit-badge visit-${visitRec.status}" title="${visitLabel}">${visitIcon}</span>`:""}${nameParts.main}${nameParts.suffix?`<span class="nm-suffix">${nameParts.suffix}</span>`:""}${newBadgeHTML}${a.tim?`<span class="tim-badge" title="TİM İlk 1000 İhracatçı${S.timYear?' '+S.timYear:''}">${ic('trophy')} İlk 1000${a.tim.r<9999?` · #${a.tim.r}`:''}</span>`:""}${a.tq?`<span class="tq-badge" title="${a.tq.prog||'Turquality/Marka Destek'}">${ic('medal')} ${/TURQUALITY/i.test(a.tq.prog)?'Turquality':'Marka Destek'}</span>`:""}${custShow?`<span class="cust-badge" title="Müşteri listesinden">${ic('user')} ${S.branch?"Müşterim":"Müşteri · "+custBranchNames(custB)}</span>`:""}</div>
+        <div class="firm-top"><div class="firm-name">${isStarredForBranch?`<span class="star-badge" title="Şubeniz için hedef firma">${ic('starFilled')}</span>`:""}${isImportantForBranch?`<span class="important-badge" title="Sizin işaretlediğiniz önemli firma">${ic('pin')}</span>`:""}${adminViewImportant?`<span class="important-badge" title="Bu şube tarafından önemli işaretlenmiş">${ic('pin')}</span>`:""}${visitRec?`<span class="visit-badge visit-${visitRec.status}" title="${visitLabel}">${visitIcon}</span>`:""}${nameParts.main}${nameParts.suffix?`<span class="nm-suffix">${nameParts.suffix}</span>`:""}${newBadgeHTML}${a.tim?`<span class="tim-badge" title="TİM İlk 1000 İhracatçı${S.timYear?' '+S.timYear:''}">${ic('trophy')} İlk 1000${a.tim.r<9999?` · #${a.tim.r}`:''}</span>`:""}${a.tq?`<span class="tq-badge" title="${a.tq.prog||'Turquality/Marka Destek'}">${ic('medal')} ${/TURQUALITY/i.test(a.tq.prog)?'Turquality':'Marka Destek'}</span>`:""}</div>
           <div class="firm-top-right">
             ${S.branch?`<button class="important-pin-toggle${isImportantForBranch?" marked":""}" data-important-key="${a.key}" title="${isImportantForBranch?'Önemli işaretini kaldır':'Önemli olarak işaretle'}">${ic('pin')}</button>`:""}
             ${S._visitView&&visitRec?`<span class="firm-visit-state ${visitRec.status}">${visitRec.status==="done"?ic('checkCircle')+" Ziyaret edildi":ic('bookmark')+" Planlandı"} · ${fmtVisitDate(visitRec.ts)}</span>`:""}
@@ -2483,7 +2457,6 @@ function firmDetailHTML(a, mapsUrl){
   const belgeVal = a.belge ? `${a.belge} belge${bitisler.length?` <span class='muted'>· bitiş: ${bitisler.join(", ")}</span>`:""}` : "";
   return `<div class="firm-detail">
     ${row("Vergi No (VKN)", a.vkn||"<span class='muted'>Listede yok</span>", a.vkn||"", true)}
-    ${(()=>{ const b = custBranchesOf(a); if (!b.length) return ""; const mine = S.branch && b.includes(S.branch.username); return row("Müşteri şubesi", `<span style="color:#7FA6F5;font-weight:600">${S.branch ? (mine ? S.branch.name : custBranchNames(b)) : custBranchNames(b)}</span> <span class="muted">· müşteri listesinden</span>`); })()}
     ${row("Firma", a.firma, a.firma)}
     ${a.adres?row("Adres", a.adres, a.adres):""}
     ${row("İl", a.il||"—")}
@@ -3024,8 +2997,7 @@ function drawMap(list){
     const col = isSelected ? "#E8A33D" : (vm ? (allDone ? "#35C4A8" : "#E8A33D") : "#35C4A8");
     const rr = isSelected ? r+4 : r;
     const glow = L.circleMarker([c.lat,c.lon],{radius:rr+6,color:col,weight:0,fillColor:col,fillOpacity:isSelected?.25:.12,interactive:false}).addTo(S.map);
-    const custHere = custActive() && firms.some(f=>{ const b = custBranchesOf(f); return S.branch ? b.includes(S.branch.username) : b.length>0; });
-    const m = L.circleMarker([c.lat,c.lon],{radius:rr, color:isSelected?"#06251F":(custHere?"#5B8DEF":"#0D1220"), fillColor:col, fillOpacity:isSelected?.95:.85, weight:isSelected?2.5:(custHere?2.5:1.5)})
+    const m = L.circleMarker([c.lat,c.lon],{radius:rr, color:isSelected?"#06251F":"#0D1220", fillColor:col, fillOpacity:isSelected?.95:.85, weight:isSelected?2.5:1.5})
       .addTo(S.map)
       .on("click", ()=>{
         // Noktaya tıklamak, panel açılmasının yanında o noktadaki en yüksek ihracatlı firmayı
@@ -3096,8 +3068,8 @@ $("csvBtn").onclick = ()=>{
   const esc = v=>`"${String(v??"").replace(/"/g,'""')}"`;
   // VKN başındaki sıfırlar Excel'de düşmesin diye metin formülü olarak yazılır (="0010781316")
   const vknCell = v => v ? `="${String(v).replace(/"/g,"")}"` : "";
-  let csv = "\uFEFFFirma;VKN;Müşteri Şubesi;İl;Adres;Belge Sayısı;Öngörülen İthalat (USD);Öngörülen İhracat (USD);Mesafe (km)\n";
-  for (const a of list) csv += [esc(a.firma),vknCell(a.vkn),esc(custBranchNames(custBranchesOf(a))),esc(a.il),esc(a.adres),a.belge,Math.round(a.imp),Math.round(a.exp),S.distByKey[a.key]!==undefined?S.distByKey[a.key].toFixed(1):""].join(";")+"\n";
+  let csv = "\uFEFFFirma;VKN;İl;Adres;Belge Sayısı;Öngörülen İthalat (USD);Öngörülen İhracat (USD);Mesafe (km)\n";
+  for (const a of list) csv += [esc(a.firma),vknCell(a.vkn),esc(a.il),esc(a.adres),a.belge,Math.round(a.imp),Math.round(a.exp),S.distByKey[a.key]!==undefined?S.distByKey[a.key].toFixed(1):""].join(";")+"\n";
   const blob = new Blob([csv],{type:"text/csv;charset=utf-8"});
   const u = URL.createObjectURL(blob); const aEl=document.createElement("a");
   aEl.href=u; aEl.download="diib-radar.csv"; aEl.click(); URL.revokeObjectURL(u);
@@ -3161,7 +3133,6 @@ function initFirebase(){
     renderBranchUI();
     updateSaveRow();
     renderGate(); // giriş yapılmadan platform hiç görünmesin
-    if (user) loadCustomerFile(); else { S.cust = null; S._custFilter = "all"; }
     // Bulut verisi yalnızca giriş yapılmışken okunabilir (güvenlik kuralları) — dinleyiciler burada kurulur,
     // çıkışta sökülür ve bellek temizlenir. Şube hesabı sadece KENDİ düğümlerini dinler.
     if (user){ if (!S._cloudOn) loadCloud(); } else detachCloud();
@@ -3212,7 +3183,6 @@ function resetFilterUIOnLogout(){
   S._filtersOpen = false;
   S._openFirm = null;
   S._visitView = false; S._locStatusSaved = null;
-  S._custFilter = "all";
 }
 
 // Kapı ekranı: "Yönetim Giriş" bağlantısı — şube formunu gizleyip admin formunu gösterir
@@ -3399,132 +3369,6 @@ $("onboardClose").onclick = closeOnboarding;
 $("onboardOverlay").addEventListener("click", e=>{ if (e.target.id==="onboardOverlay") closeOnboarding(); });
 $("onboardHelpBtn") && ($("onboardHelpBtn").onclick = openOnboarding);
 
-// ---- Müşteri–şube eşleştirmesi ----
-// index.html'in YANINDA duran "musteri-subeleri.xlsx" (1. sütun Şube, 2. sütun Vergi Numarası) sayfa
-// açılışında (girişten sonra) okunur. Dosya yoksa (ör. Netlify/GitHub kopyası) özellik sessizce kapalı
-// kalır. Veri hiçbir sunucuya gönderilmez; yalnızca tarayıcı belleğinde tutulur.
-// Kural: şube kullanıcısı kendi müşterilerini "Müşterim" rozetiyle görür, BAŞKA şubenin müşterisi olan
-// firmaları hiç görmez; hiçbir şubenin müşterisi olmayanlar herkese açık. Admin her şeyi görür.
-// Aynı VKN birden fazla şubede geçebilir — firma o şubelerin hepsine "Müşterim" olarak görünür.
-const CUSTOMER_FILE = "musteri-subeleri.xlsx";
-S.cust = null;          // null: dosya yok/okunmadı · {byVkn, total, matched, unmatched, loadedAt} · {error}
-S._custFilter = "all";  // "all" | "mine" (şube: benim; admin: müşteri olan) | "none"
-function normBranchName(x){ return trUp(x).replace(/ŞUBESİ|ŞUBE|ŞB\.?/g," ").replace(/[^A-ZÇĞİÖŞÜ0-9]/g,""); }
-function normVkn(v){ let d = String(v??"").replace(/\D/g,""); if (!d) return ""; if (d.length>=8 && d.length<10) d = d.padStart(10,"0"); return (d.length===10||d.length===11) ? d : ""; }
-function custActive(){ return !!(S.cust && S.cust.byVkn); }
-function custBranchesOf(a){ if (!custActive()) return []; const v = normVkn(a.vkn); return v ? (S.cust.byVkn[v]||[]) : []; }
-function custBranchNames(list){ return list.map(u=>SUBE_TABLE[u]?SUBE_TABLE[u][0]:u).join(", "); }
-async function loadCustomerFile(){
-  if (S.cust && (S.cust.loading || S.cust.byVkn)) return;
-  if (typeof XLSX==="undefined") return;
-  // Bilgisayardan çift tıklayarak (file://) açıldığında tarayıcı yanındaki dosyayı okutmaz;
-  // bu durumda admin ekranındaki "Dosyayı seç" düğmesiyle elle seçilir (parseCustomerWorkbook).
-  if (location.protocol==="file:"){ S.cust = {localOnly:true}; renderCustStatus(); return; }
-  S.cust = {loading:true};
-  try{
-    const res = await fetch(CUSTOMER_FILE, {cache:"no-store"});
-    if (!res.ok){ S.cust = null; return; }
-    parseCustomerWorkbook(await res.arrayBuffer());
-  }catch(e){
-    S.cust = {error: e.message||String(e)};
-  }finally{
-    render(); renderCustStatus();
-  }
-}
-// Excel'i (ArrayBuffer) çözüp S.cust'ı doldurur — hem sunucudan hem elle seçilen dosyadan kullanılır
-function parseCustomerWorkbook(buffer){
-  try{
-    const wb = XLSX.read(buffer, {type:"array"});
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:""});
-    // Başlık satırını bul (ŞUBE + VERGİ/VKN); bulunamazsa 1. sütun şube, 2. sütun VKN kabul edilir
-    let hi = -1, cs = 0, cv = 1;
-    for (let r=0; r<Math.min(rows.length,10); r++){
-      const cells = rows[r].map(trUp);
-      const is = cells.findIndex(c=>/ŞUBE/.test(c)), iv = cells.findIndex(c=>/VERG|VKN/.test(c));
-      if (is>=0 && iv>=0){ hi=r; cs=is; cv=iv; break; }
-    }
-    const branchIndex = {};
-    for (const [u, rec] of Object.entries(SUBE_TABLE)){ const k = normBranchName(rec[0]); if (k && !branchIndex[k]) branchIndex[k] = u; }
-    const byVkn = {}, unmatched = {};
-    let total = 0, matched = 0;
-    for (let r=hi+1; r<rows.length; r++){
-      const sube = String(rows[r][cs]??"").trim(), vkn = normVkn(rows[r][cv]);
-      if (!sube || !vkn) continue;
-      total++;
-      const uname = branchIndex[normBranchName(sube)] || (SUBE_TABLE[sube] ? sube : null);
-      if (!uname){ unmatched[sube] = (unmatched[sube]||0)+1; continue; }
-      matched++;
-      if (!byVkn[vkn]) byVkn[vkn] = [];
-      if (!byVkn[vkn].includes(uname)) byVkn[vkn].push(uname);
-    }
-    const unmatchedList = Object.entries(unmatched).map(([name,count])=>{
-      const nk = normBranchName(name);
-      const hit = nk ? Object.entries(branchIndex).find(([k])=>k.startsWith(nk)||nk.startsWith(k)||k.includes(nk)) : null;
-      return {name, count, suggest: hit ? SUBE_TABLE[hit[1]][0] : ""};
-    }).sort((a,b)=>b.count-a.count);
-    S.cust = {byVkn, total, matched, unmatched: unmatchedList, loadedAt: Date.now()};
-  }catch(e){
-    S.cust = {error: e.message||String(e)};
-  }
-}
-// Elle dosya seçimi (yerel test / sunucusuz kullanım): admin durum kutusundaki düğme
-function pickCustomerFile(){
-  const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".xlsx,.xls,.csv";
-  inp.onchange = async ()=>{
-    const f = inp.files && inp.files[0]; if (!f) return;
-    parseCustomerWorkbook(await f.arrayBuffer());
-    render(); renderCustStatus();
-    if (S.cust && S.cust.byVkn) toast(`Müşteri listesi okundu: ${S.cust.total} satır`);
-  };
-  inp.click();
-}
-function custFilterLabel(){
-  const mineLabel = S.branch ? "Müşterim" : "Müşteri";
-  return S._custFilter==="mine" ? mineLabel : (S._custFilter==="none" ? "Müşteri değil" : "Tümü");
-}
-function updateCustButtonUI(){
-  const wrap = $("custWrap"), cur = $("custCurrent");
-  if (!wrap) return;
-  const has = S.files.length>0 || Object.keys(S.tq).length>0;
-  const visitOpen = $("visitListScreen") && !$("visitListScreen").hidden;
-  wrap.hidden = !(custActive() && has && !visitOpen);
-  if (cur) cur.textContent = "· " + custFilterLabel();
-}
-$("custToggleBtn") && $("custToggleBtn").addEventListener("click", e=>{
-  e.stopPropagation();
-  const menu = $("custMenu"), btn = $("custToggleBtn");
-  if (!menu.hidden){ menu.hidden = true; btn.classList.remove("open"); return; }
-  const opts = [["all","Tümü"],["mine", S.branch ? "Müşterim" : "Müşteri olan"],["none","Müşteri değil"]];
-  menu.innerHTML = opts.map(([k,l])=>`<button type="button" data-cf="${k}" class="${k===S._custFilter?"active":""}">${l}${k===S._custFilter?" ✓":""}</button>`).join("");
-  menu.querySelectorAll("button").forEach(b=>{ b.onclick = ()=>{ S._custFilter = b.dataset.cf; S.shown = 50; menu.hidden = true; btn.classList.remove("open"); render(); if (S.userLoc) refineMahalle(); }; });
-  menu.hidden = false; btn.classList.add("open");
-});
-document.addEventListener("click", e=>{ if (!e.target.closest("#custWrap")){ const m=$("custMenu"); if (m) m.hidden = true; $("custToggleBtn") && $("custToggleBtn").classList.remove("open"); } });
-// Admin › Hedef Kitleler: dosya durumu ve eşleşmeyen şube adları
-function renderCustStatus(){
-  const box = $("custStatus"); if (!box) return;
-  if (!S.isAdmin){ box.hidden = true; return; }
-  box.hidden = false;
-  const pickBtn = `<button class="btn" type="button" onclick="pickCustomerFile()" style="margin-top:10px">${ic('folder')} Dosyayı seç</button>`;
-  if (S.cust && S.cust.localOnly){
-    box.innerHTML = `<h4>${ic('user')} Müşteri listesi <span class="warn">· elle seçilmeli</span></h4><p>Sayfa bilgisayardan doğrudan açıldığı için (adres <code>file://</code> ile başlıyor) tarayıcı yanındaki <code>${CUSTOMER_FILE}</code> dosyasını kendiliğinden okuyamıyor. Şirket bulutundan (<code>https://…</code>) açıldığında otomatik okunur; şimdilik dosyayı elle seçebilirsin — yine hiçbir yere gönderilmez, sadece bu sekmede kalır.</p>${pickBtn}`;
-    return;
-  }
-  if (!S.cust || S.cust.loading){
-    box.innerHTML = `<h4>${ic('user')} Müşteri listesi <span class="warn">· bulunamadı</span></h4><p><code>${CUSTOMER_FILE}</code> dosyası HTML ile aynı klasörde değil ya da okunamadı. Dosya eklendiğinde (1. sütun Şube, 2. sütun Vergi Numarası) sayfa yenilenince otomatik devreye girer. Test için elle de seçebilirsin.</p>${pickBtn}`;
-    return;
-  }
-  if (S.cust.error){
-    box.innerHTML = `<h4>${ic('user')} Müşteri listesi <span class="warn">· okunamadı</span></h4><p>${S.cust.error}</p>${pickBtn}`;
-    return;
-  }
-  const c = S.cust, firms = Object.keys(c.byVkn).length;
-  const t = new Date(c.loadedAt).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
-  box.innerHTML = `<h4>${ic('user')} Müşteri listesi <span class="ok">· okundu</span></h4>
-    <p><code>${CUSTOMER_FILE}</code> · ${c.total.toLocaleString("tr-TR")} satır · ${firms.toLocaleString("tr-TR")} farklı VKN · ${c.matched.toLocaleString("tr-TR")} satırda şube eşleşti${c.unmatched.length?` · <span class="warn">${c.unmatched.reduce((n,u)=>n+u.count,0)} satırda şube adı tanınmadı</span>`:""} · son okuma ${t}</p>
-    ${c.unmatched.length?`<div class="cust-unmatched">${c.unmatched.map(u=>`<b>${u.name}</b> → tanınmadı${u.suggest?` (öneri: ${u.suggest})`:""} · ${u.count} kayıt`).join("<br>")}</div><p style="margin-top:8px">Düzeltme Excel'de yapılır: şube adını sistemdeki adla (ör. "Pendik Şubesi") yazıp dosyayı aynı adla klasöre yeniden koy.</p>`:""}`;
-}
-
 // ---- Ziyaret Listem görünümü: harita + liste yalnızca ziyaret listesindeki firmalar ----
 S._visitView = false;
 function visitOwnerUname(){ return S.branch ? S.branch.username : (S.isAdmin ? S._adminViewBranch : null); }
@@ -3638,7 +3482,6 @@ function showAdminScreen(targetId){
     renderBranchProxTable();
   } else if (targetId === "adminAudiencesScreen"){
     renderMergeFirmList();
-    renderCustStatus();
   } else if (targetId === "adminOverviewScreen"){
     renderAdminOverview();
   } else if (targetId === "adminFirmViewScreen"){
