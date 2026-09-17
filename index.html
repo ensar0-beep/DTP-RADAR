@@ -4114,7 +4114,20 @@ function detachCloud(){
 }
 function loadCloud(){
   S._cloudOn = true;
+  // Şirket ağları Firebase'in canlı bağlantısını (firebaseio.com / WebSocket) engelleyebiliyor; kullanıcı
+  // sonsuza kadar "yükleniyor" görmesin diye 20 sn içinde veri gelmezse açıklayıcı bir uyarı gösterilir.
+  // Bağlantı sonradan kurulursa dinleyici çalışır ve liste kendiliğinden gelir.
+  S._cloudFirstData = false;
+  setTimeout(()=>{
+    if (S._cloudOn && !S._cloudFirstData && !S.files.length){
+      setEmptyState("Bulut sunucusuna ulaşılamıyor (20 sn). Bu bilgisayarın ağı Firebase bağlantısını engelliyor olabilir — BT'den *.firebaseio.com ve *.googleapis.com adreslerine izin istenmeli. Bağlantı kurulursa liste kendiliğinden yüklenir.", false);
+    }
+  }, 20000);
+  cloudOn(".info/connected", snap=>{
+    if (snap.val()===false && S._cloudOn && !S._cloudFirstData && !S.files.length) setEmptyState("Bulut sunucusuna bağlanılıyor…", true);
+  });
   cloudOn("months", snap=>{
+    S._cloudFirstData = true;
     const data = snap.val() || {};
     // Buluttaki her ayı S.files içine (cloud) olarak koy; elle yüklenmiş dirty dosyaları koru.
     const dirtyKept = S.files.filter(f=>f.dirty);
