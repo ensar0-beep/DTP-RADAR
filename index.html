@@ -285,7 +285,37 @@ input[type=file]{display:none}
 .this-month b{font-weight:600}
 .this-month .tm-sub{font-size:12px;color:var(--muted)}
 .this-month .btn{margin-left:auto}
-.data-status{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin:-2px 0 10px}
+.data-status{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);text-align:right;line-height:1.5;white-space:nowrap}
+.data-rows{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.data-row-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.data-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.data-row-icon{width:38px;height:38px;border-radius:10px;background:var(--panel2);display:flex;align-items:center;justify-content:center;color:var(--exp);font-size:17px;flex:0 0 auto}
+.data-row-icon.tim{color:var(--imp)} .data-row-icon.tq{color:#A9AEFF}
+.data-row-text{flex:1;min-width:220px}
+.data-row-text b{display:block;font-size:14px}
+.data-row-text span{font-size:12.5px;color:var(--muted)}
+.data-details{margin-top:10px}
+.data-details summary{cursor:pointer;font-size:12.5px;color:var(--muted);list-style:none;user-select:none}
+.data-details summary::before{content:"▸ ";color:var(--faint)} .data-details[open] summary::before{content:"▾ "}
+.month-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.month-chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;border:1px solid var(--border);border-radius:7px;padding:4px 8px;color:var(--muted);background:var(--panel2);cursor:pointer}
+.month-chip:hover{border-color:var(--exp);color:var(--text)}
+.month-chip.active{border-color:var(--exp);color:var(--exp)}
+.month-chip.miss{border-style:dashed;color:var(--imp);border-color:rgba(232,163,61,.5);cursor:default}
+.month-chip .del{color:var(--faint);font-size:12px;line-height:1;padding:0 0 0 2px}
+.month-chip .del:hover{color:var(--danger)}
+.data-viewer{margin-top:12px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.data-viewer[hidden]{display:none}
+.data-viewer-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.data-viewer-head > div:first-child{flex:1;min-width:200px}
+.data-viewer-title{font-family:'Sora',sans-serif;font-weight:600;font-size:14px}
+.data-viewer-head input{width:220px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 11px;font-family:inherit;font-size:13px}
+.data-viewer-body{max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:9px}
+.data-viewer-body table{width:100%;border-collapse:collapse;font-size:12.5px}
+.data-viewer-body th{position:sticky;top:0;background:var(--panel2);text-align:left;padding:8px 10px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.data-viewer-body td{padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap;max-width:360px;overflow:hidden;text-overflow:ellipsis}
+.data-viewer-body td.num{font-family:'IBM Plex Mono',monospace;text-align:right}
+.data-viewer-foot{padding:8px 10px;font-size:12px;color:var(--faint)}
 .data-status .ok{color:var(--exp)} .data-status .warn{color:var(--imp)}
 .branch-split{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;margin-top:10px;align-items:start}
 @media(max-width:900px){.branch-split{grid-template-columns:1fr}}
@@ -1265,40 +1295,46 @@ select:focus,input:focus{border-color:var(--exp)}
       <div id="adminAudiencesScreen" class="admin-screen" hidden>
         <div class="admin-head"><div><div class="admin-screen-title">Veri Yükleme</div><div class="admin-screen-desc">Her ay DİİB (D1) dosyasını ekle; İlk 1000 ve Turquality listeleri yılda bir güncellenir.</div></div></div>
 
-        <div class="audience-grid">
-          <div class="audience-card">
-            <div class="audience-card-title"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/></svg> DİİB <span class="hint-inline">(aylık, ticaret.gov.tr)</span></div>
-            <div class="data-status" id="diibDataStatus"></div>
-            <div class="hint">Belge Listeleri (D1, D3, H1) sayfasından her ayın <b>Dahilde İşleme İzin Belgeleri (D1)</b> Excel'ini indirip ekle. Ay otomatik algılanır.</div>
-            <div class="drop small" id="drop"><b>Dosya seç</b> veya sürükle (.xlsx / .xls / .csv)</div>
-            <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv">
-            <button class="filelist-toggle" id="fileListToggle" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Yüklenmiş kitleler (<span id="fileListCount">0</span>)</button>
-            <div class="filelist" id="fileList" hidden></div>
+        <div class="data-rows">
+          <!-- DİİB -->
+          <div class="data-row-card">
+            <div class="data-row">
+              <div class="data-row-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/></svg></div>
+              <div class="data-row-text"><b>DİİB aylık belgeler</b><span>Belge Listeleri (D1) Excel'i — ay dosya adından otomatik anlaşılır; birden fazla dosya seçilebilir</span></div>
+              <div class="data-status" id="diibDataStatus"></div>
+              <button class="btn primary" type="button" id="diibAddBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg> Dosya ekle</button>
+            </div>
+            <details class="data-details" id="monthDetails"><summary>Yüklü aylar (<span id="fileListCount">0</span>) — aya tıkla: firmaları gör</summary><div class="month-chips" id="monthChips"></div></details>
+            <div class="filelist" id="fileList"></div>
             <div class="saverow" id="saveRow" style="display:none">
               <button class="btn primary" id="saveCloudBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 01-.5-8.97A5.5 5.5 0 0117.3 8.02 4 4 0 0117 16h-1"/><path d="M12 12v9M9 15l3-3 3 3"/></svg> Buluta kaydet</button>
               <span class="savestatus" id="saveStatus"></span>
             </div>
           </div>
-
-          <div class="audience-card">
-            <div class="audience-card-title"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0zM7 6H4a2 2 0 002 2M17 6h3a2 2 0 01-2 2"/></svg> İlk 1000 İhracatçı <span class="hint-inline">(TİM)</span></div>
-            <div class="data-status" id="timDataStatus"></div>
-            <div class="hint">TİM'in "İlk 1000 İhracatçı" listesini yükle. Firmalar ada göre eşleştirilip rozetlenir.</div>
-            <div class="drop small" id="dropTim"><b>İlk 1000 listesini seç</b> veya sürükle</div>
-            <input type="file" id="fileTim" accept=".xlsx,.xls,.csv">
+          <!-- İlk 1000 -->
+          <div class="data-row-card">
+            <div class="data-row">
+              <div class="data-row-icon tim"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0zM7 6H4a2 2 0 002 2M17 6h3a2 2 0 01-2 2"/></svg></div>
+              <div class="data-row-text"><b>İlk 1000 İhracatçı (TİM)</b><span>TİM'in yıllık listesi; firmalar ada göre eşleştirilip rozetlenir</span></div>
+              <div class="data-status" id="timDataStatus"></div>
+              <button class="btn" type="button" id="timViewBtn">Görüntüle</button>
+              <button class="btn" type="button" id="timAddBtn">Yeni liste</button>
+            </div>
             <div class="tim-status" id="timStatus"></div>
             <div class="saverow" id="timSaveRow" style="display:none">
               <button class="btn primary" id="saveTimBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 01-.5-8.97A5.5 5.5 0 0117.3 8.02 4 4 0 0117 16h-1"/><path d="M12 12v9M9 15l3-3 3 3"/></svg> Buluta kaydet</button>
               <button class="btn" id="clearTimBtn">Listeyi temizle</button>
             </div>
           </div>
-
-          <div class="audience-card">
-            <div class="audience-card-title"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L7 21l5-2.5L17 21l-1.5-8.5"/></svg> Turquality / Marka Destek <span class="hint-inline">(Ticaret Bak.)</span></div>
-            <div class="data-status" id="tqDataStatus"></div>
-            <div class="hint">Turquality desteklenen markalar listesini yükle. DİİB'de olmasalar bile havuza eklenir.</div>
-            <div class="drop small" id="dropTq"><b>Turquality listesini seç</b> veya sürükle</div>
-            <input type="file" id="fileTq" accept=".xlsx,.xls,.csv">
+          <!-- Turquality -->
+          <div class="data-row-card">
+            <div class="data-row">
+              <div class="data-row-icon tq"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L7 21l5-2.5L17 21l-1.5-8.5"/></svg></div>
+              <div class="data-row-text"><b>Turquality markaları</b><span>Desteklenen markalar listesi; DİİB'de olmasalar bile havuza eklenir (VKN sütunu varsa okunur)</span></div>
+              <div class="data-status" id="tqDataStatus"></div>
+              <button class="btn" type="button" id="tqViewBtn">Görüntüle</button>
+              <button class="btn" type="button" id="tqAddBtn">Yeni liste</button>
+            </div>
             <div class="tim-status" id="tqStatus"></div>
             <div class="saverow" id="tqSaveRow" style="display:none">
               <button class="btn primary" id="saveTqBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 01-.5-8.97A5.5 5.5 0 0117.3 8.02 4 4 0 0117 16h-1"/><path d="M12 12v9M9 15l3-3 3 3"/></svg> Buluta kaydet</button>
@@ -1307,7 +1343,26 @@ select:focus,input:focus{border-color:var(--exp)}
           </div>
         </div>
 
-      </div>
+        <!-- Liste görüntüleyici -->
+        <div class="data-viewer" id="dataViewer" hidden>
+          <div class="data-viewer-head">
+            <div><div class="data-viewer-title" id="dataViewerTitle"></div><div class="hint" id="dataViewerSub"></div></div>
+            <input type="search" id="dataViewerSearch" placeholder="Listede ara…">
+            <button class="btn" type="button" id="dataViewerClose">Kapat</button>
+          </div>
+          <div class="data-viewer-body" id="dataViewerBody"></div>
+        </div>
+
+        <!-- Eski sürükle-bırak alanları: gizli, dosya seçiciler ve handler'lar için DOM'da kalır -->
+        <div hidden>
+          <div class="drop small" id="drop"></div>
+          <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv">
+          <button class="filelist-toggle" id="fileListToggle" type="button"></button>
+          <div class="drop small" id="dropTim"></div>
+          <input type="file" id="fileTim" accept=".xlsx,.xls,.csv">
+          <div class="drop small" id="dropTq"></div>
+          <input type="file" id="fileTq" accept=".xlsx,.xls,.csv">
+        </div>
 
       <!-- Firmalar -->
       <div id="adminFirmsScreen" class="admin-screen" hidden>
@@ -1859,8 +1914,10 @@ function refreshTqChip(){
 
 function renderFiles(){
   const el = $("fileList"); el.innerHTML="";
-  const countEl = $("fileListCount"); if (countEl) countEl.textContent = S.files.length;
-  for (const f of S.files){
+  renderMonthChips();
+  // Yalnızca henüz buluta kaydedilmemiş (yeni seçilmiş) dosyalar satır olarak listelenir;
+  // buluttaki aylar yukarıdaki çiplerde gösterilir.
+  for (const f of S.files.filter(f=>f.dirty)){
     const row = document.createElement("div"); row.className="filerow";
     const tag = f.cloud && !f.dirty ? `<span class="cloudtag">${ic('cloud')} kayıtlı</span>` : (f.dirty ? `<span class="cloudtag" style="color:var(--imp)">● kaydedilmedi</span>` : "");
     const canCloudDel = S.isAdmin && f.cloud && f.month;
@@ -1877,6 +1934,61 @@ function renderFiles(){
     el.appendChild(row);
   }
 }
+
+// Buluttaki ayları çip olarak çiz: tıkla → firmaları gör, × → buluttan sil; beklenen ay eksikse kesikli çip
+function renderMonthChips(){
+  const box = $("monthChips"), countEl = $("fileListCount"); if (!box) return;
+  const cloud = S.files.filter(f=>f.cloud && !f.dirty && f.month).sort((a,b)=>b.month.localeCompare(a.month));
+  if (countEl) countEl.textContent = cloud.length;
+  const now = new Date(); const prev = new Date(now.getFullYear(), now.getMonth()-1, 1);
+  const expected = `${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,"0")}`;
+  const missing = cloud.length && cloud[0].month < expected ? `<span class="month-chip miss" title="Henüz yüklenmedi">${expected} eksik</span>` : "";
+  box.innerHTML = missing + cloud.map(f=>`<span class="month-chip${S._viewerKey==="month:"+f.month?" active":""}" data-month="${f.month}" title="${f.records.length} kayıt — tıkla: firmaları gör">${f.month} <span class="muted">· ${f.records.length}</span>${S.isAdmin?`<span class="del" data-del="${f.month}" title="Bu ayı buluttan kalıcı olarak sil">×</span>`:""}</span>`).join("");
+  box.querySelectorAll(".month-chip[data-month]").forEach(ch=>{
+    ch.onclick = e=>{
+      if (e.target.dataset.del){ const f = cloud.find(x=>x.month===e.target.dataset.del); if (f) deleteMonthFromCloud(f); return; }
+      openDataViewer("month:"+ch.dataset.month);
+    };
+  });
+}
+// ---- Liste görüntüleyici: yüklü bir ayın / İlk 1000'in / Turquality'nin içeriğini tablo olarak göster ----
+S._viewerKey = null;
+function openDataViewer(key){
+  S._viewerKey = key; renderMonthChips();
+  const v = $("dataViewer"); v.hidden = false; $("dataViewerSearch").value = "";
+  renderDataViewer();
+  v.scrollIntoView({behavior:"smooth", block:"start"});
+}
+function renderDataViewer(){
+  const key = S._viewerKey; if (!key) return;
+  const q = trUp($("dataViewerSearch").value.trim());
+  let title="", sub="", cols=[], rows=[];
+  if (key.startsWith("month:")){
+    const m = key.slice(6); const f = S.files.find(x=>x.month===m && x.cloud);
+    title = `DİİB · ${monthLabel(m)}`; sub = f ? `${f.records.length} kayıt` : "";
+    cols = ["Firma","VKN","İl","Öngörülen ithalat","Öngörülen ihracat"];
+    rows = (f?f.records:[]).map(r=>[r.firma, r.vkn||"", r.il||"", fmt$(r.imp), fmt$(r.exp)]);
+  } else if (key==="tim"){
+    title = `İlk 1000 İhracatçı${S.timYear?" · "+S.timYear:""}`; sub = `${Object.keys(S.tim).length} firma`;
+    cols = ["Sıra","Firma","Sektör","Sektör sırası","İhracat"];
+    rows = Object.values(S.tim).sort((a,b)=>a.r-b.r).map(t=>[t.r<9999?t.r:"—", t.nm||"", t.n||"", t.s||"—", t.e?fmtM(t.e):"—"]);
+  } else if (key==="tq"){
+    title = "Turquality markaları"; sub = `${Object.keys(S.tq).length} firma`;
+    cols = ["Marka","Firma","VKN","Program","İlçe / İl"];
+    rows = Object.values(S.tq).sort((a,b)=>String(a.firma).localeCompare(String(b.firma),"tr")).map(t=>[(t.markalar&&t.markalar.length?t.markalar.join(", "):t.marka)||"", t.firma||"", t.vkn||"", t.prog||"", [t.ilce,t.il].filter(Boolean).join(" / ")]);
+  }
+  if (q) rows = rows.filter(r=>r.some(c=>trUp(c).includes(q)));
+  $("dataViewerTitle").textContent = title; $("dataViewerSub").textContent = sub + (q?` · ${rows.length} eşleşme`:"");
+  const LIMIT = 300;
+  $("dataViewerBody").innerHTML = `<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>${rows.slice(0,LIMIT).map(r=>`<tr>${r.map((c,i)=>`<td class="${/ithalat|ihracat|İhracat|Sıra|sırası/i.test(cols[i])?"num":""}">${c}</td>`).join("")}</tr>`).join("")}</tbody></table>${rows.length>LIMIT?`<div class="data-viewer-foot">İlk ${LIMIT} satır gösteriliyor · toplam ${rows.length} — daraltmak için ara</div>`:""}`;
+}
+$("dataViewerSearch") && $("dataViewerSearch").addEventListener("input", renderDataViewer);
+$("dataViewerClose") && ($("dataViewerClose").onclick = ()=>{ $("dataViewer").hidden = true; S._viewerKey = null; renderMonthChips(); });
+$("timViewBtn") && ($("timViewBtn").onclick = ()=> openDataViewer("tim"));
+$("tqViewBtn") && ($("tqViewBtn").onclick = ()=> openDataViewer("tq"));
+$("diibAddBtn") && ($("diibAddBtn").onclick = ()=> $("fileInput").click());
+$("timAddBtn") && ($("timAddBtn").onclick = ()=> $("fileTim").click());
+$("tqAddBtn") && ($("tqAddBtn").onclick = ()=> $("fileTq").click());
 
 // Bir ayı buluttan kalıcı sil (herkesten kalkar)
 async function deleteMonthFromCloud(f){
@@ -4013,6 +4125,8 @@ function renderDataStatus(){
     }
   }
   const fmtD = ts => ts ? new Date(ts).toLocaleDateString("tr-TR",{day:"numeric",month:"short",year:"numeric"}) : "—";
+  if ($("timViewBtn")) $("timViewBtn").disabled = !Object.keys(S.tim).length;
+  if ($("tqViewBtn")) $("tqViewBtn").disabled = !Object.keys(S.tq).length;
   const t = $("timDataStatus"); if (t){ const n = Object.keys(S.tim).length; t.innerHTML = n ? `<span class="ok">${n} firma</span>${S.timYear?` · ${S.timYear} listesi`:""} · son güncelleme: ${fmtD(S.timUpdated)}` : `<span class="warn">Liste yüklenmedi</span>`; }
   const q = $("tqDataStatus"); if (q){ const n = Object.keys(S.tq).length; const vk = Object.values(S.tq).filter(x=>x.vkn).length; q.innerHTML = n ? `<span class="ok">${n} firma</span> · ${vk} tanesinde VKN · son güncelleme: ${fmtD(S.tqUpdated)}` : `<span class="warn">Liste yüklenmedi</span>`; }
 }
