@@ -3775,9 +3775,12 @@ function showAdminScreen(targetId){
   } else if (targetId === "adminFirmViewScreen"){
     // Kullanıcı arayüzünü kopyalamadan, olduğu DOM elemanını buraya taşı
     const userView = $("userViewWrap"), slot = $("adminFirmViewScreen");
-    if (userView && slot && userView.parentElement !== slot){
+    if (userView && slot){
+      // Bu ekrandan çıkınca üstteki koruma userView.hidden=true yapıyor — buraya her dönüşte
+      // tekrar açılması lazım, sadece ilk taşımada değil (önceden sadece ilk ziyarette açılıyor,
+      // ekrandan çıkıp geri dönünce boş kalıyordu).
       userView.hidden = false;
-      slot.appendChild(userView);
+      if (userView.parentElement !== slot) slot.appendChild(userView);
     }
     render();
   }
