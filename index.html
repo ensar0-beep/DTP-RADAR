@@ -3937,6 +3937,8 @@ function renderMergeFirmList(){
   if (!box) return;
   const q = trUp(($("mergeSearchBox")?.value || "").trim());
   let list = aggregate(); // ham liste — birleştirilecek çiftleri BULMAK için manuel birleştirme uygulanmamış hâli lazım
+  const hasData = S.files.length>0 || Object.keys(S.tq).length>0 || Object.keys(S.tim).length>0;
+  if (!hasData){ box.innerHTML = `<div class="branch-stats-empty">${radarSpinner(18)}Firma verisi buluttan yükleniyor…</div>`; return; }
   if (q) list = list.filter(a=>trUp(a.firma).includes(q));
   list = list.slice().sort((a,b)=>a.firma.localeCompare(b.firma,"tr")).slice(0, 200); // performans için üst sınır
   if (!list.length){ box.innerHTML = `<div class="branch-stats-empty">Eşleşen firma yok.</div>`; return; }
@@ -4416,6 +4418,7 @@ function loadCloud(){
     renderFiles(); refreshPeriodOptions(); render(); updateSaveRow();
     renderAdminOverview(); // Genel Bakış (Toplam Firma sayısı + harita) veri gelince tazelensin
     renderDataStatus();
+    if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden) renderMergeFirmList();
     maybeAutoLocation();
     // Şube girişinde konum veri gelmeden önce ayarlanmış olabilir; veri gelince mesafeleri tazele
     if (S.branch && S.userLoc) geocodeVisible();
@@ -4425,12 +4428,12 @@ function loadCloud(){
   // İlk 1000 listesini buluttan yükle
   cloudOn("tim", snap=>{
     const v = snap.val();
-    if (v && v.map && !S.timDirty){ S.tim = v.map; S.timYear = v.year||""; S.timUpdated = v.updated||0; renderDataStatus(); refreshTimChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
+    if (v && v.map && !S.timDirty){ S.tim = v.map; S.timYear = v.year||""; S.timUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden) renderMergeFirmList(); refreshTimChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
   });
   // Turquality listesini buluttan yükle
   cloudOn("tq", snap=>{
     const v = snap.val();
-    if (v && v.map && !S.tqDirty){ S.tq = v.map; S.tqUpdated = v.updated||0; renderDataStatus(); refreshTqChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
+    if (v && v.map && !S.tqDirty){ S.tq = v.map; S.tqUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden) renderMergeFirmList(); refreshTqChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
   });
   // Yıldız / Önemli / Ziyaret / Giriş kayıtları: admin tüm şubeleri, şube hesabı yalnızca KENDİ düğümünü
   // dinler (kurallar başka şubenin verisini okumaya izin vermez).
