@@ -272,7 +272,32 @@ input[type=file]{display:none}
 
 /* Alt ekranlar (Şubeler / Hedef Kitleler / Genel Bakış) */
 .admin-screen{margin-top:0}
-.admin-screen-title{font-family:'Sora',sans-serif;font-weight:700;font-size:16px;margin-bottom:16px}
+.admin-screen-title{font-family:'Sora',sans-serif;font-weight:700;font-size:18px;margin-bottom:2px}
+.admin-screen-desc{font-size:12.5px;color:var(--muted)}
+.admin-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.admin-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.overview-stat-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.this-month{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border:1px solid rgba(232,163,61,.45);background:rgba(232,163,61,.06);border-radius:12px;font-size:13px}
+.this-month[hidden]{display:none}
+.this-month.ok{border-color:rgba(53,196,168,.4);background:rgba(53,196,168,.06)}
+.this-month .tm-dot{width:10px;height:10px;border-radius:50%;background:var(--imp);flex:0 0 auto}
+.this-month.ok .tm-dot{background:var(--exp)}
+.this-month b{font-weight:600}
+.this-month .tm-sub{font-size:12px;color:var(--muted)}
+.this-month .btn{margin-left:auto}
+.data-status{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin:-2px 0 10px}
+.data-status .ok{color:var(--exp)} .data-status .warn{color:var(--imp)}
+.branch-split{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;margin-top:10px;align-items:start}
+@media(max-width:900px){.branch-split{grid-template-columns:1fr}}
+.branch-drawer{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;position:sticky;top:0}
+.branch-drawer h3{margin:0;font-family:'Sora',sans-serif;font-size:15px}
+.branch-drawer .bd-sub{font-size:12px;color:var(--muted);margin:2px 0 10px}
+.branch-drawer .bd-stat{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--border);font-size:12.5px}
+.branch-drawer .bd-stat span:last-child{font-family:'IBM Plex Mono',monospace;color:var(--text);text-align:right}
+.branch-drawer .bd-logins{margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);line-height:1.7}
+.branch-drawer .btn{width:100%;justify-content:center;margin-top:8px}
+.bulk-star[hidden]{display:none}
+.branch-prox-table tbody tr.sel td{background:rgba(53,196,168,.07)}
 .admin-subhead{font-family:'Sora',sans-serif;font-weight:600;font-size:13.5px;margin-top:26px;margin-bottom:8px;color:var(--text)}
 
 /* Şube sınıflandırma sekmeleri */
@@ -1100,13 +1125,17 @@ select:focus,input:focus{border-color:var(--exp)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
         Genel Bakış
       </button>
+      <button class="admin-nav-item" id="navAudiences" type="button" data-target="adminAudiencesScreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+        Veri Yükleme
+      </button>
+      <button class="admin-nav-item" id="navFirms" type="button" data-target="adminFirmsScreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10M20 21V10M2 10l10-6 10 6M6 10v11M10 10v11M14 10v11M18 10v11"/></svg>
+        Firmalar
+      </button>
       <button class="admin-nav-item" id="navBranches" type="button" data-target="adminBranchesScreen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M13 21V11l6 3v7"/><path d="M9 9v.01M9 12v.01M9 15v.01"/></svg>
         Şubeler
-      </button>
-      <button class="admin-nav-item" id="navAudiences" type="button" data-target="adminAudiencesScreen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
-        Hedef Kitleler
       </button>
       <div class="admin-sidebar-sep"></div>
       <button class="admin-nav-item" id="navFirmView" type="button" data-target="adminFirmViewScreen">
@@ -1119,7 +1148,7 @@ select:focus,input:focus{border-color:var(--exp)}
 
       <!-- Genel Bakış -->
       <div id="adminOverviewScreen" class="admin-screen">
-        <div class="admin-screen-title">Genel Bakış</div>
+        <div class="admin-head"><div><div class="admin-screen-title">Genel Bakış</div><div class="admin-screen-desc">Sistemin durumu ve bu ay yapılacaklar.</div></div></div>
         <div class="overview-stats">
           <div class="overview-stat">
             <div class="overview-stat-label">
@@ -1142,7 +1171,16 @@ select:focus,input:focus{border-color:var(--exp)}
             </div>
             <div class="overview-stat-value exp" id="ovStatLogins">—</div>
           </div>
+          <div class="overview-stat">
+            <div class="overview-stat-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+              Yıldız / Ziyaret Listesi
+            </div>
+            <div class="overview-stat-value" id="ovStatStarsVisits">—</div>
+            <div class="overview-stat-sub" id="ovStatVisitsSub"></div>
+          </div>
         </div>
+        <div class="this-month" id="ovThisMonth" hidden></div>
 
         <div class="admin-subhead-row">
           <div class="admin-subhead" style="margin-top:22px">Türkiye Haritası</div>
@@ -1173,21 +1211,23 @@ select:focus,input:focus{border-color:var(--exp)}
           <div id="ovBranchFirmList" class="ov-branch-firmlist" hidden></div>
         </div>
 
-        <div class="hint" style="margin-top:12px">Sol menüden bir bölüm seçerek devam et.</div>
       </div>
 
       <!-- Şubeler -->
       <div id="adminBranchesScreen" class="admin-screen" hidden>
-        <div class="admin-screen-title">Şubeler</div>
-
-        <div class="branch-class-tabs" id="branchClassTabs">
-          <button class="branch-class-tab active" data-class="all" type="button">Tümü <span class="bct-count" id="bctAll">0</span></button>
-          <button class="branch-class-tab" data-class="ticari" type="button">Ticari Şube <span class="bct-count" id="bctTicari">0</span></button>
-          <button class="branch-class-tab" data-class="kurumsal" type="button">Kurumsal Şube <span class="bct-count" id="bctKurumsal">0</span></button>
-          <button class="branch-class-tab" data-class="kobi" type="button">Kobi Şube <span class="bct-count" id="bctKobi">0</span></button>
+        <div class="admin-head">
+          <div><div class="admin-screen-title">Şubeler</div><div class="admin-screen-desc">Bir şubeye tıkla; yıldızlarını, ziyaret listesini ve çevresindeki potansiyeli sağda gör.</div></div>
+          <div class="admin-head-actions">
+          <select id="branchProxRadiusSel" style="width:auto">
+            <option value="5" selected>≤ 5 km</option>
+            <option value="10">≤ 10 km</option>
+            <option value="25">≤ 25 km</option>
+            <option value="50">≤ 50 km</option>
+          </select>
+            <button class="btn" type="button" id="bulkStarToggle"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg> Excel ile yıldızla</button>
+          </div>
         </div>
-
-        <div class="bulk-star" id="bulkStarCard">
+        <div class="bulk-star" id="bulkStarCard" hidden>
           <div class="bulk-star-head">
             <div>
               <div class="admin-subhead" style="margin:0">Excel ile toplu yıldızlama</div>
@@ -1198,41 +1238,37 @@ select:focus,input:focus{border-color:var(--exp)}
           <div class="bulk-star-result" id="bulkStarResult" hidden></div>
         </div>
 
-        <div class="admin-subhead-row">
-          <div class="admin-subhead" style="margin-top:22px">Şube Yakınlık Analizi</div>
-          <select id="branchProxRadiusSel" style="width:auto">
-            <option value="5" selected>≤ 5 km</option>
-            <option value="10">≤ 10 km</option>
-            <option value="25">≤ 25 km</option>
-            <option value="50">≤ 50 km</option>
-          </select>
-        </div>
-        <div class="hint">Her şubenin seçilen yarıçapı içindeki firma sayısı ve öngörülen ihracat/ithalat toplamı. Bir şubeye tıklayınca o şubenin konumuna gidip yıldızlama moduna geçersin. Sütun başlıklarına tıklayarak sırala.</div>
-        <div id="branchProxTableWrap" class="branch-prox-table-wrap">
-          <div class="branch-stats-empty"><svg class="radar-spinner-svg" width="18" height="18" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" fill="none" stroke="var(--border)" stroke-width="1.2"/><circle cx="22" cy="22" r="13" fill="none" stroke="var(--border)" stroke-width="1.2"/><circle cx="22" cy="22" r="6.5" fill="none" stroke="var(--border)" stroke-width="1.2"/><path class="radar-spin" d="M22 22 L22 3 A19 19 0 0 1 39.5 13.5 Z" fill="var(--exp)" opacity=".55"/><circle cx="22" cy="22" r="1.6" fill="var(--exp)"/></svg>Hesaplanıyor…</div>
+        <div class="branch-class-tabs" id="branchClassTabs">
+          <button class="branch-class-tab active" data-class="all" type="button">Tümü <span class="bct-count" id="bctAll">0</span></button>
+          <button class="branch-class-tab" data-class="ticari" type="button">Ticari Şube <span class="bct-count" id="bctTicari">0</span></button>
+          <button class="branch-class-tab" data-class="kurumsal" type="button">Kurumsal Şube <span class="bct-count" id="bctKurumsal">0</span></button>
+          <button class="branch-class-tab" data-class="kobi" type="button">Kobi Şube <span class="bct-count" id="bctKobi">0</span></button>
         </div>
 
+        <div class="branch-split">
+          <div id="branchTableWrap" class="branch-prox-table-wrap"><div class="branch-stats-empty">Hesaplanıyor…</div></div>
+          <div id="branchDrawer" class="branch-drawer"><div class="branch-stats-empty">Listeden bir şube seç.</div></div>
+        </div>
+        <div hidden>
         <div class="branch-mgmt-row">
           <select id="branchStatSelect"><option value="">— Şube seç —</option></select>
           <button class="btn" id="branchStarModeBtn" disabled><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.9 7.1.6-5.5 4.8 1.7 7-6.2-3.9-6.2 3.9 1.7-7-5.5-4.8 7.1-.6z"/></svg> Bu şube için yıldız firma seç</button>
           <span class="branch-mgmt-status" id="branchStarModeStatus"></span>
         </div>
 
-        <div id="branchStatsBox" class="branch-stats-box">
-          <div class="branch-stats-empty">Yukarıdan bir şube seç, giriş geçmişini burada gör.</div>
+        <div id="branchStatsBox" class="branch-stats-box"></div>
+
+          <div id="branchProxTableWrap"></div><div id="branchListTable"></div>
         </div>
-
-        <div class="admin-subhead">Şube Listesi</div>
-        <div id="branchListTable" class="branch-list-table"></div>
       </div>
-
-      <!-- Hedef Kitleler -->
+      <!-- Veri Yükleme -->
       <div id="adminAudiencesScreen" class="admin-screen" hidden>
-        <div class="admin-screen-title">Hedef Kitleler</div>
+        <div class="admin-head"><div><div class="admin-screen-title">Veri Yükleme</div><div class="admin-screen-desc">Her ay DİİB (D1) dosyasını ekle; İlk 1000 ve Turquality listeleri yılda bir güncellenir.</div></div></div>
 
         <div class="audience-grid">
           <div class="audience-card">
             <div class="audience-card-title"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/></svg> DİİB <span class="hint-inline">(aylık, ticaret.gov.tr)</span></div>
+            <div class="data-status" id="diibDataStatus"></div>
             <div class="hint">Belge Listeleri (D1, D3, H1) sayfasından her ayın <b>Dahilde İşleme İzin Belgeleri (D1)</b> Excel'ini indirip ekle. Ay otomatik algılanır.</div>
             <div class="drop small" id="drop"><b>Dosya seç</b> veya sürükle (.xlsx / .xls / .csv)</div>
             <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv">
@@ -1246,6 +1282,7 @@ select:focus,input:focus{border-color:var(--exp)}
 
           <div class="audience-card">
             <div class="audience-card-title"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0zM7 6H4a2 2 0 002 2M17 6h3a2 2 0 01-2 2"/></svg> İlk 1000 İhracatçı <span class="hint-inline">(TİM)</span></div>
+            <div class="data-status" id="timDataStatus"></div>
             <div class="hint">TİM'in "İlk 1000 İhracatçı" listesini yükle. Firmalar ada göre eşleştirilip rozetlenir.</div>
             <div class="drop small" id="dropTim"><b>İlk 1000 listesini seç</b> veya sürükle</div>
             <input type="file" id="fileTim" accept=".xlsx,.xls,.csv">
@@ -1258,6 +1295,7 @@ select:focus,input:focus{border-color:var(--exp)}
 
           <div class="audience-card">
             <div class="audience-card-title"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L7 21l5-2.5L17 21l-1.5-8.5"/></svg> Turquality / Marka Destek <span class="hint-inline">(Ticaret Bak.)</span></div>
+            <div class="data-status" id="tqDataStatus"></div>
             <div class="hint">Turquality desteklenen markalar listesini yükle. DİİB'de olmasalar bile havuza eklenir.</div>
             <div class="drop small" id="dropTq"><b>Turquality listesini seç</b> veya sürükle</div>
             <input type="file" id="fileTq" accept=".xlsx,.xls,.csv">
@@ -1269,7 +1307,12 @@ select:focus,input:focus{border-color:var(--exp)}
           </div>
         </div>
 
-        <div class="admin-subhead">Firma Listesi &amp; Manuel Birleştirme</div>
+      </div>
+
+      <!-- Firmalar -->
+      <div id="adminFirmsScreen" class="admin-screen" hidden>
+        <div class="admin-head"><div><div class="admin-screen-title">Firmalar</div><div class="admin-screen-desc">Tüm kaynaklardan (DİİB, İlk 1000, Turquality) gelen firmalar tek listede. Aynı firmanın farklı yazımlarını burada birleştir.</div></div><button class="btn" id="firmsCsvBtn" type="button">Excel indir</button></div>
+        <div class="admin-subhead" style="margin-top:0">Firma listesi &amp; manuel birleştirme</div>
         <div class="hint">Aşağıda tüm kaynaklardan (DİİB, İlk 1000, Turquality) gelen firmalar tek listede. İsim farklılığı yüzünden otomatik eşleşmeyen iki kaydı seçip elle birleştirebilirsin.</div>
         <div class="merge-toolbar">
           <div class="search-box-wrap" style="flex:1">
@@ -3179,6 +3222,7 @@ function openMapSidePanel(count, dir, top){
 $("mapSidePanelClose") && ($("mapSidePanelClose").onclick = ()=>{ $("mapSidePanel").hidden = true; setTimeout(()=>S.map && S.map.invalidateSize(), 60); });
 
 /* ================= CSV EXPORT ================= */
+$("firmsCsvBtn") && ($("firmsCsvBtn").onclick = ()=> $("csvBtn").click());
 $("csvBtn").onclick = ()=>{
   const list = applyManualMerges(applyStarPriority(filtered())); // ekrandaki listeyle birebir aynı
   const esc = v=>`"${String(v??"").replace(/"/g,'""')}"`;
@@ -3597,7 +3641,7 @@ function renderAuth(){
 // ---- Yönetim paneli: Şube Yönetimi (giriş istatistikleri + yıldız firma atama) ----
 
 // ---- Yönetim paneli: sidebar navigasyonu ----
-const ADMIN_SCREENS = ["adminOverviewScreen", "adminBranchesScreen", "adminAudiencesScreen", "adminFirmViewScreen"];
+const ADMIN_SCREENS = ["adminOverviewScreen", "adminAudiencesScreen", "adminFirmsScreen", "adminBranchesScreen", "adminFirmViewScreen"];
 function showAdminScreen(targetId){
   ADMIN_SCREENS.forEach(id => { const el = $(id); if (el) el.hidden = (id !== targetId); });
   document.querySelectorAll(".admin-nav-item").forEach(nav => nav.classList.toggle("active", nav.dataset.target === targetId));
@@ -3608,9 +3652,11 @@ function showAdminScreen(targetId){
   if (targetId === "adminBranchesScreen"){
     fillBranchStatSelect();
     renderBranchClassCounts();
-    renderBranchListTable();
-    renderBranchProxTable();
+    renderBranchTable();
+    renderBranchDrawer();
   } else if (targetId === "adminAudiencesScreen"){
+    renderDataStatus();
+  } else if (targetId === "adminFirmsScreen"){
     renderMergeFirmList();
   } else if (targetId === "adminOverviewScreen"){
     renderAdminOverview();
@@ -3644,6 +3690,7 @@ if (brandHomeLink){
 
 // Genel Bakış: toplam firma, aktif şube, toplam giriş sayısı
 function renderAdminOverview(){
+  renderOverviewKpis();
   if ($("ovStatFirms")) $("ovStatFirms").textContent = aggregate().length.toLocaleString("tr-TR");
   if ($("ovStatBranches")) $("ovStatBranches").textContent = Object.keys(SUBE_TABLE).length.toLocaleString("tr-TR");
   if ($("ovStatLogins")){
@@ -3884,7 +3931,117 @@ function computeBranchProximityStats(radiusKm){
 }
 
 S._branchProxSort = {col:"count", dir:"desc"};
-function renderBranchProxTable(){
+// ---- Şubeler: tek tablo (sınıf · ≤N km firma · ihracat · yıldız · ziyaret · son giriş) + sağda özet panel ----
+S._branchDrawer = null;
+function renderBranchTable(){
+  const wrap = $("branchTableWrap"), radSel = $("branchProxRadiusSel");
+  if (!wrap || !radSel) return;
+  const radiusKm = +(radSel.value || 5);
+  wrap.innerHTML = `<div class="branch-stats-empty">${radarSpinner(18)}Hesaplanıyor…</div>`;
+  setTimeout(()=>{
+    let rows = computeBranchProximityStats(radiusKm).map(r=>{
+      const logs = S.loginLogs[r.uname] ? Object.values(S.loginLogs[r.uname]).map(l=>l.ts).filter(Boolean) : [];
+      const vis = S.visits[r.uname] ? Object.values(S.visits[r.uname]) : [];
+      return {...r, stars: S.starred[r.uname] ? Object.keys(S.starred[r.uname]).length : 0,
+        visits: vis.length, visitsPlanned: vis.filter(v=>v.status==="planned").length,
+        lastLogin: logs.length ? Math.max(...logs) : 0};
+    });
+    if (S._branchClassFilter !== "all") rows = rows.filter(r=>r.cls===S._branchClassFilter);
+    const {col, dir} = S._branchProxSort;
+    rows.sort((a,b)=>{ const va=a[col], vb=b[col]; if (typeof va==="string") return dir==="asc"?va.localeCompare(vb,"tr"):vb.localeCompare(va,"tr"); return dir==="asc"?va-vb:vb-va; });
+    const arrow = c => S._branchProxSort.col===c ? (S._branchProxSort.dir==="asc"?"▲":"▼") : "";
+    const th = (c,label) => `<th data-col="${c}" class="${S._branchProxSort.col===c?"active":""}">${label} <span class="sort-arrow">${arrow(c)}</span></th>`;
+    const ago = ts => { if (!ts) return "—"; const d = Math.floor((Date.now()-ts)/86400000); return d===0?"bugün":(d===1?"dün":(d<30?d+" gün":new Date(ts).toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit"}))); };
+    wrap.innerHTML = `<table class="branch-prox-table">
+      <thead><tr>${th("name","Şube")}${th("cls","Sınıf")}${th("count",`≤${radiusKm} km firma`)}${th("exp","Öngörülen ihracat")}${th("stars","Yıldız")}${th("visits","Ziyaret listesi")}${th("lastLogin","Son giriş")}</tr></thead>
+      <tbody>${rows.map(r=>`<tr data-uname="${r.uname}" class="${r.uname===S._branchDrawer?"sel":""}">
+        <td class="name">${r.name}</td>
+        <td><span class="branch-list-tag ${r.cls}">${BRANCH_CLASS_LABEL[r.cls]}</span></td>
+        <td class="num">${r.count}</td>
+        <td class="num">${fmt$(r.exp)}</td>
+        <td class="num">${r.stars||"—"}</td>
+        <td class="num">${r.visits?`${r.visits}${r.visitsPlanned?` <span class="muted">(${r.visitsPlanned} planlı)</span>`:""}`:"—"}</td>
+        <td class="num">${ago(r.lastLogin)}</td>
+      </tr>`).join("")}</tbody></table>`;
+    wrap.querySelectorAll("th").forEach(el=>{ el.onclick = ()=>{ const c = el.dataset.col; if (S._branchProxSort.col===c) S._branchProxSort.dir = S._branchProxSort.dir==="asc"?"desc":"asc"; else S._branchProxSort = {col:c, dir:(c==="name"||c==="cls")?"asc":"desc"}; renderBranchTable(); }; });
+    wrap.querySelectorAll("tbody tr").forEach(tr=>{ tr.onclick = ()=>{ S._branchDrawer = tr.dataset.uname; wrap.querySelectorAll("tbody tr").forEach(x=>x.classList.toggle("sel", x===tr)); const sel=$("branchStatSelect"); if (sel){ fillBranchStatSelect(); sel.value = tr.dataset.uname; } renderBranchDrawer(); }; });
+  }, 0);
+}
+function renderBranchDrawer(){
+  const box = $("branchDrawer"); if (!box) return;
+  const uname = S._branchDrawer;
+  if (!uname || !SUBE_TABLE[uname]){ box.innerHTML = `<div class="branch-stats-empty">Listeden bir şube seç; yıldızları, ziyaret listesi ve giriş geçmişi burada görünür.</div>`; return; }
+  const name = SUBE_TABLE[uname][0], cls = branchClassOf(name);
+  const logs = S.loginLogs[uname] ? Object.values(S.loginLogs[uname]).map(l=>l.ts).filter(Boolean).sort((a,b)=>b-a) : [];
+  const fmtDate = ts => new Date(ts).toLocaleString("tr-TR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  const stars = S.starred[uname] ? Object.keys(S.starred[uname]).length : 0;
+  const imp = S.important[uname] ? Object.keys(S.important[uname]).length : 0;
+  const vis = S.visits[uname] ? Object.values(S.visits[uname]) : [];
+  const planned = vis.filter(v=>v.status==="planned").length, done = vis.filter(v=>v.status==="done").length;
+  const rad = $("branchProxRadiusSel") ? $("branchProxRadiusSel").value : "5";
+  const prox = computeBranchProximityStats(+rad).find(r=>r.uname===uname);
+  box.innerHTML = `<h3>${name}</h3><div class="bd-sub">${BRANCH_CLASS_LABEL[cls]} · kullanıcı: ${uname}</div>
+    <div class="bd-stat"><span>≤ ${rad} km firma</span><span>${prox?prox.count:"—"}</span></div>
+    <div class="bd-stat"><span>Öngörülen ihracat (${rad} km)</span><span>${prox?fmt$(prox.exp):"—"}</span></div>
+    <div class="bd-stat"><span>Yıldızlı hedef</span><span>${stars}</span></div>
+    <div class="bd-stat"><span>Ziyaret listesi</span><span>${vis.length} firma · ${planned} planlı · ${done} edildi</span></div>
+    <div class="bd-stat"><span>Önemli işaretleri</span><span>${imp}</span></div>
+    <div class="bd-stat"><span>Giriş</span><span>${logs.length}${logs.length?` · son: ${fmtDate(logs[0])}`:""}</span></div>
+    ${logs.length?`<div class="bd-logins">${logs.slice(0,5).map(t=>"↳ "+fmtDate(t)).join("<br>")}${logs.length>5?`<br>… ${logs.length-5} giriş daha`:""}</div>`:""}
+    <button class="btn primary" type="button" id="bdOpenFirmView">${ic('star')} Firma görünümünde aç ve yıldızla</button>
+    ${stars?`<button class="btn" type="button" id="bdClearStars">${ic('trash')} Yıldızları temizle (${stars})</button>`:""}`;
+  $("bdOpenFirmView").onclick = ()=> goToBranchFromProxTable(uname);
+  const clr = $("bdClearStars");
+  if (clr) clr.onclick = async ()=>{
+    if (!confirm(`${name} için ${stars} yıldız silinsin mi?`)) return;
+    try{ await fbDB.ref("starred/"+uname).set({}); S.starred = {...S.starred, [uname]:{}}; render(); renderAdminStats(); toast("Yıldızlar temizlendi"); }
+    catch(e){ toast("Silinemedi: "+(e.message||e.code)); }
+  };
+}
+$("bulkStarToggle") && ($("bulkStarToggle").onclick = ()=>{ const c=$("bulkStarCard"); c.hidden = !c.hidden; $("bulkStarToggle").classList.toggle("open", !c.hidden); });
+// Veri Yükleme: her kaynağın durumu
+function renderDataStatus(){
+  const months = loadedMonths();
+  const d = $("diibDataStatus");
+  if (d){
+    if (!months.length) d.innerHTML = `<span class="warn">Henüz ay yüklenmedi</span>`;
+    else {
+      const latest = months[0];
+      const now = new Date(); const prev = new Date(now.getFullYear(), now.getMonth()-1, 1);
+      const expected = `${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,"0")}`;
+      d.innerHTML = `<span class="ok">${months.length} ay yüklü</span> · son: ${monthLabel(latest)}${latest < expected?` · <span class="warn">${monthLabel(expected)} eksik</span>`:` · <span class="ok">güncel</span>`}`;
+    }
+  }
+  const fmtD = ts => ts ? new Date(ts).toLocaleDateString("tr-TR",{day:"numeric",month:"short",year:"numeric"}) : "—";
+  const t = $("timDataStatus"); if (t){ const n = Object.keys(S.tim).length; t.innerHTML = n ? `<span class="ok">${n} firma</span>${S.timYear?` · ${S.timYear} listesi`:""} · son güncelleme: ${fmtD(S.timUpdated)}` : `<span class="warn">Liste yüklenmedi</span>`; }
+  const q = $("tqDataStatus"); if (q){ const n = Object.keys(S.tq).length; const vk = Object.values(S.tq).filter(x=>x.vkn).length; q.innerHTML = n ? `<span class="ok">${n} firma</span> · ${vk} tanesinde VKN · son güncelleme: ${fmtD(S.tqUpdated)}` : `<span class="warn">Liste yüklenmedi</span>`; }
+}
+// Genel Bakış: sayılar + "bu ay" kutusu (haritayı yeniden çizmeden)
+function renderOverviewKpis(){
+  let stars = 0; for (const u in S.starred) stars += Object.keys(S.starred[u]||{}).length;
+  let vis = 0, planned = 0, done = 0; for (const u in S.visits){ for (const v of Object.values(S.visits[u]||{})){ vis++; if (v.status==="done") done++; else planned++; } }
+  if ($("ovStatStarsVisits")) $("ovStatStarsVisits").innerHTML = `${stars.toLocaleString("tr-TR")} <span class="muted" style="font-size:14px">/</span> ${vis.toLocaleString("tr-TR")}`;
+  if ($("ovStatVisitsSub")) $("ovStatVisitsSub").textContent = vis ? `ziyaret listelerinde ${vis} firma · ${planned} planlı · ${done} edildi` : "";
+  const box = $("ovThisMonth"); if (!box) return;
+  const months = loadedMonths();
+  if (!months.length){ box.hidden = true; return; }
+  const latest = months[0];
+  const now = new Date(); const prev = new Date(now.getFullYear(), now.getMonth()-1, 1);
+  const expected = `${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,"0")}`;
+  const [ly,lm] = latest.split("-").map(Number); const from = new Date(ly, lm-12, 1);
+  const win = `${AY_ADI[from.getMonth()+1].slice(0,3)} ${from.getFullYear()} – ${AY_ADI[lm].slice(0,3)} ${ly}`;
+  box.hidden = false;
+  if (latest < expected){
+    box.className = "this-month";
+    box.innerHTML = `<span class="tm-dot"></span><div><b>${monthLabel(expected)} DİİB dosyası henüz yüklenmedi.</b><div class="tm-sub">Son yüklenen ay: ${monthLabel(latest)} · "Son 12 ay" penceresi ${win}</div></div><button class="btn primary" type="button" onclick="showAdminScreen('adminAudiencesScreen')">${monthLabel(expected).split(" ")[0]} dosyasını yükle</button>`;
+  } else {
+    box.className = "this-month ok";
+    box.innerHTML = `<span class="tm-dot"></span><div><b>Veriler güncel.</b><div class="tm-sub">Son yüklenen ay: ${monthLabel(latest)} · "Son 12 ay" penceresi ${win}</div></div>`;
+  }
+}
+function renderBranchProxTable(){ renderBranchTable(); }
+function renderBranchListTable(){ if ($("adminBranchesScreen") && !$("adminBranchesScreen").hidden) renderBranchTable(); }
+function _renderBranchProxTable_old(){
   const wrap = $("branchProxTableWrap"), radSel = $("branchProxRadiusSel");
   if (!wrap || !radSel) return;
   const radiusKm = +(radSel.value || 5);
@@ -3931,7 +4088,7 @@ function renderBranchProxTable(){
     });
   }, 0);
 }
-$("branchProxRadiusSel") && $("branchProxRadiusSel").addEventListener("change", ()=>{ _branchProxCache=null; renderBranchProxTable(); });
+$("branchProxRadiusSel") && $("branchProxRadiusSel").addEventListener("change", ()=>{ _branchProxCache=null; renderBranchTable(); renderBranchDrawer(); });
 
 // Yakınlık tablosunda bir şubeye tıklayınca: var olan applyAdminBranchPreview akışını tetikle
 // (konum + yıldızlama modu otomatik açılır), üstteki/Şubeler'deki seçicileri senkronla, sonra
@@ -3970,7 +4127,7 @@ document.querySelectorAll(".branch-class-tab").forEach(tab=>{
   tab.addEventListener("click", ()=>{
     S._branchClassFilter = tab.dataset.class;
     document.querySelectorAll(".branch-class-tab").forEach(t=>t.classList.toggle("active", t===tab));
-    renderBranchListTable();
+    renderBranchTable();
   });
 });
 
@@ -4097,6 +4254,8 @@ function renderAdminStats(){
     if (timestamps.length>100) html += `<div class="branch-stats-empty">…ve ${timestamps.length-100} giriş daha</div>`;
   }
   box.innerHTML = html;
+  if ($("adminBranchesScreen") && !$("adminBranchesScreen").hidden) renderBranchDrawer();
+  renderOverviewKpis();
 }
 
 $("authBtn").onclick = ()=>{
@@ -4142,6 +4301,7 @@ function loadCloud(){
     setEmptyState(S.files.length ? "" : "Henüz bulutta veri yok. Admin girişi yapıp ilk ayı yükle.", false);
     renderFiles(); refreshPeriodOptions(); render(); updateSaveRow();
     renderAdminOverview(); // Genel Bakış (Toplam Firma sayısı + harita) veri gelince tazelensin
+    renderDataStatus();
     maybeAutoLocation();
     // Şube girişinde konum veri gelmeden önce ayarlanmış olabilir; veri gelince mesafeleri tazele
     if (S.branch && S.userLoc) geocodeVisible();
@@ -4151,12 +4311,12 @@ function loadCloud(){
   // İlk 1000 listesini buluttan yükle
   cloudOn("tim", snap=>{
     const v = snap.val();
-    if (v && v.map && !S.timDirty){ S.tim = v.map; S.timYear = v.year||""; refreshTimChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
+    if (v && v.map && !S.timDirty){ S.tim = v.map; S.timYear = v.year||""; S.timUpdated = v.updated||0; renderDataStatus(); refreshTimChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
   });
   // Turquality listesini buluttan yükle
   cloudOn("tq", snap=>{
     const v = snap.val();
-    if (v && v.map && !S.tqDirty){ S.tq = v.map; refreshTqChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
+    if (v && v.map && !S.tqDirty){ S.tq = v.map; S.tqUpdated = v.updated||0; renderDataStatus(); refreshTqChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
   });
   // Yıldız / Önemli / Ziyaret / Giriş kayıtları: admin tüm şubeleri, şube hesabı yalnızca KENDİ düğümünü
   // dinler (kurallar başka şubenin verisini okumaya izin vermez).
@@ -4180,7 +4340,7 @@ function loadCloud(){
   cloudOn("manualMerges", snap=>{
     S.manualMerges = snap.val() || {};
     render();
-    if ($("adminAudiencesScreen") && !$("adminAudiencesScreen").hidden) renderMergeFirmList();
+    if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden) renderMergeFirmList();
   });
 }
 
