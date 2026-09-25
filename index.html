@@ -88,6 +88,10 @@ h1{font-family:'Sora',sans-serif;font-size:26px;letter-spacing:-.02em}
 .brand-sub{font-size:11.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
 /* Mobilde kaydırılınca görünen küçük üst çubuk — sadece @media(max-width:560px) içinde görünür kılınır */
 .mobile-sticky-brand{display:none}
+/* Mobil profil rozeti ve alt çekmece menüsü — masaüstünde tamamen gizli,
+   yalnızca @media(max-width:560px) içinde görünür kılınır. */
+.profile-avatar{display:none}
+.profile-sheet,.profile-sheet-scrim{display:none}
 .tagline{color:var(--muted);font-size:13px;margin-top:12px}
 .intro-row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
 .tagline-lead{color:var(--muted);font-size:13px;flex:1;min-width:180px;line-height:1.5}
@@ -727,6 +731,7 @@ select:focus,input:focus{border-color:var(--exp)}
 .firm.open .firm-caret{transform:rotate(180deg)}
 .firm-detail{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);animation:fade .18s ease}
 @keyframes fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@keyframes sheetup{from{transform:translateY(100%)}to{transform:none}}
 .det-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(38,48,74,.5)}
 .det-row:last-child{border-bottom:none}
 .det-label{flex:0 0 118px;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
@@ -932,8 +937,45 @@ select:focus,input:focus{border-color:var(--exp)}
   .mobile-sticky-brand .msb-mark{flex:0 0 auto;display:flex}
   .mobile-sticky-brand .msb-name{flex:1;min-width:0;font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .mobile-sticky-brand .msb-name b{color:var(--exp);font-weight:700}
-  .mobile-sticky-brand .msb-theme{flex:0 0 auto;background:none;border:none;width:28px;height:28px;padding:0;border-radius:50%;color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center}
-  .mobile-sticky-brand .msb-theme .ic{width:16px;height:16px}
+  .mobile-sticky-brand .msb-avatar{width:28px;height:28px;font-size:10.5px}
+  /* --- Profil rozeti (başlıkta ve sabit üst çubukta) --- */
+  .profile-avatar{display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+    width:32px;height:32px;padding:0;border-radius:50%;cursor:pointer;
+    background:color-mix(in srgb,var(--exp) 16%,transparent);
+    border:1px solid color-mix(in srgb,var(--exp) 42%,transparent);
+    color:var(--exp);font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:700}
+  .profile-avatar[hidden]{display:none!important}
+  .profile-avatar.on{background:var(--exp);color:var(--bg);border-color:var(--exp)}
+  /* Mobilde hesap şeridi ve ikon düğmeleri profil menüsüne taşındı */
+  .header-tools,.header-account{display:none}
+  /* --- Alt çekmece --- */
+  .profile-sheet-scrim{display:block;position:fixed;inset:0;z-index:2400;background:rgba(5,8,15,.55);animation:fade .16s ease}
+  .profile-sheet-scrim[hidden]{display:none!important}
+  .profile-sheet{display:block;position:fixed;left:0;right:0;bottom:0;z-index:2500;
+    background:var(--panel);border-top:1px solid var(--border);border-radius:18px 18px 0 0;
+    box-shadow:0 -16px 44px rgba(0,0,0,.36);
+    padding:6px 8px calc(16px + env(safe-area-inset-bottom, 0px));
+    animation:sheetup .22s cubic-bezier(.32,.72,0,1)}
+  .profile-sheet[hidden]{display:none!important}
+  .ps-grab{width:34px;height:4px;border-radius:3px;background:var(--border);margin:6px auto 2px}
+  .ps-head{display:flex;align-items:center;gap:11px;padding:12px 12px 10px}
+  .ps-av{flex:0 0 auto;width:36px;height:36px;border-radius:50%;background:color-mix(in srgb,var(--exp) 16%,transparent);border:1px solid color-mix(in srgb,var(--exp) 42%,transparent);color:var(--exp);font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .ps-who{min-width:0}
+  .ps-who b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ps-who small{display:block;color:var(--faint);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em}
+  .ps-sep{height:1px;background:var(--border);margin:5px 4px}
+  .ps-row{display:flex;align-items:center;gap:12px;width:100%;background:none;border:none;color:var(--text);
+    font-family:inherit;font-size:13.5px;text-align:left;padding:13px 12px;cursor:pointer;border-radius:10px}
+  .ps-row[hidden]{display:none!important}
+  .ps-row:active{background:var(--panel2)}
+  .ps-row svg{width:17px;height:17px;stroke:var(--muted);flex:0 0 auto}
+  .ps-row .ps-lbl{flex:1;min-width:0}
+  .ps-row .ps-val{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--faint)}
+  .ps-visit svg{stroke:var(--imp)}
+  .ps-badge{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:700;color:var(--imp);background:color-mix(in srgb,var(--imp) 20%,transparent);border-radius:20px;padding:1px 8px}
+  .ps-badge[hidden]{display:none!important}
+  .ps-out{color:var(--danger)}
+  .ps-out svg{stroke:var(--danger)}
   /* iOS'ta odaklanınca zoom olmasın diye form fontları 16px */
   select,input[type=search],input[type=text],.filterbar select,.search-row input[type=search]{font-size:16px}
   /* GİRİŞ KAPISI — mobilde Konsept B: kutu sınırı yok, radar sahne arka planı */
@@ -954,16 +996,7 @@ select:focus,input:focus{border-color:var(--exp)}
   .brand-mark svg{width:30px;height:30px}
   .brand-name{font-size:17px;white-space:nowrap}
   .brand-sub{display:none}
-  .header-tools{order:1;display:flex;align-items:center;gap:2px;margin-left:auto}
-  .header-tools .theme-toggle{background:none;border:none;width:30px;height:30px;padding:0;border-radius:50%;color:var(--muted);font-size:15px}
-  .header-account{order:2;flex-basis:100%;display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:9px;border-top:1px solid var(--border);font-size:12.5px;min-width:0}
-  .header-account .branch-badge:not([hidden]),.header-account .admin-badge:not([hidden]){display:contents}
-  .header-account .branch-badge > .ic,.header-account .admin-badge > .ic{color:var(--exp);order:0;width:15px;height:15px}
-  .header-account .admin-badge > .ic{color:var(--imp)}
-  .header-account #branchBadgeName{order:0;flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .header-account .header-visit-btn{order:1;margin-left:auto;background:none;border:none;padding:0;color:var(--imp);font-size:12.5px;font-weight:600;gap:5px;border-radius:0}
-  .header-account .header-visit-label{display:inline}
-  .header-account .branch-badge-logout{order:2;background:none;border:none;border-left:1px solid var(--border);color:var(--muted);font-size:12px;padding:2px 0 2px 10px;border-radius:0}
+  .profile-avatar{order:1;margin-left:auto}
   header > .intro-row,header > .diib-panel{flex-basis:100%;order:5}
   header > .intro-row{margin-top:14px}
   /* Marka başlığı */
@@ -1155,9 +1188,7 @@ select:focus,input:focus{border-color:var(--exp)}
     </svg>
   </span>
   <span class="msb-name">Dış Ticaret <b>Radar</b></span>
-  <button class="msb-theme" id="mobileStickyThemeBtn" type="button" aria-label="Tema değiştir">
-    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A8.5 8.5 0 1111.2 3 6.8 6.8 0 0021 12.8z"/></svg>
-  </button>
+  <button class="profile-avatar msb-avatar" id="mobileStickyAvatar" type="button" aria-label="Hesap menüsü"><span class="pa-initials">–</span></button>
 </div>
 <header>
   <div class="header-right-row">
@@ -1172,6 +1203,7 @@ select:focus,input:focus{border-color:var(--exp)}
       <button class="branch-badge-logout" id="adminHeaderLogout">Çıkış</button>
     </span>
     </span>
+    <button class="profile-avatar" id="profileAvatar" type="button" aria-label="Hesap menüsü"><span class="pa-initials">–</span></button>
     <span class="header-tools">
     <button class="theme-toggle" id="onboardHelpBtn" hidden title="Nasıl kullanılır?" aria-label="Kullanım rehberini aç"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-4 10 4-10 4-10-4z"/><path d="M6 11v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg></button>
     <button class="theme-toggle" id="themeToggle" title="Açık/koyu tema" aria-label="Tema değiştir"><svg class="ic" id="themeToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A8.5 8.5 0 1111.2 3 6.8 6.8 0 0021 12.8z"/></svg></button>
@@ -1674,6 +1706,35 @@ select:focus,input:focus{border-color:var(--exp)}
 </div>
 
 <footer class="site-footer">by <span>Ensar</span></footer>
+</div>
+
+<!-- Mobil profil menüsü (alt çekmece): mobilde başlıktaki hesap şeridi ve tema/rehber ikonları
+     tek bir profil rozetine toplanır, içerik buradan açılır. Masaüstünde hiç görünmez. -->
+<div class="profile-sheet-scrim" id="profileSheetScrim" hidden></div>
+<div class="profile-sheet" id="profileSheet" hidden role="dialog" aria-modal="true" aria-label="Hesap menüsü">
+  <div class="ps-grab"></div>
+  <div class="ps-head">
+    <span class="ps-av" id="profileSheetInitials">–</span>
+    <span class="ps-who"><b id="profileSheetName">—</b><small id="profileSheetRole">Şube</small></span>
+  </div>
+  <div class="ps-sep"></div>
+  <button class="ps-row ps-visit" id="psVisitBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+    <span class="ps-lbl">Ziyaret Listem</span><span class="ps-badge" id="psVisitCount" hidden>0</span>
+  </button>
+  <button class="ps-row" id="psThemeBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A8.5 8.5 0 1111.2 3 6.8 6.8 0 0021 12.8z"/></svg>
+    <span class="ps-lbl">Tema</span><span class="ps-val" id="psThemeVal">Koyu</span>
+  </button>
+  <button class="ps-row" id="psGuideBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-4 10 4-10 4-10-4z"/><path d="M6 11v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
+    <span class="ps-lbl">Kullanım rehberi</span>
+  </button>
+  <div class="ps-sep"></div>
+  <button class="ps-row ps-out" id="psLogoutBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+    <span class="ps-lbl">Çıkış</span>
+  </button>
 </div>
 
 <!-- Şube girişinde bir kere gösterilen kullanım rehberi (slider) -->
@@ -4107,6 +4168,7 @@ function renderBranchUI(){
     closeVisitListScreen();
     setLocSource("gps");
   }
+  if (syncProfileMenu) syncProfileMenu();
 }
 
 /* ================= ŞUBE KULLANIM REHBERİ (giriş sonrası slider) ================= */
@@ -4332,11 +4394,11 @@ if (brandHomeLink){
   brandHomeLink.addEventListener("keydown", e=>{ if (e.key==="Enter"||e.key===" "){ e.preventDefault(); goHome(); } });
 }
 
-// Mobilde aşağı kaydırılınca görünen küçük üst çubuk (logo + tema düğmesi). Gerçek üst satır
+// Mobilde aşağı kaydırılınca görünen küçük üst çubuk (logo + profil rozeti). Gerçek üst satır
 // (header) çok kısa olduğu için position:sticky sayfa boyunca "yapışık" kalamıyor — bunun yerine
 // ayrı, position:fixed bir çubuk; belirli bir eşiği geçince gösterilir (bkz. .mobile-sticky-brand CSS).
 (function(){
-  const bar = $("mobileStickyBrand"), themeBtn = $("mobileStickyThemeBtn");
+  const bar = $("mobileStickyBrand");
   if (!bar) return;
   const THRESHOLD = 80;
   let ticking = false;
@@ -4348,8 +4410,72 @@ if (brandHomeLink){
   }
   window.addEventListener("scroll", ()=>{ if (!ticking){ ticking = true; requestAnimationFrame(update); } }, {passive:true});
   window.addEventListener("resize", update);
-  bar.addEventListener("click", (e)=>{ if (e.target.closest(".msb-theme")) return; goHome(); });
-  themeBtn && themeBtn.addEventListener("click", (e)=>{ e.stopPropagation(); $("themeToggle").click(); });
+  bar.addEventListener("click", (e)=>{ if (e.target.closest(".profile-avatar")) return; goHome(); });
+})();
+
+// Profil rozeti/menüsü içeriğini tazeler (kimlik, baş harfler, ziyaret sayısı, tema etiketi).
+// Aşağıdaki IIFE atıyor; renderBranchUI() bundan önce çalışabileceği için var + kontrol.
+var syncProfileMenu = null;
+
+/* ---- Mobil profil menüsü (alt çekmece) ----
+   Mobilde başlıktaki hesap şeridi (şube adı · Ziyaret Listem · Çıkış) ve tema/rehber ikonları
+   tek bir profil rozetine toplandı. Menüdeki satırlar yeni bir mantık kurmuyor, var olan
+   düğmeleri tetikliyor: tema → #themeToggle, rehber → openOnboarding, çıkış → mevcut çıkış
+   düğmesi, ziyaret listesi → openVisitListScreen. İçerik açılışta tazeleniyor. */
+(function(){
+  const sheet = $("profileSheet"), scrim = $("profileSheetScrim");
+  if (!sheet || !scrim) return;
+
+  function initials(name){
+    const parts = String(name||"").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "–";
+    const two = (parts[0][0] || "") + (parts.length>1 ? (parts[1][0]||"") : "");
+    return trUp(two) || "–";
+  }
+  function currentIdentity(){
+    if (S.branch) return { name: S.branch.name, role: "Şube" };
+    if (S.isGroupUser && S.group) return { name: S.group.name, role: "Genel Müdürlük" };
+    if (S.isAdmin) return { name: (ADMIN_TABLE[(S.user&&S.user.email||"").split("@")[0]] || "Yönetim"), role: "Yönetim" };
+    return { name: "—", role: "" };
+  }
+  syncProfileMenu = function(){
+    const id = currentIdentity();
+    const ini = initials(id.name);
+    $("profileSheetName").textContent = id.name;
+    $("profileSheetRole").textContent = id.role;
+    $("profileSheetInitials").textContent = ini;
+    document.querySelectorAll(".profile-avatar .pa-initials").forEach(el=>{ el.textContent = ini; });
+    // Ziyaret Listem: yalnızca kendi listesi olan hesaplarda (şube / genel müdürlük)
+    const owner = ownDataUname();
+    const total = owner ? Object.keys(S.visits[owner] || {}).length : 0;
+    $("psVisitBtn").hidden = !owner;
+    $("psVisitCount").textContent = total;
+    $("psVisitCount").hidden = total === 0;
+    // Tema etiketi
+    $("psThemeVal").textContent = document.documentElement.getAttribute("data-theme")==="light" ? "Açık" : "Koyu";
+    // Kullanım rehberi: başlıktaki rehber düğmesi gizliyse burada da gösterme
+    const help = $("onboardHelpBtn");
+    $("psGuideBtn").hidden = !help || help.hidden;
+  }
+  function open(){ syncProfileMenu(); scrim.hidden = false; sheet.hidden = false; document.querySelectorAll(".profile-avatar").forEach(a=>a.classList.add("on")); }
+  function close(){ scrim.hidden = true; sheet.hidden = true; document.querySelectorAll(".profile-avatar").forEach(a=>a.classList.remove("on")); }
+
+  document.querySelectorAll(".profile-avatar").forEach(av=>{
+    av.addEventListener("click", e=>{ e.stopPropagation(); sheet.hidden ? open() : close(); });
+  });
+  scrim.addEventListener("click", close);
+  document.addEventListener("keydown", e=>{ if (e.key==="Escape" && !sheet.hidden) close(); });
+
+  $("psVisitBtn").addEventListener("click", ()=>{ close(); openVisitListScreen(); });
+  $("psThemeBtn").addEventListener("click", ()=>{ $("themeToggle").click(); syncProfileMenu(); });
+  $("psGuideBtn").addEventListener("click", ()=>{ close(); openOnboarding(); });
+  $("psLogoutBtn").addEventListener("click", ()=>{
+    close();
+    const branchOut = $("branchBadgeLogout"), adminOut = $("adminHeaderLogout");
+    if ($("branchBadge") && !$("branchBadge").hidden && branchOut) branchOut.click();
+    else if (adminOut) adminOut.click();
+    else fbAuth.signOut();
+  });
 })();
 
 // Genel Bakış: toplam firma, aktif şube, toplam giriş sayısı
