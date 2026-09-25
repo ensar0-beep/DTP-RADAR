@@ -1651,6 +1651,7 @@ let fbApp, fbAuth, fbDB;
 const S = {
   files: [],        // {id, name, month:'YYYY-MM'|null, records:[...], cloud:bool, dirty:bool}
   userLoc: null,    // {lat,lon}
+  _locPlaceholder: false, // true: userLoc gerçek değil, GPS/şube gelene kadar harita boş kalmasın diye konulan Türkiye geneli nötr konum
   geoCache: {},     // query -> {lat,lon} | null
   geoQueue: [], geoBusy:false,
   distByKey: {},    // firmaKey -> km
@@ -2479,7 +2480,9 @@ function filtered(){
     // Ziyaret Listem görünümü: yalnızca listedeki firmalar; yarıçap sınırı uygulanmaz (liste tam görünsün)
     const vm = visitMapFor();
     list = list.filter(a=>vm[a.key]);
-  } else if (S.userLoc){
+  } else if (S.userLoc && !S._locPlaceholder){
+    // _locPlaceholder: henüz gerçek bir konum yok (GPS bekleniyor) — Türkiye ortasından "≤5km" gibi
+    // anlamsız bir sınırlama uygulanmasın, gerçek konum/şube gelene kadar tüm firmalar görünsün.
     const rad = $("radiusSel").value;
     if (rad) list = list.filter(a=>S.distByKey[a.key]!==undefined && S.distByKey[a.key]<=+rad);
   }
@@ -2766,7 +2769,7 @@ function render(){
     // Yol tarifi doğrudan firmanın tam adresine gitsin (ilçe merkezine değil)
     const destText = [a.firma, a.adres, a.il].filter(Boolean).join(", ");
     const dest = encodeURIComponent(destText || (a.firma+" "+(a.il||"")));
-    const origin = S.userLoc ? `&origin=${S.userLoc.lat},${S.userLoc.lon}` : "";
+    const origin = (S.userLoc && !S._locPlaceholder) ? `&origin=${S.userLoc.lat},${S.userLoc.lon}` : "";
     const mapsUrl = `https://www.google.com/maps/dir/?api=1${origin}&destination=${dest}`;
     const open = S._openFirm===a.key;
     const div = document.createElement("div"); div.className="firm"+(open?" open":"");
@@ -3397,13 +3400,21 @@ async function refineMahalle(){
   } finally { _refineBusy = false; }
 }
 
+// Konum isteği çok yavaş dönebilir (izin diyaloğu bekler, 15sn'ye kadar sürebilir). Bu sırada kullanıcı
+// bir şube seçmiş olabilir — geç gelen eski bir GPS sonucu bunu sessizce ezmesin diye her isteğin kendi
+// numarası var; yalnızca EN SON isteğin sonucu uygulanır (invalidateLocationRequest ile de iptal edilir).
+let _locReqId = 0;
+function invalidateLocationRequest(){ _locReqId++; }
 function requestLocation(){
   if (!navigator.geolocation){ toast("Tarayıcı konum desteklemiyor."); return; }
+  const myReqId = ++_locReqId;
   $("locStatus").textContent="Konum alınıyor…";
   navigator.geolocation.getCurrentPosition(p=>{
+    if (myReqId !== _locReqId) return; // bu arada başka bir konum/şube seçildi, bu sonuç artık geçersiz
     showMapLoadingOverlay();
     S.userLoc = {lat:p.coords.latitude, lon:p.coords.longitude};
     S._locSource = "gps"; // haritadaki konum etiketi "Buradayım" olsun
+    S._locPlaceholder = false;
     S._mapBoundsFit = false; // yeni konum — harita bir kez otomatik yakınlaşsın
     $("locStatus").textContent = `Konum alındı. Yakın firmalar en üstte; mesafe önce ilçeye, sonra mahalleye göre hassaslaşır (nokta • = mahalle bazlı).`;
     S._locStatusSaved = null; $("locStatus").classList.remove("visit");
@@ -3411,6 +3422,7 @@ function requestLocation(){
     $("map").style.display="block";
     initMap(); geocodeVisible();
   }, e=>{
+    if (myReqId !== _locReqId) return;
     $("locStatus").textContent = "Konum alınamadı — konum düğmesiyle tekrar deneyebilirsin.";
     if (e.code!==e.PERMISSION_DENIED) toast("Konum alınamadı: "+e.message);
   }, {enableHighAccuracy:true, timeout:15000});
@@ -3434,6 +3446,20 @@ const CARTO_API_KEY = "cb1_2ffl_1_c0f43ad5fb5e72c7905db246";
 // dışına kaydırılamaz/uzaklaşılamaz. Sınıra biraz pay bırakıldı (komşu ülkelerin kıyısı hafif görünsün).
 const TURKEY_BOUNDS = [[35.0, 24.5], [43.0, 45.5]];
 const TURKEY_MIN_ZOOM = 6;
+const TURKEY_CENTER = {lat:39.0, lon:35.2};
+// Gerçek konum (GPS/şube) henüz yokken harita ve firma listesi boş kalmasın diye nötr, Türkiye geneli
+// bir "yer tutucu" konum konur — S._locPlaceholder ile işaretlenir; bu sırada "buradayım" iğnesi
+// çizilmez ve yarıçap filtresi uygulanmaz (bkz. drawMap/filtered). Gerçek konum gelince otomatik geçilir.
+function seedPlaceholderLocationIfNeeded(){
+  if (S.userLoc) return;
+  S.userLoc = {lat:TURKEY_CENTER.lat, lon:TURKEY_CENTER.lon};
+  S._locPlaceholder = true;
+  S._locSource = "gps";
+  S._mapBoundsFit = false;
+  $("map").style.display = "block";
+  initMap();
+  geocodeVisible();
+}
 function currentMapTileUrls(){
   const isLight = document.documentElement.getAttribute("data-theme")==="light";
   const style = isLight ? "light_all" : "dark_all";
@@ -3498,9 +3524,9 @@ function drawMap(list){
   if (!S.map) return;
   S.mapLayers.forEach(l=>S.map.removeLayer(l)); S.mapLayers=[];
   const pts = [];
-  // Kullanıcı konumu: hafif hâle + parlak nokta — henüz konum yoksa (ör. GPS izni bekleniyor) hiç çizilmez,
-  // harita Türkiye genelini gösterir, konum gelince (drawMap tekrar çağrılınca) otomatik eklenir.
-  if (S.userLoc){
+  // Kullanıcı konumu: hafif hâle + parlak nokta — henüz gerçek konum yoksa (yer tutucu, GPS bekleniyor)
+  // hiç çizilmez, harita sadece Türkiye genelini ve firmaları gösterir; gerçek konum gelince eklenir.
+  if (S.userLoc && !S._locPlaceholder){
     const halo = L.circleMarker([S.userLoc.lat,S.userLoc.lon],{radius:16,color:"#5B8DEF",weight:0,fillColor:"#5B8DEF",fillOpacity:.15,interactive:false}).addTo(S.map);
     // Etiket: şube girişinde şube adı, admin önizlemesinde önizlenen şube adı, yoksa genel "Konumun"
     // "Şu anki konumum" seçiliyse şube adı yerine "Buradayım"
@@ -3531,7 +3557,7 @@ function drawMap(list){
   for (const {c,firms} of groups.values()){
     pts.push([c.lat,c.lon]);
     const top = firms.slice().sort((a,b)=>b.exp-a.exp); // tüm firmalar — popup içi kaydırılabilir, artık 6 ile sınırlı değil
-    const dir = `https://www.google.com/maps/dir/?api=1${S.userLoc?`&origin=${S.userLoc.lat},${S.userLoc.lon}`:""}&destination=${c.lat},${c.lon}`;
+    const dir = `https://www.google.com/maps/dir/?api=1${(S.userLoc&&!S._locPlaceholder)?`&origin=${S.userLoc.lat},${S.userLoc.lon}`:""}&destination=${c.lat},${c.lon}`;
     const r = Math.min(6+Math.sqrt(firms.length)*2.4, 22);
     // Şu an listede açık/seçili firma bu grupta mı? Öyleyse haritada turuncu + daha büyük göster.
     const isSelected = !!S._openFirm && firms.some(f=>f.key===S._openFirm);
@@ -3840,9 +3866,11 @@ $("gateAdminUser").addEventListener("keydown", e=>{ if(e.key==="Enter") $("gateA
 // Şube girişinde konumu otomatik ayarla (GPS istemeden), harita ve mesafe hesapları o noktadan başlasın
 function applyBranchLocation(){
   if (!S.branch) return;
+  invalidateLocationRequest(); // sürmekte olan bir GPS isteği varsa geç gelen sonucu artık ezmesin
   showMapLoadingOverlay();
   S.userLoc = {lat:S.branch.lat, lon:S.branch.lon};
   S._locSource = "branch";
+  S._locPlaceholder = false;
   S._mapBoundsFit = false; // yeni konum — harita bir kez otomatik yakınlaşsın
   $("locStatus").textContent = `${S.branch.name} konumundasın. Yakın firmalar en üstte; mesafe önce ilçeye, sonra mahalleye göre hassaslaşır.`;
   S._locStatusSaved = null; $("locStatus").classList.remove("visit");
@@ -3857,6 +3885,7 @@ function applyBranchLocation(){
 function applyAdminBranchPreview(uname){
   const rec = SUBE_TABLE[uname];
   if (!rec) return;
+  invalidateLocationRequest(); // sürmekte olan bir GPS isteği varsa geç gelen sonucu artık bu şube seçimini ezmesin
   showMapLoadingOverlay();
   // "Şu Anki Konumum" kartı admin girişinde varsayılan olarak "Aktif" görünüyordu; bir şube
   // seçilince konumu artık o şube belirlediği için yanıltıcı olmasın diye kaldırılır.
@@ -3864,6 +3893,7 @@ function applyAdminBranchPreview(uname){
   S._adminViewBranch = uname;
   S.userLoc = {lat:rec[1], lon:rec[2]};
   S._locSource = "branch";
+  S._locPlaceholder = false;
   S._mapBoundsFit = false; // yeni konum — harita bir kez otomatik yakınlaşsın
   $("locStatus").textContent = `${rec[0]} konumunu görüntülüyorsun (Şube Seç). Yakın firmalar en üstte.`;
   S._locStatusSaved = null; $("locStatus").classList.remove("visit");
@@ -3908,13 +3938,7 @@ function renderBranchUI(){
     if (adminPicker) adminPicker.hidden = false;
     if (visitBtn) visitBtn.hidden = false;
     if (helpBtn) helpBtn.hidden = true;
-    if (!S._adminViewBranch && !S.userLoc){
-      // Gerçek konum gelene kadar (izin istemi gecikebilir/reddedilebilir) harita boş kalmasın —
-      // hemen Türkiye geneli görünümle açılır, firmalar listelenir; GPS başarılı olursa otomatik ortalanır.
-      $("map").style.display = "block";
-      initMap();
-      setLocSource("gps");
-    }
+    if (!S._adminViewBranch && !S.userLoc) setLocSource("gps");
   } else {
     badge.hidden = true;
     $("locSrcBranch").hidden = true;
@@ -4035,6 +4059,7 @@ function setLocSource(which){
       syncAbpCard();
       const hint = $("adminBranchPickerHint"); if (hint) hint.textContent = "";
     }
+    seedPlaceholderLocationIfNeeded();
     requestLocation();
   }
 }
@@ -5141,19 +5166,19 @@ function loadCloud(){
     if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); }
     maybeAutoLocation();
     // Şube girişinde konum veri gelmeden önce ayarlanmış olabilir; veri gelince mesafeleri tazele
-    if (S.branch && S.userLoc) geocodeVisible();
+    if (S.userLoc) geocodeVisible();
   }, err=>{
     setEmptyState("Bulut okunamadı: "+err.message, false);
   });
   // İlk 1000 listesini buluttan yükle
   cloudOn("tim", snap=>{
     const v = snap.val();
-    if (v && v.map && !S.timDirty){ S.tim = v.map; S.timYear = v.year||""; S.timUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); } refreshTimChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
+    if (v && v.map && !S.timDirty){ S.tim = v.map; S.timYear = v.year||""; S.timUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); } refreshTimChip(); render(); renderAdminOverview(); if (S.userLoc) geocodeVisible(); }
   });
   // Turquality listesini buluttan yükle
   cloudOn("tq", snap=>{
     const v = snap.val();
-    if (v && v.map && !S.tqDirty){ S.tq = v.map; S.tqUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); } refreshTqChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
+    if (v && v.map && !S.tqDirty){ S.tq = v.map; S.tqUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); } refreshTqChip(); render(); renderAdminOverview(); if (S.userLoc) geocodeVisible(); }
   });
   // Yönetimin yayınladığı duyuru (kampanya pop-up'ı) — herkes okur, sadece admin yazar
   cloudOn("announcement", snap=>{
