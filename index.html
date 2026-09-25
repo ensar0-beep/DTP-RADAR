@@ -1227,7 +1227,7 @@ select:focus,input:focus{border-color:var(--exp)}
 
       <!-- Genel Bakış -->
       <div id="adminOverviewScreen" class="admin-screen">
-        <div class="admin-head"><div><div class="admin-screen-title">Genel Bakış</div><div class="admin-screen-desc">Sistemin durumu ve bu ay yapılacaklar.</div></div></div>
+        <div class="admin-head"><div><div class="admin-screen-title">Genel Bakış</div></div></div>
         <div class="overview-stats">
           <div class="overview-stat">
             <div class="overview-stat-label">
@@ -1264,7 +1264,7 @@ select:focus,input:focus{border-color:var(--exp)}
         <div class="admin-subhead-row">
           <div class="admin-subhead" style="margin-top:22px">Türkiye Haritası</div>
           <span class="ov-map-legend">
-            <span class="ov-legend-item"><span class="ov-legend-dot firm"></span> Firma (tek tek)</span>
+            <span class="ov-legend-item"><span class="ov-legend-dot firm"></span> Hedef Firmalar</span>
             <span class="ov-legend-item"><span class="ov-legend-dot ticari"></span> Ticari</span>
             <span class="ov-legend-item"><span class="ov-legend-dot kurumsal"></span> Kurumsal</span>
             <span class="ov-legend-item"><span class="ov-legend-dot kobi"></span> Kobi</span>
@@ -3886,7 +3886,9 @@ function renderAdminOverviewMap(){
     // olduğunda showAdminScreen() zaten renderAdminOverview()'i tekrar çağırıyor.
     if (!el.offsetParent) return;
     // Binlerce firma noktası SVG ile yavaşlar — canvas renderer performansı ciddi artırır.
-    S._adminOvMap = L.map("adminOverviewMap", {scrollWheelZoom:true, renderer:L.canvas({padding:0.5})}).setView([39.0, 35.2], 6);
+    S._adminOvMap = L.map("adminOverviewMap", {scrollWheelZoom:true, renderer:L.canvas({padding:0.5}), minZoom:6, maxBoundsViscosity:1}).setView([39.0, 35.2], 6);
+    // Harita sadece Türkiye ile sınırlı kalsın — dünyanın geri kalanına kaydırılamaz/uzaklaşılamaz
+    S._adminOvMap.setMaxBounds(L.latLngBounds([35.0, 24.5], [43.0, 45.5]));
     S._adminOvTileLayers = addBaseTileLayers(S._adminOvMap);
     S._adminOvMap.on("zoomend", updateOvBranchLabels);
   } else if (el.offsetParent){
@@ -3949,6 +3951,9 @@ function showOvBranchDetail(uname){
   S._ovActiveBranch = uname;
   $("ovBranchDetailGo").onclick = ()=> renderOvBranchFirmList(uname);
   $("ovBranchDetail").hidden = false;
+  // Panel haritanın hemen altında açılıyor ama görünür alanın dışında kalabiliyordu —
+  // açılır açılmaz otomatik kaydırıp gösterir.
+  setTimeout(()=> $("ovBranchDetail").scrollIntoView({behavior:"smooth", block:"nearest"}), 50);
 }
 $("ovBranchDetailClose") && ($("ovBranchDetailClose").onclick = ()=>{ $("ovBranchDetail").hidden = true; $("ovBranchFirmList").hidden = true; });
 
@@ -4351,7 +4356,7 @@ function renderOverviewKpis(){
   box.hidden = false;
   if (latest < expected){
     box.className = "this-month";
-    box.innerHTML = `<span class="tm-dot"></span><div><b>${monthLabel(expected)} DİİB dosyası henüz yüklenmedi.</b><div class="tm-sub">Son yüklenen ay: ${monthLabel(latest)} · "Son 12 ay" penceresi ${win}</div></div><button class="btn primary" type="button" onclick="showAdminScreen('adminAudiencesScreen')">${monthLabel(expected).split(" ")[0]} dosyasını yükle</button>`;
+    box.innerHTML = `<span class="tm-dot"></span><div><b>${monthLabel(expected)} DİİB dosyası henüz yüklenmedi.</b><div class="tm-sub">Son yüklenen ay: ${monthLabel(latest)} · "Son 12 ay" penceresi ${win}</div></div><a class="btn" href="https://ticaret.gov.tr/destekler/destek-yonetim-sistemi-dys/resmi-gazetede-yayimlanan-belge-listeleri-d1-d3-h1" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">Kontrol Et</a><button class="btn primary" type="button" onclick="showAdminScreen('adminAudiencesScreen')">${monthLabel(expected).split(" ")[0]} dosyasını yükle</button>`;
   } else {
     box.className = "this-month ok";
     box.innerHTML = `<span class="tm-dot"></span><div><b>Veriler güncel.</b><div class="tm-sub">Son yüklenen ay: ${monthLabel(latest)} · "Son 12 ay" penceresi ${win}</div></div>`;
