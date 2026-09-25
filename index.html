@@ -43,6 +43,14 @@
   --imp:#C97D14; --exp:#1F9B82; --danger:#D6453D; --axis:#C3CEDE;
 }
 [data-theme="light"] body{background:var(--bg)}
+/* İnce, tema uyumlu kaydırma çubuğu — varsayılan kalın/gri tarayıcı çubuğu yerine */
+*{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{background-color:var(--border);border-radius:20px;border:2.5px solid var(--bg);background-clip:padding-box}
+*::-webkit-scrollbar-thumb:hover{background-color:var(--faint)}
+*::-webkit-scrollbar-corner{background:transparent}
+[data-theme="light"] *::-webkit-scrollbar-thumb{border-color:var(--panel)}
 [data-theme="light"] .gate-screen{background:radial-gradient(ellipse at 50% 30%,#EEF2F8 0%,#F5F7FA 65%)}
 [data-theme="light"] .leaflet-tile-pane{filter:none}
 *{box-sizing:border-box;margin:0;padding:0}
