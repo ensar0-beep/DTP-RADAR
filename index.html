@@ -666,6 +666,32 @@ select:focus,input:focus{border-color:var(--exp)}
 .det-value a:hover{text-decoration:underline}
 .det-value.big{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;letter-spacing:.02em}
 .det-value .muted{color:var(--faint);font-weight:400;font-size:13px;font-family:'IBM Plex Sans',sans-serif}
+/* Belge sayısı: aç/kapa + tarih/tutar listesi */
+.det-toggle{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(38,48,74,.5);cursor:pointer;user-select:none;background:none;border-left:none;border-right:none;border-top:none;width:100%;text-align:left;font-family:inherit;color:inherit}
+.det-toggle .det-value{display:flex;align-items:center;gap:8px}
+.det-toggle .car{color:var(--faint);transition:transform .18s ease;font-size:11px}
+.det-toggle.open .car{transform:rotate(180deg)}
+.count-badge{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)}
+.belge-panel{display:none;padding:2px 0 4px;border-bottom:1px solid rgba(38,48,74,.5)}
+.belge-panel.open{display:block;animation:fade .16s ease}
+.stat{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;letter-spacing:.01em;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.stat.ok{color:var(--exp);background:rgba(53,196,168,.13)}
+.stat.warn{color:var(--imp);background:rgba(232,163,61,.15)}
+.stat.off{color:var(--faint);background:var(--panel2)}
+.stat i{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+.bl{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.bl-row{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.bl-left{flex:1;min-width:0}
+.bl-range{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.bl-range .arrow{color:var(--faint);font-weight:400;margin:0 1px}
+.bl-bar{position:relative;height:3px;background:var(--border);border-radius:3px;margin-top:7px;overflow:hidden}
+.bl-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--faint);border-radius:3px}
+.bl-row.ok .bl-bar i{background:var(--exp)}
+.bl-row.warn .bl-bar i{background:var(--imp)}
+.bl-nums{flex:0 0 auto;display:flex;gap:14px;text-align:right}
+.bl-num{display:flex;flex-direction:column;gap:1px}
+.bl-num .lbl{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.bl-num .val{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600}
 .copy-btn{flex:0 0 auto;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:5px 10px;font-family:inherit;font-size:12px;cursor:pointer;transition:.15s}
 .copy-btn:hover{border-color:var(--exp);color:var(--exp)}
 .copy-btn.ok{border-color:var(--exp);color:var(--exp)}
@@ -897,6 +923,9 @@ select:focus,input:focus{border-color:var(--exp)}
   .det-value{flex:1 1 auto;font-size:13px}
   .det-value.big{font-size:15px}
   .copy-btn{flex:0 0 auto}
+  .det-toggle .det-label{flex:0 0 118px}
+  .bl-row{flex-wrap:wrap}
+  .bl-nums{flex:1 1 100%;justify-content:flex-start;text-align:left;margin-top:2px}
   /* Araç çubuğu ve butonlar */
   .toolrow{gap:8px}
   .det-actions{gap:8px}
@@ -2240,6 +2269,42 @@ function belgeBitisLabel(month){
   return `${AY_ADI[m]} ${y+1}`;
 }
 
+// Bir belgenin (alındığı ay üzerinden) durumu: geçerlilik 1 yıl.
+// off = süresi dolmuş, warn = 90 günden az kalmış, ok = bol vakit var.
+function belgeDurum(month){
+  const [y,m] = String(month||"").split("-").map(Number);
+  if (!y || !m) return null;
+  const start = new Date(y, m-1, 1);
+  const end = new Date(y+1, m-1, 1);
+  const now = new Date();
+  const remainDays = (end-now)/86400000;
+  const status = remainDays<=0 ? "off" : (remainDays<=90 ? "warn" : "ok");
+  const pct = Math.max(0, Math.min(100, ((now-start)/(end-start))*100));
+  const kisa = i => AY_ADI[i].slice(0,3);
+  return { status, pct, startLabel:`${kisa(m)} ${y}`, endLabel:`${kisa(m)} ${y+1}` };
+}
+const BELGE_DURUM_ETIKET = { ok:"Aktif", warn:"Yakında bitiyor", off:"Süresi doldu" };
+
+// Firma kartındaki "Belge sayısı" altında açılan belge listesi (en yeni belge en üstte)
+function belgeListHTML(a){
+  const docs = (a.docs||[]).slice().sort((x,y)=> (y.month||"").localeCompare(x.month||""));
+  if (!docs.length) return "";
+  return `<div class="bl">${docs.map(doc=>{
+    const du = belgeDurum(doc.month);
+    if (!du) return "";
+    return `<div class="bl-row ${du.status}">
+      <div class="bl-left">
+        <div class="bl-range">${du.startLabel}<span class="arrow">→</span>${du.endLabel} <span class="stat ${du.status}"><i></i>${BELGE_DURUM_ETIKET[du.status]}</span></div>
+        <div class="bl-bar"><i style="width:${du.pct.toFixed(0)}%"></i></div>
+      </div>
+      <div class="bl-nums">
+        <div class="bl-num"><span class="lbl">İth.</span><span class="val n-imp">${fmt$(doc.imp)}</span></div>
+        <div class="bl-num"><span class="lbl">İhr.</span><span class="val n-exp">${fmt$(doc.exp)}</span></div>
+      </div>
+    </div>`;
+  }).join("")}</div>`;
+}
+
 function periodLabel(){
   const y=$("yearSel").value, m=$("monthSel").value;
   if (y==="all") return "Tüm yıllar";
@@ -2253,9 +2318,9 @@ function aggregate(){
   const map = new Map();
   for (const r of recordsForPeriod()){
     let a = map.get(r.key);
-    if (!a){ a={firma:r.firma, key:r.key, adres:r.adres, vkn:r.vkn||"", il:r.il, imp:0, exp:0, belge:0, months:[], src:{diib:true}}; map.set(r.key,a); }
+    if (!a){ a={firma:r.firma, key:r.key, adres:r.adres, vkn:r.vkn||"", il:r.il, imp:0, exp:0, belge:0, months:[], docs:[], src:{diib:true}}; map.set(r.key,a); }
     a.imp+=r.imp; a.exp+=r.exp; a.belge++;
-    if (r.month) a.months.push(r.month);
+    if (r.month){ a.months.push(r.month); a.docs.push({month:r.month, imp:r.imp, exp:r.exp}); }
     if (!a.vkn && r.vkn) a.vkn=r.vkn;
     if (r.adres.length > a.adres.length){ a.adres=r.adres; a.il=r.il||a.il; }
   }
@@ -2349,6 +2414,7 @@ function mergeByVkn(list){
     for (const small of g.slice(1)){
       big.imp += small.imp; big.exp += small.exp; big.belge += small.belge;
       big.months = [...(big.months||[]), ...(small.months||[])];
+      big.docs = [...(big.docs||[]), ...(small.docs||[])];
       if (!big.adres && small.adres) big.adres = small.adres;
       if (!big.il && small.il) big.il = small.il;
       if (!big.tim && small.tim) big.tim = small.tim;
@@ -2420,6 +2486,7 @@ function applyManualMerges(list){
     if (!small || !big || small===big) continue;
     big.imp += small.imp; big.exp += small.exp; big.belge += small.belge;
     big.months = [...(big.months||[]), ...(small.months||[])];
+    big.docs = [...(big.docs||[]), ...(small.docs||[])];
     if (!big.vkn && small.vkn) big.vkn = small.vkn;
     if (!big.adres && small.adres) big.adres = small.adres;
     if (!big.tim && small.tim) big.tim = small.tim;
@@ -2775,9 +2842,6 @@ function firmDetailHTML(a, mapsUrl){
   else { visitBtnLabel = ic('checkCircle')+" Ziyaret edildi · Ziyaret Listeme Git"; visitBtnClass = " visit-done"; }
   // İlçe: Turquality kaydında varsa oradan, yoksa adres metninden çıkar
   const ilce = (a.tq && a.tq.ilce) ? trUp(a.tq.ilce) : (a.adres && a.il ? extractIlce(a.adres, a.il) : null);
-  // Belge sayısı + her belgenin geçerlilik bitişi (alındığı ay + 1 yıl), en yakın bitiş önce
-  const bitisler = (a.months||[]).slice().sort().map(belgeBitisLabel).filter(Boolean);
-  const belgeVal = a.belge ? `${a.belge} belge${bitisler.length?` <span class='muted'>· bitiş: ${bitisler.join(", ")}</span>`:""}` : "";
   return `<div class="firm-detail">
     ${row("Vergi No (VKN)", a.vkn||"<span class='muted'>Listede yok</span>", a.vkn||"", true)}
     ${row("Firma", a.firma, a.firma)}
@@ -2795,7 +2859,11 @@ function firmDetailHTML(a, mapsUrl){
     ${a.tq&&a.tq.web?row("Web", `<a href="${/^https?:/.test(a.tq.web)?a.tq.web:'https://'+a.tq.web}" target="_blank" rel="noopener">${a.tq.web.replace(/^https?:\/\//,'')}</a>`, a.tq.web):""}
     ${(a.imp||a.exp||a.belge)?row("Öngörülen ithalat", `<span class='n-imp'>${fmt$(a.imp)}</span>`):""}
     ${(a.imp||a.exp||a.belge)?row("Öngörülen ihracat", `<span class='n-exp'>${fmt$(a.exp)}</span>`):""}
-    ${a.belge?row("Belge sayısı", belgeVal):""}
+    ${a.belge?`<button class="det-toggle" type="button">
+      <div class="det-label">Belge sayısı</div>
+      <div class="det-value"><span class="count-badge">${a.belge} belge</span><span class="car">⌄</span></div>
+    </button>
+    <div class="belge-panel">${belgeListHTML(a)}</div>`:""}
     ${d!==undefined?row("Yaklaşık mesafe", (d<10?d.toFixed(1):Math.round(d))+" km"):""}
     <div class="det-actions">
       <a class="maps-link" href="${mapsUrl}" target="_blank" rel="noopener">${ic('pin')} Yol tarifi</a>
@@ -2883,6 +2951,14 @@ $("firmList").addEventListener("click", e=>{
   if (copyBtn){
     e.stopPropagation();
     copyText(copyBtn.dataset.copy, copyBtn);
+    return;
+  }
+  const belgeToggle = e.target.closest(".det-toggle");
+  if (belgeToggle){
+    e.stopPropagation();
+    belgeToggle.classList.toggle("open");
+    const panel = belgeToggle.nextElementSibling;
+    if (panel && panel.classList.contains("belge-panel")) panel.classList.toggle("open");
     return;
   }
   const starBtn = e.target.closest(".star-assign-btn");
@@ -4181,6 +4257,13 @@ function renderDuplicateSuggestions(){
     }).join("");
 }
 $("dupSuggestions") && $("dupSuggestions").addEventListener("click", async e=>{
+  const belgeToggle = e.target.closest(".det-toggle");
+  if (belgeToggle){
+    belgeToggle.classList.toggle("open");
+    const panel = belgeToggle.nextElementSibling;
+    if (panel && panel.classList.contains("belge-panel")) panel.classList.toggle("open");
+    return;
+  }
   const mergeBtn = e.target.closest("[data-dup-merge]");
   if (mergeBtn){
     const [k1,k2] = mergeBtn.dataset.dupMerge.split("|");
