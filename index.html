@@ -4561,11 +4561,11 @@ function maybeShowAnnouncement(){
   // Görüldüğü anda kaydedilir (action henüz yok); kapatma/tıklama ayrıca işaretlenir —
   // yönetim böylece "gördü ama kapattı" ile "gördü ve tıkladı"yı ayırt edebilir.
   const viewRef = fbDB.ref(`announcementViews/${a.id}/${S.branch.username}`);
-  viewRef.set({ seenAt: Date.now(), action: null }).catch(()=>{});
+  viewRef.set({ seenAt: Date.now(), action: null }).catch(e=>console.warn("Duyuru gorulme kaydi yazilamadi:", e.code||e.message));
   const dismiss = (action)=>{
     $("annOverlay").hidden = true;
     try{ localStorage.setItem("dtr-ann-seen-"+a.id, "1"); }catch(e){}
-    viewRef.update({ action, actionAt: Date.now() }).catch(()=>{});
+    viewRef.update({ action, actionAt: Date.now() }).catch(e=>console.warn("Duyuru etkilesim kaydi yazilamadi:", e.code||e.message));
   };
   $("annOverlayClose").onclick = ()=> dismiss("dismissed");
   $("annOverlayLink").onclick = ()=> dismiss("clicked");
