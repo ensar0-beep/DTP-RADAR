@@ -525,7 +525,9 @@ select:focus,input:focus{border-color:var(--exp)}
 .abp-card.filled .abp-name{color:var(--text)}
 .abp-caret{flex:0 0 auto;color:var(--faint);font-size:11px;transition:transform .15s}
 .abp-card.open .abp-caret{transform:rotate(180deg)}
-.abp-panel{position:absolute;left:0;top:calc(100% + 8px);width:300px;max-width:calc(100vw - 32px);background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.28);z-index:30;overflow:hidden}
+/* z-index 1250: Leaflet harita katmanlarının (400-800) ve harita üstü çip menülerinin (1150)
+   üstünde kalmalı — aksi hâlde şube listesi haritanın arkasında kalıp görünmüyordu. */
+.abp-panel{position:absolute;left:0;top:calc(100% + 8px);width:300px;max-width:calc(100vw - 32px);background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.28);z-index:1250;overflow:hidden}
 .abp-panel[hidden]{display:none!important}
 .abp-search{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border)}
 .abp-search svg{width:15px;height:15px;stroke:var(--faint);flex:0 0 auto}
