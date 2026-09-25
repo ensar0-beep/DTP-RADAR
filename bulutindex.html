@@ -36,12 +36,14 @@
   --bg:#0D1220; --panel:#151C2E; --panel2:#1B2438; --border:#26304A;
   --text:#E9EDF6; --muted:#8B96AF; --faint:#5A6480;
   --imp:#E8A33D; --exp:#35C4A8; --danger:#E06060; --axis:#3A4664;
+  --sticky-bg: rgba(13,18,32,.82);
   color-scheme:dark;
 }
 [data-theme="light"]{
   --bg:#F5F7FA; --panel:#FFFFFF; --panel2:#F0F3F8; --border:#DCE2ED;
   --text:#1A2233; --muted:#5C6B84; --faint:#8C97AB;
   --imp:#C97D14; --exp:#1F9B82; --danger:#D6453D; --axis:#C3CEDE;
+  --sticky-bg: rgba(245,247,250,.82);
   color-scheme:light;
 }
 [data-theme="light"] body{background:var(--bg)}
@@ -84,6 +86,8 @@ h1{font-family:'Sora',sans-serif;font-size:26px;letter-spacing:-.02em}
 .brand-name{font-family:'Sora',sans-serif;font-weight:700;font-size:25px;letter-spacing:-.02em;color:var(--text)}
 .brand-accent{background:linear-gradient(90deg,var(--exp),#5FE0C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .brand-sub{font-size:11.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+/* Mobilde kaydırılınca görünen küçük üst çubuk — sadece @media(max-width:560px) içinde görünür kılınır */
+.mobile-sticky-brand{display:none}
 .tagline{color:var(--muted);font-size:13px;margin-top:12px}
 .intro-row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
 .tagline-lead{color:var(--muted);font-size:13px;flex:1;min-width:180px;line-height:1.5}
@@ -870,6 +874,24 @@ select:focus,input:focus{border-color:var(--exp)}
 
 @media(max-width:560px){
   .wrap{padding:16px 11px 70px}
+  /* Kaydırınca görünen küçük üst çubuk (bkz. #mobileStickyBrand JS): position:sticky, gerçek
+     üst satırın (header kısa olduğu için) tüm sayfa boyunca "yapışık" kalamamasına çözüm olarak
+     kullanılamıyor — bunun yerine ayrı, position:fixed bir çubuk; scroll dinleyicisi eşiği geçince
+     hidden kaldırılır. */
+  .mobile-sticky-brand:not([hidden]){
+    display:flex;align-items:center;gap:9px;
+    position:fixed;top:0;left:0;right:0;z-index:1300;
+    padding:10px 14px;
+    background:var(--sticky-bg);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+    animation:fade .16s ease;
+  }
+  .mobile-sticky-brand .msb-mark{flex:0 0 auto;display:flex}
+  .mobile-sticky-brand .msb-name{flex:1;min-width:0;font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mobile-sticky-brand .msb-name b{color:var(--exp);font-weight:700}
+  .mobile-sticky-brand .msb-theme{flex:0 0 auto;background:none;border:none;width:28px;height:28px;padding:0;border-radius:50%;color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center}
+  .mobile-sticky-brand .msb-theme .ic{width:16px;height:16px}
   /* iOS'ta odaklanınca zoom olmasın diye form fontları 16px */
   select,input[type=search],input[type=text],.filterbar select,.search-row input[type=search]{font-size:16px}
   /* GİRİŞ KAPISI — mobilde Konsept B: kutu sınırı yok, radar sahne arka planı */
@@ -1072,6 +1094,25 @@ select:focus,input:focus{border-color:var(--exp)}
 <div class="wrap" id="appWrap" hidden>
 
 <div id="userViewWrap">
+<!-- Mobilde aşağı kaydırılınca görünen, logonun bulunduğu üst çubuğun küçük/şeffaf hâli.
+     Sayfanın geri kalanı çok daha uzun olduğu için (header kısa), üst çubuğu doğrudan
+     position:sticky yapmak mümkün değil (sticky, kendi ebeveyninin boyu kadar "yapışık" kalabilir).
+     Bunun yerine ayrı, position:fixed bir çubuk: kaydırma bir miktarı geçince JS ile gösterilir. -->
+<div class="mobile-sticky-brand" id="mobileStickyBrand" hidden>
+  <span class="msb-mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="22" height="22">
+      <circle cx="12" cy="12" r="10" fill="none" stroke="#26304A" stroke-width="1.2"/>
+      <circle cx="12" cy="12" r="5.5" fill="none" stroke="#26304A" stroke-width="1.2"/>
+      <circle cx="15.5" cy="8" r="1.6" fill="#E8A33D"/>
+      <circle cx="9" cy="14.5" r="1.6" fill="#35C4A8"/>
+      <circle cx="12" cy="12" r="1" fill="#E9EDF6"/>
+    </svg>
+  </span>
+  <span class="msb-name">Dış Ticaret <b>Radar</b></span>
+  <button class="msb-theme" id="mobileStickyThemeBtn" type="button" aria-label="Tema değiştir">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A8.5 8.5 0 1111.2 3 6.8 6.8 0 0021 12.8z"/></svg>
+  </button>
+</div>
 <header>
   <div class="header-right-row">
     <span class="header-account">
@@ -4151,6 +4192,26 @@ if (brandHomeLink){
   brandHomeLink.addEventListener("click", goHome);
   brandHomeLink.addEventListener("keydown", e=>{ if (e.key==="Enter"||e.key===" "){ e.preventDefault(); goHome(); } });
 }
+
+// Mobilde aşağı kaydırılınca görünen küçük üst çubuk (logo + tema düğmesi). Gerçek üst satır
+// (header) çok kısa olduğu için position:sticky sayfa boyunca "yapışık" kalamıyor — bunun yerine
+// ayrı, position:fixed bir çubuk; belirli bir eşiği geçince gösterilir (bkz. .mobile-sticky-brand CSS).
+(function(){
+  const bar = $("mobileStickyBrand"), themeBtn = $("mobileStickyThemeBtn");
+  if (!bar) return;
+  const THRESHOLD = 80;
+  let ticking = false;
+  function update(){
+    ticking = false;
+    const shouldShow = window.innerWidth <= 560 && window.scrollY > THRESHOLD;
+    if (shouldShow === !bar.hidden) return;
+    bar.hidden = !shouldShow;
+  }
+  window.addEventListener("scroll", ()=>{ if (!ticking){ ticking = true; requestAnimationFrame(update); } }, {passive:true});
+  window.addEventListener("resize", update);
+  bar.addEventListener("click", (e)=>{ if (e.target.closest(".msb-theme")) return; goHome(); });
+  themeBtn && themeBtn.addEventListener("click", (e)=>{ e.stopPropagation(); $("themeToggle").click(); });
+})();
 
 // Genel Bakış: toplam firma, aktif şube, toplam giriş sayısı
 function renderAdminOverview(){
