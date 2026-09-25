@@ -505,11 +505,35 @@ select:focus,input:focus{border-color:var(--exp)}
 }
 .locstatus{font-size:12.5px;color:var(--muted);flex:1;min-width:160px}
 .locstatus.on{color:var(--exp)}
-.admin-branch-picker{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(232,163,61,.06);border:1px solid rgba(232,163,61,.3);border-radius:10px;padding:10px 14px;margin-bottom:14px}
+.admin-branch-picker{position:relative;flex:1;min-width:180px;max-width:260px}
 .admin-branch-picker[hidden]{display:none!important}
-.admin-branch-picker label{font-size:12.5px;color:var(--imp);font-weight:600;white-space:nowrap}
-.admin-branch-picker select{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 11px;font-family:inherit;font-size:13px}
-.admin-branch-picker-hint{font-size:11.5px;color:var(--muted)}
+.abp-native-select{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.abp-card{position:relative;display:flex;align-items:center;gap:11px;width:100%;height:100%;box-sizing:border-box;background:var(--panel);border:1.5px solid var(--border);border-radius:14px;padding:13px 15px;cursor:pointer;text-align:left;font-family:inherit;color:inherit;transition:border-color .18s ease,background .18s ease}
+.abp-card:hover{border-color:var(--imp)}
+.abp-card.filled{background:rgba(232,163,61,.07);border-color:var(--imp)}
+.abp-icon{flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:var(--panel2);display:flex;align-items:center;justify-content:center}
+.abp-icon svg{width:16px;height:16px;stroke:var(--muted)}
+.abp-card.filled .abp-icon{background:rgba(232,163,61,.16)}
+.abp-card.filled .abp-icon svg{stroke:var(--imp)}
+.abp-text{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+.abp-label{font-size:9.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+.abp-name{font-size:13.5px;font-weight:600;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.abp-card.filled .abp-name{color:var(--text)}
+.abp-caret{flex:0 0 auto;color:var(--faint);font-size:11px;transition:transform .15s}
+.abp-card.open .abp-caret{transform:rotate(180deg)}
+.abp-panel{position:absolute;left:0;top:calc(100% + 8px);width:300px;max-width:calc(100vw - 32px);background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.28);z-index:30;overflow:hidden}
+.abp-panel[hidden]{display:none!important}
+.abp-search{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.abp-search svg{width:15px;height:15px;stroke:var(--faint);flex:0 0 auto}
+.abp-search input{flex:1;min-width:0;background:none;border:none;color:var(--text);font-family:inherit;font-size:13.5px;outline:none}
+.abp-list{max-height:230px;overflow-y:auto;padding:6px}
+.abp-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px}
+.abp-item:hover{background:var(--panel2)}
+.abp-item.sel{color:var(--exp)}
+.abp-item .abp-dot{width:5px;height:5px;border-radius:50%;background:var(--faint);flex:0 0 auto}
+.abp-item.sel .abp-dot{background:var(--exp)}
+.abp-empty{padding:18px 12px;text-align:center;color:var(--faint);font-size:12.5px}
+.admin-branch-picker-hint{display:block;margin-top:8px;font-size:11.5px;color:var(--muted)}
 .map-row{display:flex;gap:12px;margin-top:12px;align-items:stretch}
 .map-container-wrap{position:relative;flex:1;min-width:0}
 /* Harita üstü yüzen düğmeler — yalnızca mobilde (bkz. @media 560px) */
@@ -883,9 +907,12 @@ select:focus,input:focus{border-color:var(--exp)}
   /* KONUM BLOĞU (mobil, "harita önde"): kart, konum kartları, yarıçap seçici ve açıklama gizli;
      harita doğrudan görünür, kontroller haritanın üstünde yüzen düğmeler */
   #locCard{padding:0;background:none;border:none;box-shadow:none}
-  #locCard .loc-source,#locCard .locbar{display:none}
+  /* Şube seçici (departman kullanıcıları / admin Kullanıcı Görünümü) mobilde de erişilebilir kalsın —
+     yalnızca konum kartları (Şube/GPS/Ziyaret) ve alt çubuk gizlenir, harita üstteki yüzen çiplerle yönetilir. */
+  #locSrcBranch,#locSrcGps,#locSrcVisit,#locCard .locbar{display:none}
   #locCard .map-row{margin-top:0}
-  #locCard .admin-branch-picker{margin-bottom:10px}
+  #locCard .loc-source{margin-bottom:10px}
+  #locCard .admin-branch-picker{max-width:none}
   #map{height:360px;border-radius:14px}
   .map-chip{display:flex}
   .map-chip-visit:not([hidden]){display:flex;bottom:28px}
@@ -1113,6 +1140,21 @@ select:focus,input:focus{border-color:var(--exp)}
       <span class="loc-src-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5l-1.5 5-5 1.5 1.5-5z"/></svg></span>
       <span class="loc-src-text"><span class="loc-src-label">Konum</span><span class="loc-src-name">Şu Anki Konumum</span></span>
     </button>
+    <div class="admin-branch-picker" id="adminBranchPicker" hidden>
+      <button type="button" class="abp-card" id="abpCard">
+        <span class="abp-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10M20 21V10M2 10l10-6 10 6M6 10v11M10 10v11M14 10v11M18 10v11"/></svg></span>
+        <span class="abp-text"><span class="abp-label">Şube</span><span class="abp-name" id="abpName">Şube seç</span></span>
+        <span class="abp-caret">⌄</span>
+      </button>
+      <div class="abp-panel" id="abpPanel" hidden>
+        <div class="abp-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input type="text" id="abpSearchInput" placeholder="Şube ara…" autocomplete="off">
+        </div>
+        <div class="abp-list" id="abpList"></div>
+      </div>
+      <select id="adminBranchSelect" class="abp-native-select" tabindex="-1" aria-hidden="true"><option value="">— şube seçilmedi —</option></select>
+    </div>
     <!-- Ziyaret Listem görünümü: açıkken harita ve liste yalnızca ziyaret listesindeki firmaları gösterir -->
     <button class="loc-src-card loc-src-visit" id="locSrcVisit" hidden title="Ziyaret listendeki firmaları haritada ve listede göster">
       <span class="loc-src-active-tag">Aktif</span>
@@ -1121,11 +1163,7 @@ select:focus,input:focus{border-color:var(--exp)}
       <span class="loc-src-count q" id="locSrcVisitCount">0</span>
     </button>
   </div>
-  <div class="admin-branch-picker" id="adminBranchPicker" hidden>
-    <label for="adminBranchSelect"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10M20 21V10M2 10l10-6 10 6M6 10v11M10 10v11M14 10v11M18 10v11"/></svg> Şube Seç:</label>
-    <select id="adminBranchSelect"><option value="">— şube seçilmedi —</option></select>
-    <span class="admin-branch-picker-hint" id="adminBranchPickerHint"></span>
-  </div>
+  <span class="admin-branch-picker-hint" id="adminBranchPickerHint"></span>
   <div class="locbar">
     <select id="radiusSel" style="width:auto">
       <option value="5" selected>≤ 5 km</option>
@@ -1626,6 +1664,8 @@ const S = {
   tq: {},           // normAd -> {marka, firma, tel, email, web, program}
   tqDirty: false,
   branch: null,     // {username, name, lat, lon} | null — giriş yapmış şube kullanıcısı
+  isGroupUser: false, // departman kullanıcısı (dtp/dts/kobisatis/ktsatis vb.) — sabit şubesi yok, giriş sonrası şube seçer
+  group: null,      // {username, name} | null — giriş yapmış departman kullanıcısı
   starred: {},       // { subeKullaniciAdi: { firmaKey: true, ... }, ... } — admin atar, buluttan yüklenir
   starredDirty: false,
   important: {},     // { subeKullaniciAdi: { firmaKey: true, ... }, ... } — şube kendi işaretler, buluttan yüklenir
@@ -2457,8 +2497,8 @@ function filtered(){
 // listenin en üstüne taşır. Sıra: önce yıldız, sonra önemli, sonra geri kalan.
 // filtered()'ın kendisine dokunmaz — çıktısı üzerinde çalışan ayrı bir katmandır.
 function applyStarPriority(list){
-  // Admin, "Şube Seç" ile bir şubeyi önizlerken de aynı önceliklendirmeyi görsün
-  const uname = S.branch ? S.branch.username : (S.isAdmin ? S._adminViewBranch : null);
+  // Şube/departman: kendi yıldız+önemli verisi. Admin, "Şube Seç" ile önizlerken o şubenin verisini görür.
+  const uname = ownDataUname() || (S.isAdmin ? S._adminViewBranch : null);
   if (!uname) return list;
   const starMap = S.starred[uname] || {};
   const impMap = S.important[uname] || {};
@@ -2564,7 +2604,7 @@ $("mapSrcChip") && $("mapSrcChip").addEventListener("click", e=>{
   closeMapChipMenus();
   const opts = [];
   if (S.branch) opts.push({k:"branch", label:"Şube konumu", icon:ic('building')||""});
-  else if (S.isAdmin && S._adminViewBranch && SUBE_TABLE[S._adminViewBranch]) opts.push({k:"branch", label:SUBE_TABLE[S._adminViewBranch][0]});
+  else if ((S.isAdmin || S.isGroupUser) && S._adminViewBranch && SUBE_TABLE[S._adminViewBranch]) opts.push({k:"branch", label:SUBE_TABLE[S._adminViewBranch][0]});
   opts.push({k:"gps", label:"Buradayım"});
   const cur = S._locSource==="gps" ? "gps" : "branch";
   menu.innerHTML = opts.map(o=>`<button type="button" data-src="${o.k}" class="${o.k===cur?"active":""}">${o.label}${o.k===cur?" ✓":""}</button>`).join("");
@@ -2731,15 +2771,16 @@ function render(){
     const open = S._openFirm===a.key;
     const div = document.createElement("div"); div.className="firm"+(open?" open":"");
     div.dataset.key = a.key;
+    const ownUname = ownDataUname();
     const isStarredForBranch = S.branch && S.starred[S.branch.username] && S.starred[S.branch.username][a.key];
-    const isImportantForBranch = S.branch && S.important[S.branch.username] && S.important[S.branch.username][a.key];
+    const isImportantForBranch = ownUname && S.important[ownUname] && S.important[ownUname][a.key];
     const starAssignMode = S.isAdmin && S._starTargetBranch;
     const isStarredForTarget = starAssignMode && S.starred[S._starTargetBranch] && S.starred[S._starTargetBranch][a.key];
-    // Admin, önizlediği/seçtiği şubenin kendi işaretlediği "Önemli" firmaları da görebilsin
+    // Admin, önizlediği şubenin kendi işaretlediği "Önemli" firmaları da görebilsin (salt okunur, sadece admin'de)
     const adminViewImportant = S.isAdmin && S._starTargetBranch && S.important[S._starTargetBranch] && S.important[S._starTargetBranch][a.key];
     // Ziyaret Listesi durumu: yok -> planned (🔖) -> done (✅) -> yok
-    const visitRecBranch = S.branch && S.visits[S.branch.username] ? S.visits[S.branch.username][a.key] : null;
-    const visitRecAdminView = (!S.branch && S.isAdmin && S._starTargetBranch && S.visits[S._starTargetBranch]) ? S.visits[S._starTargetBranch][a.key] : null;
+    const visitRecBranch = ownUname && S.visits[ownUname] ? S.visits[ownUname][a.key] : null;
+    const visitRecAdminView = (!ownUname && S.isAdmin && S._starTargetBranch && S.visits[S._starTargetBranch]) ? S.visits[S._starTargetBranch][a.key] : null;
     const visitRec = visitRecBranch || visitRecAdminView;
     const visitIcon = visitRec ? (visitRec.status==="done" ? ic('checkCircle') : ic('bookmark')) : ic('bookmark');
     const visitLabel = visitRec ? (visitRec.status==="done" ? "Ziyaret edildi" : "Ziyaret planlandı") : "Ziyaret listesine ekle";
@@ -2758,7 +2799,7 @@ function render(){
       <div class="firm-head" data-toggle="${a.key}">
         <div class="firm-top"><div class="firm-name">${isStarredForBranch?`<span class="star-badge" title="Şubeniz için hedef firma">${ic('starFilled')}</span>`:""}${isImportantForBranch?`<span class="important-badge" title="Sizin işaretlediğiniz önemli firma">${ic('pin')}</span>`:""}${adminViewImportant?`<span class="important-badge" title="Bu şube tarafından önemli işaretlenmiş">${ic('pin')}</span>`:""}${visitRec?`<span class="visit-badge visit-${visitRec.status}" title="${visitLabel}">${visitIcon}</span>`:""}${nameParts.main}${nameParts.suffix?`<span class="nm-suffix">${nameParts.suffix}</span>`:""}${newBadgeHTML}${a.tim?`<span class="tim-badge" title="TİM İlk 1000 İhracatçı${S.timYear?' '+S.timYear:''}">${ic('trophy')} İlk 1000${a.tim.r<9999?` · #${a.tim.r}`:''}</span>`:""}${a.tq?`<span class="tq-badge" title="${a.tq.prog||'Turquality/Marka Destek'}">${ic('medal')} ${/TURQUALITY/i.test(a.tq.prog)?'Turquality':'Marka Destek'}</span>`:""}</div>
           <div class="firm-top-right">
-            ${S.branch?`<button class="important-pin-toggle${isImportantForBranch?" marked":""}" data-important-key="${a.key}" title="${isImportantForBranch?'Önemli işaretini kaldır':'Önemli olarak işaretle'}">${ic('pin')}</button>`:""}
+            ${ownUname?`<button class="important-pin-toggle${isImportantForBranch?" marked":""}" data-important-key="${a.key}" title="${isImportantForBranch?'Önemli işaretini kaldır':'Önemli olarak işaretle'}">${ic('pin')}</button>`:""}
             ${S._visitView&&visitRec?`<span class="firm-visit-state ${visitRec.status}">${visitRec.status==="done"?ic('checkCircle')+" Ziyaret edildi":ic('bookmark')+" Planlandı"} · ${fmtVisitDate(visitRec.ts)}</span>`:""}
             ${d!==undefined?`<div class="firm-dist" title="${exact?'Tam adres':(precise?'Mahalle bazlı':'İlçe merkezine göre')}">≈ ${d<10?d.toFixed(1):Math.round(d)} km${exact?` <span class="prec exact">${ic('pin')}</span>`:(precise?' <span class="prec">•</span>':'')}</div>`:""}
           </div>
@@ -2781,7 +2822,7 @@ function render(){
     el.appendChild(div);
   }
   $("showMore").style.display = list.length>S.shown?"":"none";
-  if (S.userLoc) scheduleDrawMap(list);
+  if (S.userLoc || S.map) scheduleDrawMap(list);
 }
 
 // drawMap() tüm harita işaretleyicilerini komple silip yeniden çiziyor — render() ise arka
@@ -2830,9 +2871,10 @@ function firmDetailHTML(a, mapsUrl){
       <div class="det-value${big?" big":""}">${value||"—"}</div>
       ${copyVal?`<button class="copy-btn" data-copy="${copyVal}" title="Kopyala">Kopyala</button>`:""}
     </div>`;
-  // Ziyaret Listesi durumu (şube kendi görünümünde, admin önizlerken de görebilir)
-  const visitRecBranch = S.branch && S.visits[S.branch.username] ? S.visits[S.branch.username][a.key] : null;
-  const visitRecAdminView = (!S.branch && S.isAdmin && S._starTargetBranch && S.visits[S._starTargetBranch]) ? S.visits[S._starTargetBranch][a.key] : null;
+  // Ziyaret Listesi durumu: şube/departman kendi listesi, admin önizlerken şubenin listesini salt okunur görür
+  const ownUnameDet = ownDataUname();
+  const visitRecBranch = ownUnameDet && S.visits[ownUnameDet] ? S.visits[ownUnameDet][a.key] : null;
+  const visitRecAdminView = (!ownUnameDet && S.isAdmin && S._starTargetBranch && S.visits[S._starTargetBranch]) ? S.visits[S._starTargetBranch][a.key] : null;
   const visitRec = visitRecBranch || visitRecAdminView;
   let visitBtnLabel, visitBtnClass;
   // Listeye eklendikten sonra buton "Ziyaret Listeme Git"e dönüşür; işaretleme/kaldırma
@@ -2869,7 +2911,7 @@ function firmDetailHTML(a, mapsUrl){
       <a class="maps-link" href="${mapsUrl}" target="_blank" rel="noopener">${ic('pin')} Yol tarifi</a>
       ${a.vkn?`<button class="copy-btn wide" data-copy="${a.vkn}">VKN'yi kopyala</button>`:""}
     </div>
-    ${S.branch?`<button class="visit-detail-btn${visitBtnClass}" data-visit-key="${a.key}"${visitRec?' data-visit-goto="1"':''}>${visitBtnLabel}</button>`:""}
+    ${ownUnameDet?`<button class="visit-detail-btn${visitBtnClass}" data-visit-key="${a.key}"${visitRec?' data-visit-goto="1"':''}>${visitBtnLabel}</button>`:""}
   </div>`;
 }
 
@@ -3118,10 +3160,11 @@ async function toggleStarForTarget(firmKey){
   }
 }
 
-// Şube kullanıcısı kendi gördüğü bir firmayı "Önemli" işaretler/kaldırır, buluta kaydeder
+// Şube/departman kullanıcısı kendi gördüğü bir firmayı "Önemli" işaretler/kaldırır, buluta kaydeder
+// (departman kullanıcısında bu KENDİ hesabına yazılır, o an önizlediği şubeye değil)
 async function toggleImportantForBranch(firmKey){
-  if (!S.branch) return;
-  const uname = S.branch.username;
+  const uname = ownDataUname();
+  if (!uname) return;
   const current = { ...(S.important[uname]||{}) };
   if (current[firmKey]) delete current[firmKey];
   else current[firmKey] = true;
@@ -3134,18 +3177,19 @@ async function toggleImportantForBranch(firmKey){
   }
 }
 
-// Şube kullanıcısının Ziyaret Listesi: yok -> planlandı (🔖) -> yapıldı (✅) -> yok, döngüsel
+// Şube/departman kullanıcısının Ziyaret Listesi: yok -> planlandı (🔖) -> yapıldı (✅) -> yok, döngüsel
 async function toggleVisitForBranch(firmKey){
-  if (!S.branch) return;
-  const existing = (S.visits[S.branch.username]||{})[firmKey];
+  const uname = ownDataUname();
+  if (!uname) return;
+  const existing = (S.visits[uname]||{})[firmKey];
   if (!existing) return setVisitStatus(firmKey, "planned");
   if (existing.status === "planned") return setVisitStatus(firmKey, "done");
   return setVisitStatus(firmKey, null);
 }
 // Ziyaret durumunu doğrudan yaz: "planned" | "done" | null (listeden kaldır)
 async function setVisitStatus(firmKey, status){
-  if (!S.branch) return;
-  const uname = S.branch.username;
+  const uname = ownDataUname();
+  if (!uname) return;
   const current = { ...(S.visits[uname]||{}) };
   if (status) current[firmKey] = { status, ts: Date.now() };
   else delete current[firmKey];
@@ -3163,7 +3207,7 @@ async function setVisitStatus(firmKey, status){
 S._visitTab = "all"; // "all" | "planned" | "done"
 
 function openVisitListScreen(){
-  if (!S.branch) return;
+  if (!ownDataUname()) return;
   $("visitListScreen").hidden = false;
   render();
   renderVisitListScreen();
@@ -3187,8 +3231,8 @@ $("visitListCloseBtn") && ($("visitListCloseBtn").onclick = closeVisitListScreen
 
 function renderVisitListScreen(){
   const body = $("visitListBody");
-  if (!body || !S.branch) return;
-  const uname = S.branch.username;
+  const uname = ownDataUname();
+  if (!body || !uname) return;
   const vmap = S.visits[uname] || {};
   const all = aggregate(); // İlk1000/DİİB/Turquality mantığına dokunmadan mevcut firma havuzunu kullanır
   const byKey = {}; for (const a of all) byKey[a.key] = a;
@@ -3425,7 +3469,11 @@ function hideMapLoadingOverlay(){
 
 function initMap(){
   if (S.map){ setTimeout(()=>S.map.invalidateSize(), 60); return; }
-  S.map = L.map("map", {scrollWheelZoom:true, minZoom:TURKEY_MIN_ZOOM, maxBoundsViscosity:1}).setView([S.userLoc.lat,S.userLoc.lon], 9);
+  // Konum henüz yoksa (ör. departman kullanıcısı GPS izni beklerken) Türkiye geneli görünümle başla —
+  // gerçek konum gelince drawMap() zaten fitBounds ile otomatik ortalıyor.
+  const startCenter = S.userLoc ? [S.userLoc.lat,S.userLoc.lon] : [39.0, 35.2];
+  const startZoom = S.userLoc ? 9 : TURKEY_MIN_ZOOM;
+  S.map = L.map("map", {scrollWheelZoom:true, minZoom:TURKEY_MIN_ZOOM, maxBoundsViscosity:1}).setView(startCenter, startZoom);
   S.map.setMaxBounds(TURKEY_BOUNDS);
   S.mapTileLayers = addBaseTileLayers(S.map);
   // Konteyner display:none iken oluşturulduysa boyutu 0 kalır; görünür olunca düzelt.
@@ -3449,15 +3497,19 @@ function refreshMapTheme(){
 function drawMap(list){
   if (!S.map) return;
   S.mapLayers.forEach(l=>S.map.removeLayer(l)); S.mapLayers=[];
-  // Kullanıcı konumu: hafif hâle + parlak nokta
-  const halo = L.circleMarker([S.userLoc.lat,S.userLoc.lon],{radius:16,color:"#5B8DEF",weight:0,fillColor:"#5B8DEF",fillOpacity:.15,interactive:false}).addTo(S.map);
-  // Etiket: şube girişinde şube adı, admin önizlemesinde önizlenen şube adı, yoksa genel "Konumun"
-  // "Şu anki konumum" seçiliyse şube adı yerine "Buradayım"
-  const locName = S._locSource==="gps" ? "Buradayım" : (S.branch ? S.branch.name : (S._adminViewBranch && SUBE_TABLE[S._adminViewBranch] ? SUBE_TABLE[S._adminViewBranch][0] : "Konumun"));
-  const me = L.marker([S.userLoc.lat,S.userLoc.lon],{icon:USER_LOC_ICON}).addTo(S.map).bindPopup(`<b>${locName}</b>`);
-  me.bindTooltip(locName, {permanent:true, direction:"top", offset:[0,-26], className:"ov-branch-label"});
-  S.mapLayers.push(halo, me);
-  const pts = [[S.userLoc.lat,S.userLoc.lon]];
+  const pts = [];
+  // Kullanıcı konumu: hafif hâle + parlak nokta — henüz konum yoksa (ör. GPS izni bekleniyor) hiç çizilmez,
+  // harita Türkiye genelini gösterir, konum gelince (drawMap tekrar çağrılınca) otomatik eklenir.
+  if (S.userLoc){
+    const halo = L.circleMarker([S.userLoc.lat,S.userLoc.lon],{radius:16,color:"#5B8DEF",weight:0,fillColor:"#5B8DEF",fillOpacity:.15,interactive:false}).addTo(S.map);
+    // Etiket: şube girişinde şube adı, admin önizlemesinde önizlenen şube adı, yoksa genel "Konumun"
+    // "Şu anki konumum" seçiliyse şube adı yerine "Buradayım"
+    const locName = S._locSource==="gps" ? "Buradayım" : (S.branch ? S.branch.name : (S._adminViewBranch && SUBE_TABLE[S._adminViewBranch] ? SUBE_TABLE[S._adminViewBranch][0] : "Konumun"));
+    const me = L.marker([S.userLoc.lat,S.userLoc.lon],{icon:USER_LOC_ICON}).addTo(S.map).bindPopup(`<b>${locName}</b>`);
+    me.bindTooltip(locName, {permanent:true, direction:"top", offset:[0,-26], className:"ov-branch-label"});
+    S.mapLayers.push(halo, me);
+    pts.push([S.userLoc.lat,S.userLoc.lon]);
+  }
   const vm = S._visitView ? visitMapFor() : null;
   if (vm){
     // Ziyaret görünümü: listede olmayan firmalar bağlam için silik, tıklanmaz noktalar olarak kalır
@@ -3479,7 +3531,7 @@ function drawMap(list){
   for (const {c,firms} of groups.values()){
     pts.push([c.lat,c.lon]);
     const top = firms.slice().sort((a,b)=>b.exp-a.exp); // tüm firmalar — popup içi kaydırılabilir, artık 6 ile sınırlı değil
-    const dir = `https://www.google.com/maps/dir/?api=1&origin=${S.userLoc.lat},${S.userLoc.lon}&destination=${c.lat},${c.lon}`;
+    const dir = `https://www.google.com/maps/dir/?api=1${S.userLoc?`&origin=${S.userLoc.lat},${S.userLoc.lon}`:""}&destination=${c.lat},${c.lon}`;
     const r = Math.min(6+Math.sqrt(firms.length)*2.4, 22);
     // Şu an listede açık/seçili firma bu grupta mı? Öyleyse haritada turuncu + daha büyük göster.
     const isSelected = !!S._openFirm && firms.some(f=>f.key===S._openFirm);
@@ -3582,10 +3634,18 @@ function unpackRecords(packed){
 
 const SUBE_EMAIL_DOMAIN = "sube.disticaretradar.local"; // şube hesapları için sahte e-posta alanı
 const ADMIN_EMAIL_DOMAIN = "admin.disticaretradar.local"; // yönetim hesapları için — şube domaininden kasıtlı olarak farklı, karışma ihtimali sıfır
+const GRUP_EMAIL_DOMAIN = "grup.disticaretradar.local"; // sabit şubesi olmayan departman hesapları için — giriş sonrası istedikleri şubeyi seçerler
 const ADMIN_TABLE = {
   // kullanıcı_adı: "Görünen İsim"
   "ensar": "Ensar",
   "dtpadmin": "DTP Admin",
+};
+const GRUP_TABLE = {
+  // kullanıcı_adı: "Görünen İsim" — admin yetkisi yok, sadece giriş sonrası şube seçip o şubenin görünümünü inceleyebilir
+  "dtp": "Dış Ticaret Pazarlama",
+  "dts": "Dış Ticaret Satış",
+  "kobisatis": "Kobi Satış",
+  "ktsatis": "Kurumsal ve Ticari Satış",
 };
 
 function initFirebase(){
@@ -3604,8 +3664,11 @@ function initFirebase(){
     const isBranch = !!user && user.email && user.email.endsWith("@"+SUBE_EMAIL_DOMAIN);
     // Admin hesabı mı? (ayrı bir sahte e-posta alan adından anlaşılır — şube domaininden tamamen farklı)
     const isAdminAccount = !!user && user.email && user.email.endsWith("@"+ADMIN_EMAIL_DOMAIN);
-    // Güvenlik: sadece ADMIN_EMAIL_DOMAIN'li hesap admin sayılır; şube hesabı hiçbir koşulda admin olamaz
-    S.isAdmin = isAdminAccount && !isBranch;
+    // Departman hesabı mı? (sabit şubesi yok — giriş sonrası istediği şubeyi seçer)
+    const isGroup = !!user && user.email && user.email.endsWith("@"+GRUP_EMAIL_DOMAIN);
+    // Güvenlik: sadece ADMIN_EMAIL_DOMAIN'li hesap admin sayılır; şube/departman hesabı hiçbir koşulda admin olamaz
+    S.isAdmin = isAdminAccount && !isBranch && !isGroup;
+    S.isGroupUser = isGroup && !isBranch && !isAdminAccount;
     // Oturuma özel admin durumunu her giriş/çıkışta sıfırla (önceki oturumdan kalıntı taşınmasın)
     S._starTargetBranch = null;
     S._adminViewBranch = null;
@@ -3616,10 +3679,16 @@ function initFirebase(){
         S.branch = {username:uname, name:rec[0], lat:rec[1], lon:rec[2]};
         applyBranchLocation();
       }
-    } else if (!user){
+      S.group = null;
+    } else if (S.isGroupUser){
+      const uname = user.email.split("@")[0];
+      const rec = GRUP_TABLE[uname];
       S.branch = null;
+      S.group = rec ? {username:uname, name:rec} : null;
+    } else if (!user){
+      S.branch = null; S.group = null;
     } else {
-      S.branch = null; // admin girişinde şube durumu temiz başlasın
+      S.branch = null; S.group = null; // admin girişinde şube/departman durumu temiz başlasın
     }
     renderAuth();
     renderBranchUI();
@@ -3712,16 +3781,19 @@ function resolveBranchUsername(typed){
   return hit || raw.toLocaleLowerCase("tr-TR").replace(/[^a-z0-9._-]/g,"");
 }
 $("gateBranchBtn").onclick = ()=>{
-  const uname = resolveBranchUsername($("gateBranchUser").value);
+  const typed = $("gateBranchUser").value;
   const pass = $("gateBranchPass").value;
   const st = $("gateBranchStatus");
   const btn = $("gateBranchBtn");
+  const grupUname = String(typed||"").trim().toLocaleLowerCase("tr-TR").replace(/[^a-z0-9._-]/g,"");
+  const isGrup = !!GRUP_TABLE[grupUname];
+  const uname = isGrup ? grupUname : resolveBranchUsername(typed);
   if (!uname || !pass){ st.textContent="Kullanıcı adı ve şifre gerekli."; st.className="gate-status"; return; }
   st.textContent = ""; st.className="gate-status";
   setGateBtnLoading(btn, true, "Giriş yap");
-  const email = uname + "@" + SUBE_EMAIL_DOMAIN;
+  const email = uname + "@" + (isGrup ? GRUP_EMAIL_DOMAIN : SUBE_EMAIL_DOMAIN);
   fbAuth.signInWithEmailAndPassword(email, pass)
-    .then(()=>{ st.textContent="Giriş başarılı ✓"; st.className="gate-status ok"; logBranchLogin(uname); })
+    .then(()=>{ st.textContent="Giriş başarılı ✓"; st.className="gate-status ok"; if (!isGrup) logBranchLogin(uname); })
     .catch(e=>{
       setGateBtnLoading(btn, false, "Giriş yap");
       st.className="gate-status";
@@ -3779,8 +3851,9 @@ function applyBranchLocation(){
   initMap(); geocodeVisible();
 }
 
-// Admin bir şube seçtiğinde: S.branch'i DEĞİŞTİRMEZ (admin admin kalır),
-// sadece konumu o şubenin konumuna göre gösterir ve yıldızlama modunu otomatik açar.
+// Admin ya da departman kullanıcısı bir şube seçtiğinde: S.branch'i DEĞİŞTİRMEZ (kendi rolü kalır),
+// sadece konumu o şubenin konumuna göre gösterir. Admin'de ayrıca yıldızlama modu otomatik açılır
+// (⭐ butonu render() içinde S.isAdmin ile ayrıca korunur — departman kullanıcısı bunu görmez).
 function applyAdminBranchPreview(uname){
   const rec = SUBE_TABLE[uname];
   if (!rec) return;
@@ -3826,6 +3899,22 @@ function renderBranchUI(){
         openOnboarding();
       }
     }catch(e){ /* localStorage yoksa (gizli sekme vb.) sessizce geç */ }
+  } else if (S.isGroupUser){
+    // Departman kullanıcısı: sabit şubesi yok, üstteki isim rozetinde departman adı görünür,
+    // "Şube Seç" ile istediği şubeyi seçip o şubenin tam görünümünü (konum, harita, yakın firmalar) izler.
+    badge.hidden = false;
+    $("branchBadgeName").textContent = S.group ? S.group.name : "Kullanıcı";
+    $("locSrcBranch").hidden = true;
+    if (adminPicker) adminPicker.hidden = false;
+    if (visitBtn) visitBtn.hidden = false;
+    if (helpBtn) helpBtn.hidden = true;
+    if (!S._adminViewBranch && !S.userLoc){
+      // Gerçek konum gelene kadar (izin istemi gecikebilir/reddedilebilir) harita boş kalmasın —
+      // hemen Türkiye geneli görünümle açılır, firmalar listelenir; GPS başarılı olursa otomatik ortalanır.
+      $("map").style.display = "block";
+      initMap();
+      setLocSource("gps");
+    }
   } else {
     badge.hidden = true;
     $("locSrcBranch").hidden = true;
@@ -3882,9 +3971,18 @@ $("onboardClose").onclick = closeOnboarding;
 $("onboardOverlay").addEventListener("click", e=>{ if (e.target.id==="onboardOverlay") closeOnboarding(); });
 $("onboardHelpBtn") && ($("onboardHelpBtn").onclick = openOnboarding);
 
+// "Önemli" ve "Ziyaret Listesi" hangi hesaba yazılır/gösterilir:
+// şube kendi kullanıcı adına, departman kullanıcısı (dtp/dts/…) KENDİ kullanıcı adına —
+// önizlediği şubeyle asla karışmaz. Admin'in kendi ekleyebileceği bir liste yok.
+function ownDataUname(){
+  if (S.branch) return S.branch.username;
+  if (S.isGroupUser) return S.group ? S.group.username : null;
+  return null;
+}
 // ---- Ziyaret Listem görünümü: harita + liste yalnızca ziyaret listesindeki firmalar ----
 S._visitView = false;
-function visitOwnerUname(){ return S.branch ? S.branch.username : (S.isAdmin ? S._adminViewBranch : null); }
+// Şube/departman: kendi listesi. Admin (kendi listesi yok): önizlediği şubenin listesini salt-okunur görür.
+function visitOwnerUname(){ return ownDataUname() || (S.isAdmin ? S._adminViewBranch : null); }
 function visitMapFor(){ const u = visitOwnerUname(); return (u && S.visits[u]) || {}; }
 function fmtVisitDate(ts){ try{ return new Date(ts).toLocaleDateString("tr-TR",{day:"numeric",month:"short"}); }catch(e){ return ""; } }
 function toggleVisitView(force){
@@ -3928,6 +4026,15 @@ function setLocSource(which){
   if (which==="branch" && S.branch){
     applyBranchLocation();
   } else if (which==="gps"){
+    // Önizlenen bir şube varsa (admin/departman "Şube Seç"): Şu Anki Konumum'a geçince önizleme
+    // temizlenir — Şube kartı da sıfırlanır, aksi hâlde eski şubenin önemli/ziyaret verisiyle karışır.
+    if (S._adminViewBranch){
+      S._adminViewBranch = null;
+      S._starTargetBranch = null;
+      const sel = $("adminBranchSelect"); if (sel) sel.value = "";
+      syncAbpCard();
+      const hint = $("adminBranchPickerHint"); if (hint) hint.textContent = "";
+    }
     requestLocation();
   }
 }
@@ -3959,6 +4066,7 @@ function renderAuth(){
     if ($("adminTopbarName")) $("adminTopbarName").textContent = adminName;
     if (adminBadge) adminBadge.hidden = true; // topbar zaten kimliği gösteriyor, header rozetine gerek yok
     fillAdminBranchSelect();
+    syncAbpCard();
     renderAdminOverview();
     // Kullanıcı Görünümü'ne girince admin bir şubeyi seçip tıpkı o şubenin kendi girişindeki gibi
     // (konum, harita, yakın firmalar) görebilsin diye seçici burada her zaman açık kalır.
@@ -3975,7 +4083,11 @@ function renderAuth(){
     if (fullPanel) fullPanel.hidden = true;
     if (userView) userView.hidden = false;
     if (adminBadge) adminBadge.hidden = true;
-    const picker = $("adminBranchPicker"); if (picker) picker.hidden = true;
+    // Departman kullanıcısı (S.isGroupUser): admin paneli yok, ama üstteki "Şube Seç" seçiciyi
+    // tıpkı admin'in Kullanıcı Görünümü'ndeki gibi kullanır.
+    const picker = $("adminBranchPicker");
+    if (picker) picker.hidden = !S.isGroupUser;
+    if (S.isGroupUser){ fillAdminBranchSelect(); syncAbpCard(); }
   }
 }
 
@@ -4756,7 +4868,7 @@ function goToBranchFromProxTable(uname){
   applyAdminBranchPreview(uname);
   const name = SUBE_TABLE[uname][0];
   const adminSel = $("adminBranchSelect");
-  if (adminSel){ adminSel.value = uname; const hint=$("adminBranchPickerHint"); if(hint) hint.textContent = `Konum ve yıldızlama "${name}" için aktif.`; }
+  if (adminSel){ adminSel.value = uname; syncAbpCard(); const hint=$("adminBranchPickerHint"); if(hint) hint.textContent = `Konum ve yıldızlama "${name}" için aktif.`; }
   const statSel = $("branchStatSelect");
   if (statSel){
     fillBranchStatSelect(); statSel.value = uname;
@@ -4836,17 +4948,83 @@ $("adminBranchSelect") && $("adminBranchSelect").addEventListener("change", ()=>
     S._adminViewBranch = null;
     S._starTargetBranch = null;
     if (hint) hint.textContent = "";
+    syncAbpCard();
     const gBtn = $("locSrcGps"); if (gBtn) gBtn.classList.add("active"); // şube seçimi kaldırılınca "Şu Anki Konumum" tekrar aktif görünsün
     render();
     return;
   }
   applyAdminBranchPreview(uname);
   const name = SUBE_TABLE[uname] ? SUBE_TABLE[uname][0] : uname;
-  if (hint) hint.textContent = `Konum ve yıldızlama "${name}" için aktif.`;
-  // Yönetim panelindeki istatistik seçicisini de aynı şubeye getir
-  const statSel = $("branchStatSelect");
+  if (hint) hint.textContent = S.isGroupUser ? `Konum "${name}" için aktif.` : `Konum ve yıldızlama "${name}" için aktif.`;
+  syncAbpCard();
+  // Yönetim panelindeki istatistik seçicisini de aynı şubeye getir (sadece admin girişinde)
+  const statSel = S.isAdmin ? $("branchStatSelect") : null;
   if (statSel){ fillBranchStatSelect(); statSel.value = uname; renderAdminStats(); }
 });
+
+// ---- Şube Seç: konum kartlarıyla aynı dilde, aranabilir kart+panel (native <select> gizli kalır,
+// mevcut değişim mantığını olduğu gibi tetikler) ----
+function syncAbpCard(){
+  const sel = $("adminBranchSelect"), card = $("abpCard"), nameEl = $("abpName");
+  if (!sel || !card || !nameEl) return;
+  const uname = sel.value;
+  if (uname && SUBE_TABLE[uname]){
+    nameEl.textContent = SUBE_TABLE[uname][0];
+    card.classList.add("filled");
+  } else {
+    nameEl.textContent = "Şube seç";
+    card.classList.remove("filled");
+  }
+}
+function renderAbpList(query){
+  const list = $("abpList"), sel = $("adminBranchSelect");
+  if (!list || !sel) return;
+  const q = trUp(query||"").trim();
+  const entries = Object.entries(SUBE_TABLE)
+    .filter(([,rec]) => !q || trUp(rec[0]).includes(q))
+    .sort((a,b)=>a[1][0].localeCompare(b[1][0],"tr"));
+  const cur = sel.value;
+  let html = q ? "" : `<div class="abp-item${!cur?" sel":""}" data-uname="">— şube seçilmedi —</div>`;
+  if (entries.length){
+    html += entries.map(([uname,rec])=>`<div class="abp-item${cur===uname?" sel":""}" data-uname="${uname}"><span class="abp-dot"></span>${rec[0]}</div>`).join("");
+  } else if (q){
+    html += `<div class="abp-empty">Eşleşen şube yok</div>`;
+  }
+  list.innerHTML = html;
+  list.querySelectorAll(".abp-item[data-uname]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      sel.value = el.dataset.uname;
+      sel.dispatchEvent(new Event("change"));
+      closeAbpPanel();
+    });
+  });
+}
+function openAbpPanel(){
+  const panel = $("abpPanel"), card = $("abpCard"), input = $("abpSearchInput");
+  if (!panel || !card) return;
+  panel.hidden = false;
+  card.classList.add("open");
+  if (input) input.value = "";
+  renderAbpList("");
+  setTimeout(()=>{ if (input) input.focus(); }, 10);
+}
+function closeAbpPanel(){
+  const panel = $("abpPanel"), card = $("abpCard");
+  if (panel) panel.hidden = true;
+  if (card) card.classList.remove("open");
+}
+$("abpCard") && $("abpCard").addEventListener("click", (e)=>{
+  e.stopPropagation();
+  const panel = $("abpPanel");
+  if (panel && !panel.hidden) closeAbpPanel(); else openAbpPanel();
+});
+$("abpSearchInput") && $("abpSearchInput").addEventListener("click", e=> e.stopPropagation());
+$("abpSearchInput") && $("abpSearchInput").addEventListener("input", ()=> renderAbpList($("abpSearchInput").value));
+document.addEventListener("click", (e)=>{
+  const picker = $("adminBranchPicker");
+  if (picker && !picker.hidden && !picker.contains(e.target)) closeAbpPanel();
+});
+document.addEventListener("keydown", (e)=>{ if (e.key==="Escape") closeAbpPanel(); });
 
 $("branchStatSelect") && $("branchStatSelect").addEventListener("change", ()=>{
   const uname = $("branchStatSelect").value;
@@ -4985,15 +5163,20 @@ function loadCloud(){
   });
   // Yıldız / Önemli / Ziyaret / Giriş kayıtları: admin tüm şubeleri, şube hesabı yalnızca KENDİ düğümünü
   // dinler (kurallar başka şubenin verisini okumaya izin vermez).
-  const uname = S.branch ? S.branch.username : null;
+  const uname = ownDataUname();
   if (S.isAdmin){
     cloudOn("starred", snap=>{ if (!S.starredDirty){ S.starred = snap.val() || {}; render(); renderAdminStats(); } });
     cloudOn("important", snap=>{ S.important = snap.val() || {}; render(); renderAdminStats(); });
     cloudOn("visits", snap=>{ S.visits = snap.val() || {}; render(); renderAdminStats(); });
     cloudOn("loginLogs", snap=>{ S.loginLogs = snap.val() || {}; renderAdminStats(); });
     cloudOn("announcementViews", snap=>{ S.announcementViews = snap.val() || {}; if ($("adminAnnouncementsScreen") && !$("adminAnnouncementsScreen").hidden) renderAnnouncementAdmin(); });
-  } else if (uname){
+  } else if (S.branch && uname){
+    // "starred" (yıldız) sadece admin'in gerçek şubelere atadığı hedefler — departman hesabında yok
     cloudOn("starred/"+uname, snap=>{ if (!S.starredDirty){ S.starred = {[uname]: snap.val() || {}}; render(); } });
+    cloudOn("important/"+uname, snap=>{ S.important = {[uname]: snap.val() || {}}; render(); });
+    cloudOn("visits/"+uname, snap=>{ S.visits = {[uname]: snap.val() || {}}; render(); if (!$("visitListScreen").hidden) renderVisitListScreen(); });
+  } else if (S.isGroupUser && uname){
+    // Departman kullanıcısı: kendi "önemli"+"ziyaret" verisi, önizlediği şubeyle karışmaz
     cloudOn("important/"+uname, snap=>{ S.important = {[uname]: snap.val() || {}}; render(); });
     cloudOn("visits/"+uname, snap=>{ S.visits = {[uname]: snap.val() || {}}; render(); if (!$("visitListScreen").hidden) renderVisitListScreen(); });
   }
