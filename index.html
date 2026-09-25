@@ -3647,6 +3647,9 @@ const GRUP_TABLE = {
   "kobisatis": "Kobi Satış",
   "ktsatis": "Kurumsal ve Ticari Satış",
 };
+// Genel müdürlük kullanıcıları buranın konumundan başlar (GPS izni beklenmez, harita ve yakın
+// firmalar anında gelir). İstedikleri zaman üstteki "Şube Seç" ile başka bir şubeye geçebilirler.
+const GRUP_VARSAYILAN_SUBE = "ktbu"; // Bankacılık Üssü
 
 function initFirebase(){
   try{
@@ -3900,20 +3903,22 @@ function renderBranchUI(){
       }
     }catch(e){ /* localStorage yoksa (gizli sekme vb.) sessizce geç */ }
   } else if (S.isGroupUser){
-    // Departman kullanıcısı: sabit şubesi yok, üstteki isim rozetinde departman adı görünür,
-    // "Şube Seç" ile istediği şubeyi seçip o şubenin tam görünümünü (konum, harita, yakın firmalar) izler.
+    // Genel müdürlük kullanıcısı: sabit şubesi yok, üstteki isim rozetinde birim adı görünür.
+    // Konum Bankacılık Üssü'nden (GRUP_VARSAYILAN_SUBE) başlar — GPS izni beklenmediği için harita ve
+    // yakın firmalar anında gelir; "Şube Seç" ile istedikleri şubeye geçebilirler.
     badge.hidden = false;
     $("branchBadgeName").textContent = S.group ? S.group.name : "Kullanıcı";
     $("locSrcBranch").hidden = true;
     if (adminPicker) adminPicker.hidden = false;
     if (visitBtn) visitBtn.hidden = false;
     if (helpBtn) helpBtn.hidden = true;
-    if (!S._adminViewBranch && !S.userLoc){
-      // Gerçek konum gelene kadar (izin istemi gecikebilir/reddedilebilir) harita boş kalmasın —
-      // hemen Türkiye geneli görünümle açılır, firmalar listelenir; GPS başarılı olursa otomatik ortalanır.
-      $("map").style.display = "block";
-      initMap();
-      setLocSource("gps");
+    if (!S._adminViewBranch && !S.userLoc && SUBE_TABLE[GRUP_VARSAYILAN_SUBE]){
+      fillAdminBranchSelect();
+      const sel = $("adminBranchSelect"); if (sel) sel.value = GRUP_VARSAYILAN_SUBE;
+      applyAdminBranchPreview(GRUP_VARSAYILAN_SUBE);
+      syncAbpCard();
+      const hint = $("adminBranchPickerHint");
+      if (hint) hint.textContent = `Konum "${SUBE_TABLE[GRUP_VARSAYILAN_SUBE][0]}" için aktif.`;
     }
   } else {
     badge.hidden = true;
@@ -5141,19 +5146,19 @@ function loadCloud(){
     if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); }
     maybeAutoLocation();
     // Şube girişinde konum veri gelmeden önce ayarlanmış olabilir; veri gelince mesafeleri tazele
-    if (S.branch && S.userLoc) geocodeVisible();
+    if (S.userLoc) geocodeVisible();
   }, err=>{
     setEmptyState("Bulut okunamadı: "+err.message, false);
   });
   // İlk 1000 listesini buluttan yükle
   cloudOn("tim", snap=>{
     const v = snap.val();
-    if (v && v.map && !S.timDirty){ S.tim = v.map; S.timYear = v.year||""; S.timUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); } refreshTimChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
+    if (v && v.map && !S.timDirty){ S.tim = v.map; S.timYear = v.year||""; S.timUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); } refreshTimChip(); render(); renderAdminOverview(); if (S.userLoc) geocodeVisible(); }
   });
   // Turquality listesini buluttan yükle
   cloudOn("tq", snap=>{
     const v = snap.val();
-    if (v && v.map && !S.tqDirty){ S.tq = v.map; S.tqUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); } refreshTqChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
+    if (v && v.map && !S.tqDirty){ S.tq = v.map; S.tqUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); } refreshTqChip(); render(); renderAdminOverview(); if (S.userLoc) geocodeVisible(); }
   });
   // Yönetimin yayınladığı duyuru (kampanya pop-up'ı) — herkes okur, sadece admin yazar
   cloudOn("announcement", snap=>{
