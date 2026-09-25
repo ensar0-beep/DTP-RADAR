@@ -699,6 +699,34 @@ select:focus,input:focus{border-color:var(--exp)}
 .onboard-overlay{position:fixed;inset:0;z-index:3000;background:rgba(6,10,20,.62);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px;animation:onbfade .18s ease}
 .onboard-overlay[hidden]{display:none}
 @keyframes onbfade{from{opacity:0}to{opacity:1}}
+/* Yönetim duyurusu (kampanya) pop-up'ı — onboarding ile aynı katmanda ama bir tık üstünde,
+   ikisi aynı anda tetiklenirse duyuru önce görünsün. */
+.ann-overlay{position:fixed;inset:0;z-index:3100;background:rgba(6,10,20,.68);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px;animation:onbfade .18s ease}
+.ann-overlay[hidden]{display:none}
+.ann-box{position:relative;max-width:min(480px,100%);max-height:88vh}
+.ann-box a{display:block;line-height:0;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.ann-box img{display:block;width:100%;max-height:88vh;object-fit:contain;background:var(--panel);cursor:pointer}
+.ann-overlay-close{position:absolute;top:-14px;right:-14px;width:32px;height:32px;border-radius:50%;background:var(--panel);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ann-overlay-close:hover{border-color:var(--danger);color:var(--danger)}
+/* Yönetim: Duyurular ekranı */
+.ann-current{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px}
+.ann-current.empty{color:var(--muted);font-size:13px}
+.ann-current-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.ann-current-head b{font-family:'Sora',sans-serif;font-size:14px}
+.ann-current-body{display:flex;gap:16px;align-items:flex-start}
+.ann-current-body img{width:140px;border-radius:8px;border:1px solid var(--border);flex:0 0 auto}
+.ann-current-meta{font-size:12.5px;color:var(--muted);line-height:1.8}
+.ann-current-meta a{color:var(--exp)}
+.ann-form{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+.ann-form-row{display:flex;gap:18px;flex-wrap:wrap}
+.ann-upload{flex:0 0 220px;height:150px;border:1.5px dashed var(--axis);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);text-align:center;font-size:12.5px;overflow:hidden}
+.ann-upload:hover{border-color:var(--exp);color:var(--text)}
+.ann-upload img{width:100%;height:100%;object-fit:cover}
+.ann-fields{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px}
+.ann-fields label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted)}
+.ann-fields input,.ann-fields select{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 11px;font-family:inherit;font-size:13px}
+.ann-status{font-size:12px;color:var(--muted)}
+.ann-status.ok{color:var(--exp)}
 .onboard-card{position:relative;width:100%;max-width:420px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:32px 28px 24px;box-shadow:0 24px 70px rgba(0,0,0,.45);text-align:center}
 .onboard-close{position:absolute;top:12px;right:12px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}
 .onboard-close:hover{color:var(--text);border-color:var(--exp)}
@@ -1216,6 +1244,10 @@ select:focus,input:focus{border-color:var(--exp)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M13 21V11l6 3v7"/><path d="M9 9v.01M9 12v.01M9 15v.01"/></svg>
         Şubeler
       </button>
+      <button class="admin-nav-item" id="navAnnouncements" type="button" data-target="adminAnnouncementsScreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v3a1 1 0 001 1h2l4 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M15 8a4 4 0 010 8M18.5 5.5a8 8 0 010 13"/></svg>
+        Duyurular
+      </button>
       <div class="admin-sidebar-sep"></div>
       <button class="admin-nav-item" id="navFirmView" type="button" data-target="adminFirmViewScreen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.5-7-11a7 7 0 1 1 14 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
@@ -1431,6 +1463,36 @@ select:focus,input:focus{border-color:var(--exp)}
         <div id="mergeFirmList" class="merge-firm-list"></div>
       </div>
 
+      <!-- Duyurular -->
+      <div id="adminAnnouncementsScreen" class="admin-screen" hidden>
+        <div class="admin-head"><div><div class="admin-screen-title">Duyurular</div><div class="admin-screen-desc">Şubeler giriş yaptığında göreceği kampanya/haber görselini yönet. Aynı anda tek duyuru yayında olabilir.</div></div></div>
+        <div id="annCurrent" class="ann-current"></div>
+        <div class="admin-subhead">Yeni duyuru yayınla</div>
+        <div class="hint">Görsel yükle, tıklanınca gideceği linki yaz, hedef kitleyi seç ve yayınla — bu, varsa yayındaki duyurunun yerini alır.</div>
+        <div class="ann-form">
+          <div class="ann-form-row">
+            <div class="ann-upload" id="annUploadZone">
+              <input type="file" id="annImageInput" accept="image/*" hidden>
+              <div id="annUploadHint"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg> Görsel seç</div>
+              <img id="annPreviewImg" hidden>
+            </div>
+            <div class="ann-fields">
+              <label>Tıklayınca açılacak link<input type="url" id="annLinkInput" placeholder="https://…"></label>
+              <label>Hedef kitle
+                <select id="annTargetInput">
+                  <option value="all">Tüm şubeler</option>
+                  <option value="ticari">Sadece Ticari Şube</option>
+                  <option value="kurumsal">Sadece Kurumsal Şube</option>
+                  <option value="kobi">Sadece Kobi Şube</option>
+                </select>
+              </label>
+              <button class="btn primary" type="button" id="annPublishBtn" disabled>Yayınla</button>
+              <span class="ann-status" id="annPublishStatus"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Firma Görünümü: kullanıcı arayüzü buraya taşınmadan, olduğu yerde gösterilir -->
       <div id="adminFirmViewScreen" class="admin-screen admin-screen-firmview" hidden></div>
 
@@ -1442,6 +1504,14 @@ select:focus,input:focus{border-color:var(--exp)}
 </div>
 
 <!-- Şube girişinde bir kere gösterilen kullanım rehberi (slider) -->
+<!-- Yönetimin yayınladığı duyuru: şube girişinde, hedef kitlesine uyuyorsa ve daha önce
+     kapatılmadıysa bir kez gösterilir (bkz. maybeShowAnnouncement()). -->
+<div class="ann-overlay" id="annOverlay" hidden>
+  <div class="ann-box">
+    <button class="ann-overlay-close" id="annOverlayClose" aria-label="Kapat"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <a id="annOverlayLink" target="_blank" rel="noopener"><img id="annOverlayImg" alt="Duyuru"></a>
+  </div>
+</div>
 <div class="onboard-overlay" id="onboardOverlay" hidden>
   <div class="onboard-card">
     <button class="onboard-close" id="onboardClose" aria-label="Kapat"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -3694,7 +3764,10 @@ function openOnboarding(){
   renderOnboardSlide();
   $("onboardOverlay").hidden = false;
 }
-function closeOnboarding(){ $("onboardOverlay").hidden = true; }
+function closeOnboarding(){
+  $("onboardOverlay").hidden = true;
+  maybeShowAnnouncement(); // rehber kapanınca, bekleyen bir duyuru varsa sırası şimdi gelsin
+}
 function renderOnboardSlide(){
   const s = ONBOARD_SLIDES[_onboardIdx];
   $("onboardIcon").innerHTML = ic(s.icon);
@@ -3815,7 +3888,7 @@ function renderAuth(){
 // ---- Yönetim paneli: Şube Yönetimi (giriş istatistikleri + yıldız firma atama) ----
 
 // ---- Yönetim paneli: sidebar navigasyonu ----
-const ADMIN_SCREENS = ["adminOverviewScreen", "adminAudiencesScreen", "adminFirmsScreen", "adminBranchesScreen", "adminFirmViewScreen"];
+const ADMIN_SCREENS = ["adminOverviewScreen", "adminAudiencesScreen", "adminFirmsScreen", "adminBranchesScreen", "adminAnnouncementsScreen", "adminFirmViewScreen"];
 function showAdminScreen(targetId){
   ADMIN_SCREENS.forEach(id => { const el = $(id); if (el) el.hidden = (id !== targetId); });
   document.querySelectorAll(".admin-nav-item").forEach(nav => nav.classList.toggle("active", nav.dataset.target === targetId));
@@ -3833,6 +3906,8 @@ function showAdminScreen(targetId){
   } else if (targetId === "adminFirmsScreen"){
     renderMergeFirmList();
     renderDuplicateSuggestions();
+  } else if (targetId === "adminAnnouncementsScreen"){
+    renderAnnouncementAdmin();
   } else if (targetId === "adminOverviewScreen"){
     renderAdminOverview();
   } else if (targetId === "adminFirmViewScreen"){
@@ -4324,6 +4399,123 @@ $("bulkStarToggle") && ($("bulkStarToggle").onclick = ()=>{ const c=$("bulkStarC
   const ro = new ResizeObserver(entries=>{ scr.style.setProperty("--bst-h", entries[0].contentRect.height+"px"); });
   ro.observe(top);
 })();
+// ---- Duyurular: yönetimin şube girişinde gösterdiği tek seferlik kampanya pop-up'ı ----
+// Firebase "announcement" düğümünde TEK kayıt tutulur (aynı anda tek duyuru yayında olur):
+// {id, imageData (base64 JPEG), link, target: "all"|"ticari"|"kurumsal"|"kobi", createdAt}
+S._annPendingImage = null; // admin formunda seçilmiş ama henüz yayınlanmamış görsel (data URL)
+const ANN_TARGET_LABEL = {all:"Tüm şubeler", ticari:"Sadece Ticari Şube", kurumsal:"Sadece Kurumsal Şube", kobi:"Sadece Kobi Şube"};
+
+$("annUploadZone") && $("annUploadZone").addEventListener("click", ()=> $("annImageInput").click());
+$("annImageInput") && $("annImageInput").addEventListener("change", async e=>{
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  try{
+    const dataUrl = await resizeImageToDataUrl(f, 900, 0.78);
+    S._annPendingImage = dataUrl;
+    $("annPreviewImg").src = dataUrl;
+    $("annPreviewImg").hidden = false;
+    $("annUploadHint").hidden = true;
+    updateAnnPublishBtn();
+  }catch(err){ toast("Görsel işlenemedi: "+(err.message||err)); }
+});
+$("annLinkInput") && $("annLinkInput").addEventListener("input", updateAnnPublishBtn);
+function updateAnnPublishBtn(){
+  const btn = $("annPublishBtn"); if (!btn) return;
+  const link = $("annLinkInput").value.trim();
+  btn.disabled = !(S._annPendingImage && /^https?:\/\//i.test(link));
+}
+// Seçilen görseli tarayıcıda küçültüp sıkıştırır (Firebase'e hafif/hızlı yazılsın diye) —
+// uzun kenar en fazla maxDim piksel, JPEG kalitesi quality.
+function resizeImageToDataUrl(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = ()=>{
+      URL.revokeObjectURL(url);
+      let w = img.width, h = img.height;
+      if (w > maxDim || h > maxDim){ const s = maxDim/Math.max(w,h); w = Math.round(w*s); h = Math.round(h*s); }
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = ()=> { URL.revokeObjectURL(url); reject(new Error("Görsel okunamadı")); };
+    img.src = url;
+  });
+}
+$("annPublishBtn") && $("annPublishBtn").addEventListener("click", async ()=>{
+  const link = $("annLinkInput").value.trim();
+  if (!S._annPendingImage || !/^https?:\/\//i.test(link)) return;
+  const rec = { id: Date.now(), imageData: S._annPendingImage, link, target: $("annTargetInput").value, createdAt: Date.now() };
+  const btn = $("annPublishBtn"); btn.disabled = true; btn.textContent = "Yayınlanıyor…";
+  try{
+    await fbDB.ref("announcement").set(rec);
+    S.announcement = rec;
+    S._annPendingImage = null;
+    $("annLinkInput").value = ""; $("annTargetInput").value = "all";
+    $("annPreviewImg").hidden = true; $("annUploadHint").hidden = false; $("annImageInput").value = "";
+    $("annPublishStatus").textContent = "Yayınlandı ✓"; $("annPublishStatus").className = "ann-status ok";
+    renderAnnouncementAdmin();
+  }catch(e){
+    toast("Yayınlanamadı: "+(e.message||e.code));
+  } finally {
+    btn.textContent = "Yayınla"; updateAnnPublishBtn();
+  }
+});
+async function endAnnouncement(){
+  if (!confirm("Yayındaki duyuru sona erdirilsin mi? Şubeler artık görmeyecek.")) return;
+  try{
+    await fbDB.ref("announcement").remove();
+    S.announcement = null;
+    renderAnnouncementAdmin();
+    toast("Duyuru sona erdirildi.");
+  }catch(e){ toast("Silinemedi: "+(e.message||e.code)); }
+}
+function renderAnnouncementAdmin(){
+  const box = $("annCurrent"); if (!box) return;
+  const a = S.announcement;
+  if (!a){
+    box.className = "ann-current empty";
+    box.textContent = "Şu an yayında duyuru yok.";
+    return;
+  }
+  box.className = "ann-current";
+  const date = new Date(a.createdAt).toLocaleString("tr-TR", {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  box.innerHTML = `<div class="ann-current-head"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:var(--exp)"><path d="M3 11v3a1 1 0 001 1h2l4 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M15 8a4 4 0 010 8M18.5 5.5a8 8 0 010 13"/></svg><b>Yayında</b></div>
+    <div class="ann-current-body">
+      <img src="${a.imageData}" alt="">
+      <div class="ann-current-meta">
+        Link: <a href="${a.link}" target="_blank" rel="noopener">${a.link}</a><br>
+        Hedef: ${ANN_TARGET_LABEL[a.target] || a.target}<br>
+        Yayın tarihi: ${date}<br>
+        <button class="btn" type="button" id="annEndBtn" style="margin-top:8px">Kampanyayı bitir</button>
+      </div>
+    </div>`;
+  $("annEndBtn").onclick = endAnnouncement;
+}
+
+// ---- Şube tarafı: yönetimin yayınladığı duyuruyu (varsa, hedefine uyuyorsa, daha önce
+// kapatılmadıysa) girişte BİR KEZ gösterir. Kapatma tercihi tarayıcıda (localStorage) kalıcı
+// olur — aynı kampanyayı bir daha görmez; yeni bir kampanya farklı id taşıdığı için yine gösterilir.
+function maybeShowAnnouncement(){
+  if (!S.branch) return;
+  const a = S.announcement;
+  if (!a || !a.imageData || !a.link) return;
+  if (a.target && a.target !== "all" && branchClassOf(S.branch.name) !== a.target) return;
+  if (!$("annOverlay").hidden) return; // zaten açık
+  // İlk girişte kullanım rehberi açıksa duyuru üst üste binmesin — rehber kapanınca closeOnboarding() tekrar çağırır
+  if ($("onboardOverlay") && !$("onboardOverlay").hidden) return;
+  try{ if (localStorage.getItem("dtr-ann-seen-"+a.id)) return; }catch(e){}
+  $("annOverlayImg").src = a.imageData;
+  $("annOverlayLink").href = a.link;
+  $("annOverlay").hidden = false;
+  const dismiss = ()=>{
+    $("annOverlay").hidden = true;
+    try{ localStorage.setItem("dtr-ann-seen-"+a.id, "1"); }catch(e){}
+  };
+  $("annOverlayClose").onclick = dismiss;
+  $("annOverlayLink").onclick = dismiss;
+}
+
 // Veri Yükleme: her kaynağın durumu
 function renderDataStatus(){
   const months = loadedMonths();
@@ -4646,6 +4838,12 @@ function loadCloud(){
   cloudOn("tq", snap=>{
     const v = snap.val();
     if (v && v.map && !S.tqDirty){ S.tq = v.map; S.tqUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); } refreshTqChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
+  });
+  // Yönetimin yayınladığı duyuru (kampanya pop-up'ı) — herkes okur, sadece admin yazar
+  cloudOn("announcement", snap=>{
+    S.announcement = snap.val() || null;
+    maybeShowAnnouncement();
+    if ($("adminAnnouncementsScreen") && !$("adminAnnouncementsScreen").hidden) renderAnnouncementAdmin();
   });
   // Yıldız / Önemli / Ziyaret / Giriş kayıtları: admin tüm şubeleri, şube hesabı yalnızca KENDİ düğümünü
   // dinler (kurallar başka şubenin verisini okumaya izin vermez).
