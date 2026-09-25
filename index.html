@@ -509,14 +509,6 @@ select:focus,input:focus{border-color:var(--exp)}
 .loc-src-card.active .loc-src-name{color:var(--text)}
 .loc-src-card.active .loc-src-active-tag{display:inline-block}
 /* Ziyaret Listem kartı: konum kartlarıyla aynı aile, turuncu; pasifken kesikli çerçeve */
-.loc-src-visit{margin-left:auto;border-style:dashed}
-.loc-src-visit .loc-src-icon{color:var(--imp)}
-.loc-src-visit .loc-src-active-tag{background:var(--imp);color:#1A1204}
-.loc-src-visit.active{border-style:solid;border-color:var(--imp);background:rgba(232,163,61,.07)}
-.loc-src-visit.active .loc-src-icon{background:rgba(232,163,61,.18)}
-.loc-src-visit.active .loc-src-name{color:var(--text)}
-.loc-src-count{margin-left:auto;flex:0 0 auto;min-width:22px;height:22px;padding:0 7px;border-radius:11px;background:var(--imp);color:#1A1204;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
-.loc-src-count.q{background:var(--panel2);color:var(--muted)}
 .locstatus.visit{color:var(--imp)}
 .map-visit-legend{position:absolute;left:10px;bottom:10px;z-index:1100;display:flex;gap:12px;font-size:11px;color:var(--muted);background:rgba(21,28,46,.9);border:1px solid var(--border);border-radius:8px;padding:5px 9px;pointer-events:none}
 .map-visit-legend[hidden]{display:none}
@@ -524,9 +516,6 @@ select:focus,input:focus{border-color:var(--exp)}
 .map-visit-legend .pl{background:var(--imp)} .map-visit-legend .dn{background:var(--exp)} .map-visit-legend .ot{background:var(--exp);opacity:.25}
 .firm-visit-state{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--imp);white-space:nowrap;margin-right:8px}
 .firm-visit-state.done{color:var(--exp)}
-.map-chip-visit{bottom:10px;right:10px;display:none}
-.map-chip-visit[hidden]{display:none!important}
-.map-chip-visit.on{border-color:rgba(232,163,61,.5);color:var(--imp)}
 @media(max-width:480px){
   .loc-source{flex-direction:column}
   .loc-src-card{max-width:none}
@@ -572,6 +561,17 @@ select:focus,input:focus{border-color:var(--exp)}
 .map-chip-src{top:10px;left:54px;color:var(--exp)}
 .map-chip-src span{overflow:hidden;text-overflow:ellipsis}
 .map-chip-rad{top:10px;right:10px;display:flex} /* yarıçap seçici her ekranda haritanın üstünde */
+/* Ziyaret Listem çipi haritanın sağ üst köşesinde, yarıçap çipinin solunda durur (her ekranda).
+   Konum kartları satırındaki eski kart kaldırıldı — bu düğme artık etkilediği şeyin, yani
+   haritanın üstünde. */
+.map-top-right{position:absolute;top:10px;right:10px;z-index:1100;display:flex;gap:8px;align-items:center;max-width:calc(100% - 20px)}
+.map-top-right .map-chip{position:static;max-width:none;min-width:0}
+.map-chip-visit{display:flex;color:var(--imp);border-color:rgba(232,163,61,.38)}
+.map-chip-visit[hidden]{display:none!important}
+.map-chip-visit.on{background:var(--imp);border-color:var(--imp);color:#1A1204}
+.map-chip-n{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;background:rgba(232,163,61,.22);border-radius:20px;padding:1px 7px;line-height:1.5}
+.map-chip-n[hidden]{display:none}
+.map-chip-visit.on .map-chip-n{background:rgba(0,0,0,.18)}
 /* Açıklama cümlesi ve form tipi yarıçap seçici artık gösterilmiyor (#radiusSel mantık için DOM'da kalır) */
 .locbar{display:none}
 .map-chip-count{bottom:10px;left:10px;color:var(--muted);font-weight:500;cursor:default}
@@ -973,13 +973,17 @@ select:focus,input:focus{border-color:var(--exp)}
   #locCard{padding:0;background:none;border:none;box-shadow:none}
   /* Şube seçici (departman kullanıcıları / admin Kullanıcı Görünümü) mobilde de erişilebilir kalsın —
      yalnızca konum kartları (Şube/GPS/Ziyaret) ve alt çubuk gizlenir, harita üstteki yüzen çiplerle yönetilir. */
-  #locSrcBranch,#locSrcGps,#locSrcVisit,#locCard .locbar{display:none}
+  #locSrcBranch,#locSrcGps,#locCard .locbar{display:none}
   #locCard .map-row{margin-top:0}
   #locCard .loc-source{margin-bottom:10px}
   #locCard .admin-branch-picker{max-width:none}
   #map{height:360px;border-radius:14px}
   .map-chip{display:flex}
-  .map-chip-visit:not([hidden]){display:flex;bottom:28px}
+  /* Mobilde üst kısım zaten kalabalık (Konum + yarıçap çipleri): sarmalayıcı display:contents
+     olur, ziyaret çipi eski yerine — haritanın sağ altına — döner. */
+  .map-top-right{display:contents}
+  .map-top-right .map-chip{position:absolute;max-width:calc(100% - 70px)}
+  .map-chip-visit:not([hidden]){display:flex;right:10px;bottom:28px;top:auto}
   .map-visit-legend{display:none!important}
   /* Haritadaki etiketler mobilde kısa: firma ekini gösterme, uzun adı kırp, şube etiketi küçük */
   .leaflet-tooltip.ov-branch-label{font-size:10px;max-width:190px;overflow:hidden;text-overflow:ellipsis}
@@ -1238,13 +1242,6 @@ select:focus,input:focus{border-color:var(--exp)}
       </div>
       <select id="adminBranchSelect" class="abp-native-select" tabindex="-1" aria-hidden="true"><option value="">— şube seçilmedi —</option></select>
     </div>
-    <!-- Ziyaret Listem görünümü: açıkken harita ve liste yalnızca ziyaret listesindeki firmaları gösterir -->
-    <button class="loc-src-card loc-src-visit" id="locSrcVisit" hidden title="Ziyaret listendeki firmaları haritada ve listede göster">
-      <span class="loc-src-active-tag">Aktif</span>
-      <span class="loc-src-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></span>
-      <span class="loc-src-text"><span class="loc-src-name">Ziyaret Listem</span></span>
-      <span class="loc-src-count q" id="locSrcVisitCount">0</span>
-    </button>
   </div>
   <span class="admin-branch-picker-hint" id="adminBranchPickerHint"></span>
   <div class="locbar">
@@ -1273,10 +1270,14 @@ select:focus,input:focus{border-color:var(--exp)}
       <!-- Mobil: kontroller haritanın üstünde yüzen düğmeler (masaüstünde gizli) -->
       <button class="map-chip map-chip-src" id="mapSrcChip" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10M20 21V10M2 10l10-6 10 6"/></svg><span id="mapSrcChipLabel">Şube konumu</span><svg class="ic chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <div class="map-chip-menu" id="mapSrcMenu" hidden></div>
-      <button class="map-chip map-chip-rad" id="mapRadChip" type="button"><span id="mapRadChipLabel">≤ 5 km</span><svg class="ic chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      <!-- Sağ üst köşe: Ziyaret Listem + yarıçap çipleri yan yana. Mobilde bu sarmalayıcı
+           display:contents olur, çipler kendi eski konumlarına (ziyaret çipi alta) döner. -->
+      <div class="map-top-right">
+        <button class="map-chip map-chip-visit" id="mapVisitChip" type="button" hidden><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg><span id="mapVisitChipLabel">Ziyaret Listem</span><span class="map-chip-n" id="mapVisitChipCount" hidden>0</span></button>
+        <button class="map-chip map-chip-rad" id="mapRadChip" type="button"><span id="mapRadChipLabel">≤ 5 km</span><svg class="ic chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      </div>
       <div class="map-chip-menu right" id="mapRadMenu" hidden></div>
       <div class="map-chip map-chip-count" id="mapCountChip"></div>
-      <button class="map-chip map-chip-visit" id="mapVisitChip" type="button" hidden><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg><span id="mapVisitChipLabel">Ziyaret Listem</span></button>
       <div class="map-visit-legend" id="mapVisitLegend" hidden><span><i class="pl"></i>Planlı</span><span><i class="dn"></i>Ziyaret edildi</span><span><i class="ot"></i>Diğer firmalar</span></div>
       <!-- Haritanın üstünde yüzen firma kartı: harita artık daralmıyor, panel camsı bir katman
            olarak haritanın sağ kenarında açılıyor (mobilde alt şerit gibi tabana yapışıyor). -->
@@ -4174,18 +4175,20 @@ function toggleVisitView(force){
   render();
   if (S.userLoc) refineMahalle();
 }
-$("locSrcVisit") && ($("locSrcVisit").onclick = ()=> toggleVisitView());
 $("mapVisitChip") && ($("mapVisitChip").onclick = ()=> toggleVisitView());
 // Görünüm kartı/düğmesi/durum satırı — render() içinden çağrılır
 function updateVisitViewUI(list){
   const uname = visitOwnerUname();
   const vm = visitMapFor();
   const total = Object.keys(vm).length;
-  const card = $("locSrcVisit"), cnt = $("locSrcVisitCount"), chip = $("mapVisitChip"), legend = $("mapVisitLegend");
+  const chip = $("mapVisitChip"), legend = $("mapVisitLegend");
   if (!uname && S._visitView) S._visitView = false;
-  if (card){ card.hidden = !uname; card.classList.toggle("active", S._visitView); }
-  if (cnt){ cnt.textContent = total; cnt.classList.toggle("q", total===0 && !S._visitView); }
-  if (chip){ chip.hidden = !uname; chip.classList.toggle("on", S._visitView); const l=$("mapVisitChipLabel"); if (l) l.textContent = total ? `Ziyaret Listem · ${total}` : "Ziyaret Listem"; }
+  if (chip){
+    chip.hidden = !uname;
+    chip.classList.toggle("on", S._visitView);
+    const n = $("mapVisitChipCount");
+    if (n){ n.textContent = total; n.hidden = total === 0; }
+  }
   if (legend) legend.hidden = !S._visitView;
   const ls = $("locStatus");
   if (ls){
