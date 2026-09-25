@@ -366,13 +366,7 @@ input[type=file]{display:none}
 .admin-subhead-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .admin-subhead-row .admin-subhead{margin-bottom:0}
 .admin-subhead-row select{background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 9px;font-family:inherit;font-size:12.5px}
-.branch-prox-table-wrap{margin-top:10px;max-height:360px;overflow:auto;border:1px solid var(--border);border-radius:10px;
-  background:
-    linear-gradient(var(--panel) 30%, transparent), linear-gradient(transparent, var(--panel) 70%) bottom,
-    radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.28), transparent) left, radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.28), transparent) right;
-  background-repeat:no-repeat; background-color:var(--panel);
-  background-size:100% 24px, 100% 24px, 14px 100%, 14px 100%;
-  background-attachment:local, local, scroll, scroll;}
+.branch-prox-table-wrap{margin-top:10px}
 .data-viewer-body{
   background:
     linear-gradient(var(--panel) 30%, transparent), linear-gradient(transparent, var(--panel) 70%) bottom,
@@ -393,6 +387,10 @@ input[type=file]{display:none}
 .branch-prox-table thead th:first-child{position:sticky;left:0;z-index:2;box-shadow:1px 0 0 var(--border)}
 .branch-prox-table tbody tr:hover td.name,.branch-prox-table tbody tr.sel td.name{background:var(--panel2)}
 .branch-prox-table td,.branch-prox-table th{font-variant-numeric:tabular-nums}
+/* Kısa içerikli sütunlar (sayı/tarih) kendi içeriğine sıkışsın, geniş sütunlara (Şube, İhracat) yer açsın */
+.branch-prox-table th:nth-child(3),.branch-prox-table td:nth-child(3),
+.branch-prox-table th:nth-child(5),.branch-prox-table td:nth-child(5),
+.branch-prox-table th:nth-child(7),.branch-prox-table td:nth-child(7){width:1%}
 
 /* Hedef Kitleleri Yönet: kaynak kartları */
 .bulk-star{margin-top:18px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
