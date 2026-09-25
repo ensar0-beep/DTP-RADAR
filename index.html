@@ -1626,6 +1626,8 @@ const S = {
   tq: {},           // normAd -> {marka, firma, tel, email, web, program}
   tqDirty: false,
   branch: null,     // {username, name, lat, lon} | null — giriş yapmış şube kullanıcısı
+  isGroupUser: false, // departman kullanıcısı (dtp/dts/kobisatis/ktsatis vb.) — sabit şubesi yok, giriş sonrası şube seçer
+  group: null,      // {username, name} | null — giriş yapmış departman kullanıcısı
   starred: {},       // { subeKullaniciAdi: { firmaKey: true, ... }, ... } — admin atar, buluttan yüklenir
   starredDirty: false,
   important: {},     // { subeKullaniciAdi: { firmaKey: true, ... }, ... } — şube kendi işaretler, buluttan yüklenir
@@ -2457,8 +2459,8 @@ function filtered(){
 // listenin en üstüne taşır. Sıra: önce yıldız, sonra önemli, sonra geri kalan.
 // filtered()'ın kendisine dokunmaz — çıktısı üzerinde çalışan ayrı bir katmandır.
 function applyStarPriority(list){
-  // Admin, "Şube Seç" ile bir şubeyi önizlerken de aynı önceliklendirmeyi görsün
-  const uname = S.branch ? S.branch.username : (S.isAdmin ? S._adminViewBranch : null);
+  // Admin/departman kullanıcısı "Şube Seç" ile bir şubeyi önizlerken de aynı önceliklendirmeyi görsün
+  const uname = S.branch ? S.branch.username : ((S.isAdmin || S.isGroupUser) ? S._adminViewBranch : null);
   if (!uname) return list;
   const starMap = S.starred[uname] || {};
   const impMap = S.important[uname] || {};
@@ -2564,7 +2566,7 @@ $("mapSrcChip") && $("mapSrcChip").addEventListener("click", e=>{
   closeMapChipMenus();
   const opts = [];
   if (S.branch) opts.push({k:"branch", label:"Şube konumu", icon:ic('building')||""});
-  else if (S.isAdmin && S._adminViewBranch && SUBE_TABLE[S._adminViewBranch]) opts.push({k:"branch", label:SUBE_TABLE[S._adminViewBranch][0]});
+  else if ((S.isAdmin || S.isGroupUser) && S._adminViewBranch && SUBE_TABLE[S._adminViewBranch]) opts.push({k:"branch", label:SUBE_TABLE[S._adminViewBranch][0]});
   opts.push({k:"gps", label:"Buradayım"});
   const cur = S._locSource==="gps" ? "gps" : "branch";
   menu.innerHTML = opts.map(o=>`<button type="button" data-src="${o.k}" class="${o.k===cur?"active":""}">${o.label}${o.k===cur?" ✓":""}</button>`).join("");
@@ -2735,11 +2737,11 @@ function render(){
     const isImportantForBranch = S.branch && S.important[S.branch.username] && S.important[S.branch.username][a.key];
     const starAssignMode = S.isAdmin && S._starTargetBranch;
     const isStarredForTarget = starAssignMode && S.starred[S._starTargetBranch] && S.starred[S._starTargetBranch][a.key];
-    // Admin, önizlediği/seçtiği şubenin kendi işaretlediği "Önemli" firmaları da görebilsin
-    const adminViewImportant = S.isAdmin && S._starTargetBranch && S.important[S._starTargetBranch] && S.important[S._starTargetBranch][a.key];
+    // Admin/departman kullanıcısı, önizlediği/seçtiği şubenin kendi işaretlediği "Önemli" firmaları da görebilsin
+    const adminViewImportant = (S.isAdmin || S.isGroupUser) && S._starTargetBranch && S.important[S._starTargetBranch] && S.important[S._starTargetBranch][a.key];
     // Ziyaret Listesi durumu: yok -> planned (🔖) -> done (✅) -> yok
     const visitRecBranch = S.branch && S.visits[S.branch.username] ? S.visits[S.branch.username][a.key] : null;
-    const visitRecAdminView = (!S.branch && S.isAdmin && S._starTargetBranch && S.visits[S._starTargetBranch]) ? S.visits[S._starTargetBranch][a.key] : null;
+    const visitRecAdminView = (!S.branch && (S.isAdmin || S.isGroupUser) && S._starTargetBranch && S.visits[S._starTargetBranch]) ? S.visits[S._starTargetBranch][a.key] : null;
     const visitRec = visitRecBranch || visitRecAdminView;
     const visitIcon = visitRec ? (visitRec.status==="done" ? ic('checkCircle') : ic('bookmark')) : ic('bookmark');
     const visitLabel = visitRec ? (visitRec.status==="done" ? "Ziyaret edildi" : "Ziyaret planlandı") : "Ziyaret listesine ekle";
@@ -2830,9 +2832,9 @@ function firmDetailHTML(a, mapsUrl){
       <div class="det-value${big?" big":""}">${value||"—"}</div>
       ${copyVal?`<button class="copy-btn" data-copy="${copyVal}" title="Kopyala">Kopyala</button>`:""}
     </div>`;
-  // Ziyaret Listesi durumu (şube kendi görünümünde, admin önizlerken de görebilir)
+  // Ziyaret Listesi durumu (şube kendi görünümünde, admin/departman önizlerken de görebilir)
   const visitRecBranch = S.branch && S.visits[S.branch.username] ? S.visits[S.branch.username][a.key] : null;
-  const visitRecAdminView = (!S.branch && S.isAdmin && S._starTargetBranch && S.visits[S._starTargetBranch]) ? S.visits[S._starTargetBranch][a.key] : null;
+  const visitRecAdminView = (!S.branch && (S.isAdmin || S.isGroupUser) && S._starTargetBranch && S.visits[S._starTargetBranch]) ? S.visits[S._starTargetBranch][a.key] : null;
   const visitRec = visitRecBranch || visitRecAdminView;
   let visitBtnLabel, visitBtnClass;
   // Listeye eklendikten sonra buton "Ziyaret Listeme Git"e dönüşür; işaretleme/kaldırma
@@ -3582,10 +3584,18 @@ function unpackRecords(packed){
 
 const SUBE_EMAIL_DOMAIN = "sube.disticaretradar.local"; // şube hesapları için sahte e-posta alanı
 const ADMIN_EMAIL_DOMAIN = "admin.disticaretradar.local"; // yönetim hesapları için — şube domaininden kasıtlı olarak farklı, karışma ihtimali sıfır
+const GRUP_EMAIL_DOMAIN = "grup.disticaretradar.local"; // sabit şubesi olmayan departman hesapları için — giriş sonrası istedikleri şubeyi seçerler
 const ADMIN_TABLE = {
   // kullanıcı_adı: "Görünen İsim"
   "ensar": "Ensar",
   "dtpadmin": "DTP Admin",
+};
+const GRUP_TABLE = {
+  // kullanıcı_adı: "Görünen İsim" — admin yetkisi yok, sadece giriş sonrası şube seçip o şubenin görünümünü inceleyebilir
+  "dtp": "Dış Ticaret Pazarlama",
+  "dts": "Dış Ticaret Satış",
+  "kobisatis": "Kobi Satış",
+  "ktsatis": "Kurumsal ve Ticari Satış",
 };
 
 function initFirebase(){
@@ -3604,8 +3614,11 @@ function initFirebase(){
     const isBranch = !!user && user.email && user.email.endsWith("@"+SUBE_EMAIL_DOMAIN);
     // Admin hesabı mı? (ayrı bir sahte e-posta alan adından anlaşılır — şube domaininden tamamen farklı)
     const isAdminAccount = !!user && user.email && user.email.endsWith("@"+ADMIN_EMAIL_DOMAIN);
-    // Güvenlik: sadece ADMIN_EMAIL_DOMAIN'li hesap admin sayılır; şube hesabı hiçbir koşulda admin olamaz
-    S.isAdmin = isAdminAccount && !isBranch;
+    // Departman hesabı mı? (sabit şubesi yok — giriş sonrası istediği şubeyi seçer)
+    const isGroup = !!user && user.email && user.email.endsWith("@"+GRUP_EMAIL_DOMAIN);
+    // Güvenlik: sadece ADMIN_EMAIL_DOMAIN'li hesap admin sayılır; şube/departman hesabı hiçbir koşulda admin olamaz
+    S.isAdmin = isAdminAccount && !isBranch && !isGroup;
+    S.isGroupUser = isGroup && !isBranch && !isAdminAccount;
     // Oturuma özel admin durumunu her giriş/çıkışta sıfırla (önceki oturumdan kalıntı taşınmasın)
     S._starTargetBranch = null;
     S._adminViewBranch = null;
@@ -3616,10 +3629,16 @@ function initFirebase(){
         S.branch = {username:uname, name:rec[0], lat:rec[1], lon:rec[2]};
         applyBranchLocation();
       }
-    } else if (!user){
+      S.group = null;
+    } else if (S.isGroupUser){
+      const uname = user.email.split("@")[0];
+      const rec = GRUP_TABLE[uname];
       S.branch = null;
+      S.group = rec ? {username:uname, name:rec} : null;
+    } else if (!user){
+      S.branch = null; S.group = null;
     } else {
-      S.branch = null; // admin girişinde şube durumu temiz başlasın
+      S.branch = null; S.group = null; // admin girişinde şube/departman durumu temiz başlasın
     }
     renderAuth();
     renderBranchUI();
@@ -3712,16 +3731,19 @@ function resolveBranchUsername(typed){
   return hit || raw.toLocaleLowerCase("tr-TR").replace(/[^a-z0-9._-]/g,"");
 }
 $("gateBranchBtn").onclick = ()=>{
-  const uname = resolveBranchUsername($("gateBranchUser").value);
+  const typed = $("gateBranchUser").value;
   const pass = $("gateBranchPass").value;
   const st = $("gateBranchStatus");
   const btn = $("gateBranchBtn");
+  const grupUname = String(typed||"").trim().toLocaleLowerCase("tr-TR").replace(/[^a-z0-9._-]/g,"");
+  const isGrup = !!GRUP_TABLE[grupUname];
+  const uname = isGrup ? grupUname : resolveBranchUsername(typed);
   if (!uname || !pass){ st.textContent="Kullanıcı adı ve şifre gerekli."; st.className="gate-status"; return; }
   st.textContent = ""; st.className="gate-status";
   setGateBtnLoading(btn, true, "Giriş yap");
-  const email = uname + "@" + SUBE_EMAIL_DOMAIN;
+  const email = uname + "@" + (isGrup ? GRUP_EMAIL_DOMAIN : SUBE_EMAIL_DOMAIN);
   fbAuth.signInWithEmailAndPassword(email, pass)
-    .then(()=>{ st.textContent="Giriş başarılı ✓"; st.className="gate-status ok"; logBranchLogin(uname); })
+    .then(()=>{ st.textContent="Giriş başarılı ✓"; st.className="gate-status ok"; if (!isGrup) logBranchLogin(uname); })
     .catch(e=>{
       setGateBtnLoading(btn, false, "Giriş yap");
       st.className="gate-status";
@@ -3779,8 +3801,9 @@ function applyBranchLocation(){
   initMap(); geocodeVisible();
 }
 
-// Admin bir şube seçtiğinde: S.branch'i DEĞİŞTİRMEZ (admin admin kalır),
-// sadece konumu o şubenin konumuna göre gösterir ve yıldızlama modunu otomatik açar.
+// Admin ya da departman kullanıcısı bir şube seçtiğinde: S.branch'i DEĞİŞTİRMEZ (kendi rolü kalır),
+// sadece konumu o şubenin konumuna göre gösterir. Admin'de ayrıca yıldızlama modu otomatik açılır
+// (⭐ butonu render() içinde S.isAdmin ile ayrıca korunur — departman kullanıcısı bunu görmez).
 function applyAdminBranchPreview(uname){
   const rec = SUBE_TABLE[uname];
   if (!rec) return;
@@ -3826,6 +3849,17 @@ function renderBranchUI(){
         openOnboarding();
       }
     }catch(e){ /* localStorage yoksa (gizli sekme vb.) sessizce geç */ }
+  } else if (S.isGroupUser){
+    // Departman kullanıcısı: sabit şubesi yok, üstteki isim rozetinde departman adı görünür,
+    // "Şube Seç" ile istediği şubeyi seçip o şubenin tam görünümünü (konum, harita, yakın firmalar) izler.
+    badge.hidden = false;
+    $("branchBadgeName").textContent = S.group ? S.group.name : "Kullanıcı";
+    $("locSrcBranch").hidden = true;
+    if (adminPicker) adminPicker.hidden = false;
+    if (visitBtn) visitBtn.hidden = true;
+    if (helpBtn) helpBtn.hidden = true;
+    closeVisitListScreen();
+    if (!S._adminViewBranch) setLocSource("gps");
   } else {
     badge.hidden = true;
     $("locSrcBranch").hidden = true;
@@ -3884,7 +3918,7 @@ $("onboardHelpBtn") && ($("onboardHelpBtn").onclick = openOnboarding);
 
 // ---- Ziyaret Listem görünümü: harita + liste yalnızca ziyaret listesindeki firmalar ----
 S._visitView = false;
-function visitOwnerUname(){ return S.branch ? S.branch.username : (S.isAdmin ? S._adminViewBranch : null); }
+function visitOwnerUname(){ return S.branch ? S.branch.username : ((S.isAdmin || S.isGroupUser) ? S._adminViewBranch : null); }
 function visitMapFor(){ const u = visitOwnerUname(); return (u && S.visits[u]) || {}; }
 function fmtVisitDate(ts){ try{ return new Date(ts).toLocaleDateString("tr-TR",{day:"numeric",month:"short"}); }catch(e){ return ""; } }
 function toggleVisitView(force){
@@ -3975,7 +4009,11 @@ function renderAuth(){
     if (fullPanel) fullPanel.hidden = true;
     if (userView) userView.hidden = false;
     if (adminBadge) adminBadge.hidden = true;
-    const picker = $("adminBranchPicker"); if (picker) picker.hidden = true;
+    // Departman kullanıcısı (S.isGroupUser): admin paneli yok, ama üstteki "Şube Seç" seçiciyi
+    // tıpkı admin'in Kullanıcı Görünümü'ndeki gibi kullanır.
+    const picker = $("adminBranchPicker");
+    if (picker) picker.hidden = !S.isGroupUser;
+    if (S.isGroupUser) fillAdminBranchSelect();
   }
 }
 
@@ -4842,9 +4880,9 @@ $("adminBranchSelect") && $("adminBranchSelect").addEventListener("change", ()=>
   }
   applyAdminBranchPreview(uname);
   const name = SUBE_TABLE[uname] ? SUBE_TABLE[uname][0] : uname;
-  if (hint) hint.textContent = `Konum ve yıldızlama "${name}" için aktif.`;
-  // Yönetim panelindeki istatistik seçicisini de aynı şubeye getir
-  const statSel = $("branchStatSelect");
+  if (hint) hint.textContent = S.isGroupUser ? `Konum "${name}" için aktif.` : `Konum ve yıldızlama "${name}" için aktif.`;
+  // Yönetim panelindeki istatistik seçicisini de aynı şubeye getir (sadece admin girişinde)
+  const statSel = S.isAdmin ? $("branchStatSelect") : null;
   if (statSel){ fillBranchStatSelect(); statSel.value = uname; renderAdminStats(); }
 });
 
