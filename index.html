@@ -317,8 +317,8 @@ input[type=file]{display:none}
 .data-viewer-body td.num{font-family:'IBM Plex Mono',monospace;text-align:right}
 .data-viewer-foot{padding:8px 10px;font-size:12px;color:var(--faint)}
 .data-status .ok{color:var(--exp)} .data-status .warn{color:var(--imp)}
-.branch-split{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;margin-top:10px;align-items:start}
-@media(max-width:900px){.branch-split{grid-template-columns:1fr}}
+.branch-split{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;margin-top:10px;align-items:start}
+@media(max-width:1240px){.branch-split{grid-template-columns:1fr}}
 .branch-drawer{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;position:sticky;top:0}
 .branch-drawer h3{margin:0;font-family:'Sora',sans-serif;font-size:15px}
 .branch-drawer .bd-sub{font-size:12px;color:var(--muted);margin:2px 0 10px}
@@ -350,7 +350,20 @@ input[type=file]{display:none}
 .admin-subhead-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .admin-subhead-row .admin-subhead{margin-bottom:0}
 .admin-subhead-row select{background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 9px;font-family:inherit;font-size:12.5px}
-.branch-prox-table-wrap{margin-top:10px;max-height:360px;overflow:auto;border:1px solid var(--border);border-radius:10px}
+.branch-prox-table-wrap{margin-top:10px;max-height:360px;overflow:auto;border:1px solid var(--border);border-radius:10px;
+  background:
+    linear-gradient(var(--panel) 30%, transparent), linear-gradient(transparent, var(--panel) 70%) bottom,
+    radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.28), transparent) left, radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.28), transparent) right;
+  background-repeat:no-repeat; background-color:var(--panel);
+  background-size:100% 24px, 100% 24px, 14px 100%, 14px 100%;
+  background-attachment:local, local, scroll, scroll;}
+.data-viewer-body{
+  background:
+    linear-gradient(var(--panel) 30%, transparent), linear-gradient(transparent, var(--panel) 70%) bottom,
+    radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.28), transparent) left, radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.28), transparent) right;
+  background-repeat:no-repeat; background-color:var(--panel);
+  background-size:100% 24px, 100% 24px, 14px 100%, 14px 100%;
+  background-attachment:local, local, scroll, scroll;}
 .branch-prox-table{width:100%;border-collapse:collapse;font-size:12.5px}
 .branch-prox-table th{position:sticky;top:0;background:var(--panel2);text-align:left;padding:9px 12px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;border-bottom:1px solid var(--border)}
 .branch-prox-table th:hover{color:var(--text)}
@@ -360,7 +373,10 @@ input[type=file]{display:none}
 .branch-prox-table tbody tr{cursor:pointer;transition:.1s}
 .branch-prox-table tbody tr:hover{background:var(--panel2)}
 .branch-prox-table td.num{font-family:'IBM Plex Mono',monospace;text-align:right}
-.branch-prox-table td.name{max-width:220px;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.branch-prox-table td.name{max-width:220px;overflow:hidden;text-overflow:ellipsis;font-weight:500;position:sticky;left:0;background:var(--panel);box-shadow:1px 0 0 var(--border)}
+.branch-prox-table thead th:first-child{position:sticky;left:0;z-index:2;box-shadow:1px 0 0 var(--border)}
+.branch-prox-table tbody tr:hover td.name,.branch-prox-table tbody tr.sel td.name{background:var(--panel2)}
+.branch-prox-table td,.branch-prox-table th{font-variant-numeric:tabular-nums}
 
 /* Hedef Kitleleri Yönet: kaynak kartları */
 .bulk-star{margin-top:18px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
@@ -380,6 +396,18 @@ input[type=file]{display:none}
 .audience-card-title{font-family:'Sora',sans-serif;font-weight:600;font-size:13.5px;margin-bottom:6px}
 
 /* Firma listesi + manuel birleştirme */
+.dup-suggestions[hidden]{display:none}
+.dup-suggestions{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.dup-suggestions-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+.dup-row{padding:10px 0;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.dup-row:first-of-type{border-top:none}
+.dup-names{display:flex;align-items:center;gap:10px;flex:1;min-width:260px;flex-wrap:wrap}
+.dup-name{font-weight:600;font-size:13.5px}
+.dup-vs{color:var(--faint);font-size:12px}
+.dup-why{flex:0 0 100%;font-size:12px;color:var(--muted);order:3}
+.dup-conf-high{color:var(--exp);font-weight:600}
+.dup-conf-med{color:var(--imp);font-weight:600}
+.dup-acts{display:flex;gap:6px;flex:0 0 auto}
 .merge-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}
 .merge-toolbar input[type=search]{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 12px;font-family:inherit;font-size:13px}
 .merge-selected-hint{font-size:11.5px;color:var(--faint)}
@@ -1368,6 +1396,7 @@ select:focus,input:focus{border-color:var(--exp)}
       <!-- Firmalar -->
       <div id="adminFirmsScreen" class="admin-screen" hidden>
         <div class="admin-head"><div><div class="admin-screen-title">Firmalar</div><div class="admin-screen-desc">Tüm kaynaklardan (DİİB, İlk 1000, Turquality) gelen firmalar tek listede. Aynı firmanın farklı yazımlarını burada birleştir.</div></div><button class="btn" id="firmsCsvBtn" type="button">Excel indir</button></div>
+        <div id="dupSuggestions" class="dup-suggestions" hidden></div>
         <div class="admin-subhead" style="margin-top:0">Firma listesi &amp; manuel birleştirme</div>
         <div class="hint">Aşağıda tüm kaynaklardan (DİİB, İlk 1000, Turquality) gelen firmalar tek listede. İsim farklılığı yüzünden otomatik eşleşmeyen iki kaydı seçip elle birleştirebilirsin.</div>
         <div class="merge-toolbar">
@@ -3771,6 +3800,7 @@ function showAdminScreen(targetId){
     renderDataStatus();
   } else if (targetId === "adminFirmsScreen"){
     renderMergeFirmList();
+    renderDuplicateSuggestions();
   } else if (targetId === "adminOverviewScreen"){
     renderAdminOverview();
   } else if (targetId === "adminFirmViewScreen"){
@@ -3936,6 +3966,106 @@ $("ovBranchFirmRadius") && $("ovBranchFirmRadius").addEventListener("change", ()
 // ---- Manuel Birleştirme: tüm firmaları listele, iki tanesini seçip birleştir ----
 S._mergeSelected = []; // en fazla 2 key tutar
 
+// ---- Mükerrer olabilir: isim benzerliğinden otomatik öneri (VKN'si farklı olanlar hariç) ----
+// normName() zaten şirket türü ekini (A.Ş./Ltd.Şti./Anonim Şirketi vb.) ve "VE/SAN/TİC" gibi
+// bağlaçları atıyor — bu yüzden aynı firmanın iki farklı yazımı genelde AYNI normName'i verir.
+// Bu eşleşme (yüksek güven) ve tek kelime taşan/eksik yazımlar (orta güven, gözden geçirilmeli)
+// olarak iki grupta önerilir. VKN'leri FARKLI olan iki kayıt asla önerilmez (kesin farklı firma).
+S._dupDismissed = new Set(); // bu oturumda "farklı firma" denilenler
+function computeDuplicateSuggestions(){
+  const list = aggregate();
+  const buckets = new Map(); // ilk anlamlı kelime -> [firma...]
+  for (const a of list){
+    const nk = normName(a.firma);
+    if (!nk) continue;
+    const first = nk.split(" ")[0];
+    if (!first || first.length < 3) continue;
+    if (!buckets.has(first)) buckets.set(first, []);
+    buckets.get(first).push({...a, _nk: nk});
+  }
+  const out = [];
+  const seenPairs = new Set();
+  for (const group of buckets.values()){
+    if (group.length < 2) continue;
+    for (let i=0; i<group.length; i++){
+      for (let j=i+1; j<group.length; j++){
+        const a = group[i], b = group[j];
+        if (a.key === b.key) continue;
+        const v1 = String(a.vkn||"").replace(/\D/g,""), v2 = String(b.vkn||"").replace(/\D/g,"");
+        if (v1 && v2 && v1 !== v2) continue; // farklı VKN — kesinlikle farklı firma
+        const pairId = [a.key,b.key].sort().join("\u0001");
+        if (seenPairs.has(pairId) || S._dupDismissed.has(pairId) || S.manualMerges[a.key]===b.key || S.manualMerges[b.key]===a.key) continue;
+        let conf = null, why = "";
+        if (a._nk === b._nk){ conf = "high"; why = "İsim aynı (unvan eki hariç)"; }
+        else if (a._nk.length>=8 && b._nk.startsWith(a._nk+" ")){ conf = "med"; why = `"${a.firma}" adı, diğerinin başlangıcı`; }
+        else if (b._nk.length>=8 && a._nk.startsWith(b._nk+" ")){ conf = "med"; why = `"${b.firma}" adı, diğerinin başlangıcı`; }
+        if (!conf) continue;
+        seenPairs.add(pairId);
+        out.push({a, b, pairId, conf, why});
+      }
+    }
+  }
+  out.sort((x,y)=> (x.conf===y.conf) ? 0 : (x.conf==="high" ? -1 : 1));
+  return out.slice(0, 40); // arayüz kalabalıklaşmasın diye üst sınır
+}
+function renderDuplicateSuggestions(){
+  const box = $("dupSuggestions"); if (!box) return;
+  const has = S.files.length>0 || Object.keys(S.tq).length>0 || Object.keys(S.tim).length>0;
+  if (!has){ box.hidden = true; return; }
+  const sug = computeDuplicateSuggestions();
+  if (!sug.length){ box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = `<div class="dup-suggestions-title">Mükerrer olabilir · ${sug.length} öneri</div>` +
+    sug.map(s=>{
+      const nmA = splitFirmName(s.a.firma), nmB = splitFirmName(s.b.firma);
+      return `<div class="dup-row">
+        <div class="dup-names">
+          <div class="dup-name">${nmA.main}${nmA.suffix?`<span class="nm-suffix">${nmA.suffix}</span>`:""}</div>
+          <div class="dup-vs">↔</div>
+          <div class="dup-name">${nmB.main}${nmB.suffix?`<span class="nm-suffix">${nmB.suffix}</span>`:""}</div>
+        </div>
+        <div class="dup-why">${s.why}${s.conf==="high"?` · <span class="dup-conf-high">güçlü eşleşme</span>`:` · <span class="dup-conf-med">emin değilim</span>`}</div>
+        <div class="dup-acts">
+          <button class="btn primary" type="button" data-dup-merge="${s.a.key}|${s.b.key}">Birleştir</button>
+          <button class="btn ghost" type="button" data-dup-skip="${s.pairId}">Farklı firma</button>
+        </div>
+      </div>`;
+    }).join("");
+}
+$("dupSuggestions") && $("dupSuggestions").addEventListener("click", async e=>{
+  const mergeBtn = e.target.closest("[data-dup-merge]");
+  if (mergeBtn){
+    const [k1,k2] = mergeBtn.dataset.dupMerge.split("|");
+    await mergeFirmPair(k1,k2);
+    renderDuplicateSuggestions(); renderMergeFirmList();
+    return;
+  }
+  const skipBtn = e.target.closest("[data-dup-skip]");
+  if (skipBtn){
+    S._dupDismissed.add(skipBtn.dataset.dupSkip);
+    renderDuplicateSuggestions();
+  }
+});
+// İki firmayı buluta kaydederek birleştirir — "az veri kaynağına/belgeye sahip" olan diğerine katılır.
+// Hem bu ekrandaki tek-tık öneriler hem de aşağıdaki elle iki-seçim aracı bunu kullanır.
+async function mergeFirmPair(k1, k2){
+  const all = aggregate();
+  const byKey = {}; for (const a of all) byKey[a.key] = a;
+  const a1 = byKey[k1], a2 = byKey[k2];
+  if (!a1 || !a2) return;
+  const score = a => (a.src?.diib?1:0) + (a.src?.tim?1:0) + (a.src?.tq?1:0) + (a.belge||0)*0.01;
+  const [small, big] = score(a1) <= score(a2) ? [a1,a2] : [a2,a1];
+  const current = { ...S.manualMerges, [small.key]: big.key };
+  S.manualMerges = current;
+  render();
+  try{
+    await fbDB.ref("manualMerges").set(current);
+    toast(`"${small.firma}" → "${big.firma}" ile birleştirildi`);
+  }catch(e){
+    toast("Birleştirme kaydedilemedi: "+(e.message||e.code));
+  }
+}
+
 function renderMergeFirmList(){
   const box = $("mergeFirmList");
   if (!box) return;
@@ -3986,25 +4116,11 @@ function updateMergeToolbar(){
 
 $("mergeConfirmBtn") && $("mergeConfirmBtn").addEventListener("click", async ()=>{
   if (S._mergeSelected.length !== 2) return;
-  const all = aggregate();
-  const byKey = {}; for (const a of all) byKey[a.key] = a;
   const [k1, k2] = S._mergeSelected;
-  const a1 = byKey[k1], a2 = byKey[k2];
-  if (!a1 || !a2) return;
-  // Daha az veri kaynağına sahip olan (ya da belge sayısı düşük olan) "küçük" sayılır, diğerine katılır
-  const score = a => (a.src?.diib?1:0) + (a.src?.tim?1:0) + (a.src?.tq?1:0) + (a.belge||0)*0.01;
-  const [small, big] = score(a1) <= score(a2) ? [a1,a2] : [a2,a1];
-  const current = { ...S.manualMerges, [small.key]: big.key };
-  S.manualMerges = current;
   S._mergeSelected = [];
-  render();
+  await mergeFirmPair(k1, k2);
   renderMergeFirmList();
-  try{
-    await fbDB.ref("manualMerges").set(current);
-    toast(`"${small.firma}" → "${big.firma}" ile birleştirildi`);
-  }catch(e){
-    toast("Birleştirme kaydedilemedi: "+(e.message||e.code));
-  }
+  renderDuplicateSuggestions();
 });
 
 // ---- Şube sınıflandırması: isimde "Ticari"/"Kurumsal" geçiyorsa öyle, yoksa "Kobi" ----
@@ -4422,7 +4538,7 @@ function loadCloud(){
     renderFiles(); refreshPeriodOptions(); render(); updateSaveRow();
     renderAdminOverview(); // Genel Bakış (Toplam Firma sayısı + harita) veri gelince tazelensin
     renderDataStatus();
-    if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden) renderMergeFirmList();
+    if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); }
     maybeAutoLocation();
     // Şube girişinde konum veri gelmeden önce ayarlanmış olabilir; veri gelince mesafeleri tazele
     if (S.branch && S.userLoc) geocodeVisible();
@@ -4432,12 +4548,12 @@ function loadCloud(){
   // İlk 1000 listesini buluttan yükle
   cloudOn("tim", snap=>{
     const v = snap.val();
-    if (v && v.map && !S.timDirty){ S.tim = v.map; S.timYear = v.year||""; S.timUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden) renderMergeFirmList(); refreshTimChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
+    if (v && v.map && !S.timDirty){ S.tim = v.map; S.timYear = v.year||""; S.timUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); } refreshTimChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
   });
   // Turquality listesini buluttan yükle
   cloudOn("tq", snap=>{
     const v = snap.val();
-    if (v && v.map && !S.tqDirty){ S.tq = v.map; S.tqUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden) renderMergeFirmList(); refreshTqChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
+    if (v && v.map && !S.tqDirty){ S.tq = v.map; S.tqUpdated = v.updated||0; renderDataStatus(); if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); } refreshTqChip(); render(); renderAdminOverview(); if (S.branch && S.userLoc) geocodeVisible(); }
   });
   // Yıldız / Önemli / Ziyaret / Giriş kayıtları: admin tüm şubeleri, şube hesabı yalnızca KENDİ düğümünü
   // dinler (kurallar başka şubenin verisini okumaya izin vermez).
@@ -4461,7 +4577,7 @@ function loadCloud(){
   cloudOn("manualMerges", snap=>{
     S.manualMerges = snap.val() || {};
     render();
-    if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden) renderMergeFirmList();
+    if ($("adminFirmsScreen") && !$("adminFirmsScreen").hidden){ renderMergeFirmList(); renderDuplicateSuggestions(); }
   });
 }
 
