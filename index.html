@@ -375,7 +375,7 @@ input[type=file]{display:none}
   background-size:100% 24px, 100% 24px, 14px 100%, 14px 100%;
   background-attachment:local, local, scroll, scroll;}
 .branch-prox-table{width:100%;border-collapse:collapse;font-size:12.5px}
-.branch-prox-table th{position:sticky;top:0;background:var(--panel2);text-align:left;padding:9px 12px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;border-bottom:1px solid var(--border)}
+.branch-prox-table th{position:sticky;top:var(--bst-h,0px);background:var(--panel2);text-align:left;padding:9px 12px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;border-bottom:1px solid var(--border)}
 .branch-prox-table th:hover{color:var(--text)}
 .branch-prox-table th.active{color:var(--exp)}
 .branch-prox-table th .sort-arrow{font-size:10px;margin-left:3px;opacity:.7}
@@ -384,7 +384,10 @@ input[type=file]{display:none}
 .branch-prox-table tbody tr:hover{background:var(--panel2)}
 .branch-prox-table td.num{font-family:'IBM Plex Mono',monospace;text-align:right}
 .branch-prox-table td.name{max-width:220px;overflow:hidden;text-overflow:ellipsis;font-weight:500;position:sticky;left:0;background:var(--panel);box-shadow:1px 0 0 var(--border)}
-.branch-prox-table thead th:first-child{position:sticky;left:0;z-index:2;box-shadow:1px 0 0 var(--border)}
+.branch-prox-table thead th:first-child{position:sticky;left:0;z-index:3;box-shadow:1px 0 0 var(--border)}
+#adminBranchesScreen{--bst-h:0px}
+.branches-sticky-top{position:sticky;top:0;z-index:6;background:var(--panel2);padding-top:2px;margin:-2px -2px 0;padding-left:2px;padding-right:2px}
+.branches-sticky-top .branch-strip{margin-bottom:10px}
 .branch-prox-table tbody tr:hover td.name,.branch-prox-table tbody tr.sel td.name{background:var(--panel2)}
 .branch-prox-table td,.branch-prox-table th{font-variant-numeric:tabular-nums}
 /* Kısa içerikli sütunlar (sayı/tarih) kendi içeriğine sıkışsın, geniş sütunlara (Şube, İhracat) yer açsın */
@@ -1291,6 +1294,7 @@ select:focus,input:focus{border-color:var(--exp)}
 
       <!-- Şubeler -->
       <div id="adminBranchesScreen" class="admin-screen" hidden>
+        <div class="branches-sticky-top" id="branchesStickyTop">
         <div class="admin-head">
           <div><div class="admin-screen-title">Şubeler</div><div class="admin-screen-desc">Bir şubeye tıkla; yıldızlarını, ziyaret listesini ve çevresindeki potansiyeli sağda gör.</div></div>
           <div class="admin-head-actions">
@@ -1322,6 +1326,7 @@ select:focus,input:focus{border-color:var(--exp)}
         </div>
 
         <div id="branchStrip" class="branch-strip empty">Listeden bir şube seç; yıldızlarını, ziyaret listesini ve giriş geçmişini burada gör.</div>
+        </div>
         <div id="branchTableWrap" class="branch-prox-table-wrap"><div class="branch-stats-empty">Hesaplanıyor…</div></div>
         <div hidden>
         <div class="branch-mgmt-row">
@@ -4294,6 +4299,16 @@ function renderBranchDrawer(){
   };
 }
 $("bulkStarToggle") && ($("bulkStarToggle").onclick = ()=>{ const c=$("bulkStarCard"); c.hidden = !c.hidden; $("bulkStarToggle").classList.toggle("open", !c.hidden); });
+// Şubeler ekranı: başlık+sekmeler+seçili şube şeridi ("branches-sticky-top") üstte sabit kalır;
+// tablo başlığı (th) da hemen altına sabitlenir. Üst bloğun yüksekliği şube seçilince (şerit
+// büyür) ya da Excel paneli açılınca değişir — ResizeObserver ile izlenip --bst-h güncellenir,
+// tablo başlığı elle senkronize edilmeye gerek kalmadan doğru yerde kalır.
+(function(){
+  const top = $("branchesStickyTop"), scr = $("adminBranchesScreen");
+  if (!top || !scr || !window.ResizeObserver) return;
+  const ro = new ResizeObserver(entries=>{ scr.style.setProperty("--bst-h", entries[0].contentRect.height+"px"); });
+  ro.observe(top);
+})();
 // Veri Yükleme: her kaynağın durumu
 function renderDataStatus(){
   const months = loadedMonths();
