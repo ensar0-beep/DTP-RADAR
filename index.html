@@ -1219,7 +1219,7 @@ select:focus,input:focus{border-color:var(--exp)}
       <div class="admin-sidebar-sep"></div>
       <button class="admin-nav-item" id="navFirmView" type="button" data-target="adminFirmViewScreen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.5-7-11a7 7 0 1 1 14 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-        Firma Görünümü
+        Kullanıcı Görünümü
       </button>
     </nav>
 
@@ -3616,6 +3616,9 @@ function applyAdminBranchPreview(uname){
   const rec = SUBE_TABLE[uname];
   if (!rec) return;
   showMapLoadingOverlay();
+  // "Şu Anki Konumum" kartı admin girişinde varsayılan olarak "Aktif" görünüyordu; bir şube
+  // seçilince konumu artık o şube belirlediği için yanıltıcı olmasın diye kaldırılır.
+  const gBtn = $("locSrcGps"); if (gBtn) gBtn.classList.remove("active");
   S._adminViewBranch = uname;
   S.userLoc = {lat:rec[1], lon:rec[2]};
   S._locSource = "branch";
@@ -3659,6 +3662,7 @@ function renderBranchUI(){
     $("locSrcBranch").hidden = true;
     if (visitBtn) visitBtn.hidden = true;
     if (helpBtn) helpBtn.hidden = true;
+    if (adminPicker) adminPicker.hidden = !S.isAdmin; // sadece admin girişinde: Kullanıcı Görünümü'ndeki şube seçici
     closeVisitListScreen();
     setLocSource("gps");
   }
@@ -3784,8 +3788,10 @@ function renderAuth(){
     if (adminBadge) adminBadge.hidden = true; // topbar zaten kimliği gösteriyor, header rozetine gerek yok
     fillAdminBranchSelect();
     renderAdminOverview();
+    // Kullanıcı Görünümü'ne girince admin bir şubeyi seçip tıpkı o şubenin kendi girişindeki gibi
+    // (konum, harita, yakın firmalar) görebilsin diye seçici burada her zaman açık kalır.
     const picker = $("adminBranchPicker");
-    if (picker) picker.hidden = true; // konum kartı zaten görünmüyor ama güvence
+    if (picker) picker.hidden = false;
     if (Object.keys(S.tim).length && S.timDirty) $("timSaveRow").style.display="";
     if (Object.keys(S.tq).length && S.tqDirty) $("tqSaveRow").style.display="";
   } else {
@@ -4491,6 +4497,7 @@ $("adminBranchSelect") && $("adminBranchSelect").addEventListener("change", ()=>
     S._adminViewBranch = null;
     S._starTargetBranch = null;
     if (hint) hint.textContent = "";
+    const gBtn = $("locSrcGps"); if (gBtn) gBtn.classList.add("active"); // şube seçimi kaldırılınca "Şu Anki Konumum" tekrar aktif görünsün
     render();
     return;
   }
