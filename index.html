@@ -327,15 +327,21 @@ input[type=file]{display:none}
 .data-viewer-body td.num{font-family:'IBM Plex Mono',monospace;text-align:right}
 .data-viewer-foot{padding:8px 10px;font-size:12px;color:var(--faint)}
 .data-status .ok{color:var(--exp)} .data-status .warn{color:var(--imp)}
-.branch-split{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;margin-top:10px;align-items:start}
-@media(max-width:1240px){.branch-split{grid-template-columns:1fr}}
-.branch-drawer{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;position:sticky;top:0}
-.branch-drawer h3{margin:0;font-family:'Sora',sans-serif;font-size:15px}
-.branch-drawer .bd-sub{font-size:12px;color:var(--muted);margin:2px 0 10px}
-.branch-drawer .bd-stat{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--border);font-size:12.5px}
-.branch-drawer .bd-stat span:last-child{font-family:'IBM Plex Mono',monospace;color:var(--text);text-align:right}
-.branch-drawer .bd-logins{margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);line-height:1.7}
-.branch-drawer .btn{width:100%;justify-content:center;margin-top:8px}
+.branch-strip{display:flex;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin:10px 0 14px;gap:0}
+.branch-strip.empty{padding:13px 18px;color:var(--muted);font-size:13px}
+.bs-who{display:flex;flex-direction:column;gap:3px;padding-right:20px;flex:0 0 auto;white-space:nowrap}
+.bs-who b{font-family:'Sora',sans-serif;font-size:15px}
+.bs-who span{font-size:11.5px;color:var(--muted)}
+.bs-kpis{display:flex;flex:1;border-left:1px solid var(--border);border-right:1px solid var(--border);padding:0 4px;overflow-x:auto}
+.bs-kpi{flex:1;min-width:88px;text-align:center;padding:2px 10px;border-right:1px solid var(--border)}
+.bs-kpi:last-child{border-right:none}
+.bs-kpi .k{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+.bs-kpi .v{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bs-kpi .v small{font-family:'IBM Plex Sans',sans-serif;font-size:10px;color:var(--faint);font-weight:400}
+.bs-acts{padding-left:20px;flex:0 0 auto;display:flex;gap:7px;align-items:center}
+.bs-acts .btn{padding:9px 14px;font-size:12.5px}
+.bs-acts .btn.icon{padding:0;width:34px;height:34px;border-radius:50%;justify-content:center;flex:0 0 auto}
+@media(max-width:900px){.branch-strip{flex-wrap:wrap;row-gap:10px}.bs-who{padding-right:0}.bs-kpis{border:none;flex-basis:100%;order:3;justify-content:flex-start;padding:10px 0 0;border-top:1px solid var(--border)}.bs-acts{padding-left:auto;margin-left:auto}}
 .bulk-star[hidden]{display:none}
 .branch-prox-table tbody tr.sel td{background:rgba(53,196,168,.07)}
 .admin-subhead{font-family:'Sora',sans-serif;font-weight:600;font-size:13.5px;margin-top:26px;margin-bottom:8px;color:var(--text)}
@@ -1317,10 +1323,8 @@ select:focus,input:focus{border-color:var(--exp)}
           <button class="branch-class-tab" data-class="kobi" type="button">Kobi Şube <span class="bct-count" id="bctKobi">0</span></button>
         </div>
 
-        <div class="branch-split">
-          <div id="branchTableWrap" class="branch-prox-table-wrap"><div class="branch-stats-empty">Hesaplanıyor…</div></div>
-          <div id="branchDrawer" class="branch-drawer"><div class="branch-stats-empty">Listeden bir şube seç.</div></div>
-        </div>
+        <div id="branchStrip" class="branch-strip empty">Listeden bir şube seç; yıldızlarını, ziyaret listesini ve giriş geçmişini burada gör.</div>
+        <div id="branchTableWrap" class="branch-prox-table-wrap"><div class="branch-stats-empty">Hesaplanıyor…</div></div>
         <div hidden>
         <div class="branch-mgmt-row">
           <select id="branchStatSelect"><option value="">— Şube seç —</option></select>
@@ -4246,9 +4250,14 @@ function renderBranchTable(){
   }, 0);
 }
 function renderBranchDrawer(){
-  const box = $("branchDrawer"); if (!box) return;
+  const box = $("branchStrip"); if (!box) return;
   const uname = S._branchDrawer;
-  if (!uname || !SUBE_TABLE[uname]){ box.innerHTML = `<div class="branch-stats-empty">Listeden bir şube seç; yıldızları, ziyaret listesi ve giriş geçmişi burada görünür.</div>`; return; }
+  if (!uname || !SUBE_TABLE[uname]){
+    box.className = "branch-strip empty";
+    box.textContent = "Listeden bir şube seç; yıldızlarını, ziyaret listesini ve giriş geçmişini burada gör.";
+    return;
+  }
+  box.className = "branch-strip";
   const name = SUBE_TABLE[uname][0], cls = branchClassOf(name);
   const logs = S.loginLogs[uname] ? Object.values(S.loginLogs[uname]).map(l=>l.ts).filter(Boolean).sort((a,b)=>b-a) : [];
   const fmtDate = ts => new Date(ts).toLocaleString("tr-TR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
@@ -4258,22 +4267,32 @@ function renderBranchDrawer(){
   const planned = vis.filter(v=>v.status==="planned").length, done = vis.filter(v=>v.status==="done").length;
   const rad = $("branchProxRadiusSel") ? $("branchProxRadiusSel").value : "5";
   const prox = computeBranchProximityStats(+rad).find(r=>r.uname===uname);
-  box.innerHTML = `<h3>${name}</h3><div class="bd-sub">${BRANCH_CLASS_LABEL[cls]} · kullanıcı: ${uname}</div>
-    <div class="bd-stat"><span>≤ ${rad} km firma</span><span>${prox?prox.count:"—"}</span></div>
-    <div class="bd-stat"><span>Öngörülen ihracat (${rad} km)</span><span>${prox?fmt$(prox.exp):"—"}</span></div>
-    <div class="bd-stat"><span>Yıldızlı hedef</span><span>${stars}</span></div>
-    <div class="bd-stat"><span>Ziyaret listesi</span><span>${vis.length} firma · ${planned} planlı · ${done} edildi</span></div>
-    <div class="bd-stat"><span>Önemli işaretleri</span><span>${imp}</span></div>
-    <div class="bd-stat"><span>Giriş</span><span>${logs.length}${logs.length?` · son: ${fmtDate(logs[0])}`:""}</span></div>
-    ${logs.length?`<div class="bd-logins">${logs.slice(0,5).map(t=>"↳ "+fmtDate(t)).join("<br>")}${logs.length>5?`<br>… ${logs.length-5} giriş daha`:""}</div>`:""}
-    <button class="btn primary" type="button" id="bdOpenFirmView">${ic('star')} Firma görünümünde aç ve yıldızla</button>
-    ${stars?`<button class="btn" type="button" id="bdClearStars">${ic('trash')} Yıldızları temizle (${stars})</button>`:""}`;
+  box.innerHTML = `
+    <div class="bs-who"><b>${name}</b><span>${BRANCH_CLASS_LABEL[cls]} · ${uname}</span></div>
+    <div class="bs-kpis">
+      <div class="bs-kpi" title="≤ ${rad} km içindeki firma sayısı"><div class="k">≤${rad}km Firma</div><div class="v">${prox?prox.count:"—"}</div></div>
+      <div class="bs-kpi" title="Öngörülen ihracat (≤ ${rad} km)"><div class="k">İhracat</div><div class="v">${prox?fmtM(prox.exp):"—"}</div></div>
+      <div class="bs-kpi" title="Yıldızlı hedef firma sayısı"><div class="k">Yıldız</div><div class="v">${stars}</div></div>
+      <div class="bs-kpi" title="${vis.length} firma · ${planned} planlı · ${done} edildi"><div class="k">Ziyaret</div><div class="v">${vis.length}${vis.length?` <small>(${planned}p)</small>`:""}</div></div>
+      <div class="bs-kpi" title="Şubenin kendi işaretlediği önemli firmalar"><div class="k">Önemli</div><div class="v">${imp}</div></div>
+      <div class="bs-kpi" title="${logs.length?`Son giriş: ${fmtDate(logs[0])}`:"Henüz giriş yok"}"><div class="k">Giriş</div><div class="v">${logs.length}</div></div>
+    </div>
+    <div class="bs-acts">
+      <button class="btn primary" type="button" id="bdOpenFirmView" title="Firma görünümünde aç ve yıldızla">${ic('star')} Yıldızla</button>
+      ${stars?`<button class="btn icon" type="button" id="bdClearStars" title="Yıldızları temizle (${stars})">${ic('trash')}</button>`:""}
+      <button class="btn icon" type="button" id="bdClose" title="Kapat">${ic('x')}</button>
+    </div>`;
   $("bdOpenFirmView").onclick = ()=> goToBranchFromProxTable(uname);
   const clr = $("bdClearStars");
   if (clr) clr.onclick = async ()=>{
     if (!confirm(`${name} için ${stars} yıldız silinsin mi?`)) return;
     try{ await fbDB.ref("starred/"+uname).set({}); S.starred = {...S.starred, [uname]:{}}; render(); renderAdminStats(); toast("Yıldızlar temizlendi"); }
     catch(e){ toast("Silinemedi: "+(e.message||e.code)); }
+  };
+  $("bdClose").onclick = ()=>{
+    S._branchDrawer = null;
+    renderBranchDrawer();
+    document.querySelectorAll("#branchTableWrap tbody tr.sel").forEach(tr=>tr.classList.remove("sel"));
   };
 }
 $("bulkStarToggle") && ($("bulkStarToggle").onclick = ()=>{ const c=$("bulkStarCard"); c.hidden = !c.hidden; $("bulkStarToggle").classList.toggle("open", !c.hidden); });
