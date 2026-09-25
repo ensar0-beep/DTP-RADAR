@@ -3222,6 +3222,10 @@ function maybeAutoLocation(){
 // panelinde onaylı listeye eklendi. Tek katman yeterli (Esri'deki gibi ayrı etiket katmanı yok).
 const CARTO_ATTR = "© OpenStreetMap © CARTO";
 const CARTO_API_KEY = "cb1_2ffl_1_c0f43ad5fb5e72c7905db246";
+// Uygulamadaki TÜM haritalar (ana harita + admin Genel Bakış haritası) Türkiye ile sınırlı kalsın —
+// dışına kaydırılamaz/uzaklaşılamaz. Sınıra biraz pay bırakıldı (komşu ülkelerin kıyısı hafif görünsün).
+const TURKEY_BOUNDS = [[35.0, 24.5], [43.0, 45.5]];
+const TURKEY_MIN_ZOOM = 6;
 function currentMapTileUrls(){
   const isLight = document.documentElement.getAttribute("data-theme")==="light";
   const style = isLight ? "light_all" : "dark_all";
@@ -3257,7 +3261,8 @@ function hideMapLoadingOverlay(){
 
 function initMap(){
   if (S.map){ setTimeout(()=>S.map.invalidateSize(), 60); return; }
-  S.map = L.map("map", {scrollWheelZoom:true}).setView([S.userLoc.lat,S.userLoc.lon], 9);
+  S.map = L.map("map", {scrollWheelZoom:true, minZoom:TURKEY_MIN_ZOOM, maxBoundsViscosity:1}).setView([S.userLoc.lat,S.userLoc.lon], 9);
+  S.map.setMaxBounds(TURKEY_BOUNDS);
   S.mapTileLayers = addBaseTileLayers(S.map);
   // Konteyner display:none iken oluşturulduysa boyutu 0 kalır; görünür olunca düzelt.
   setTimeout(()=>S.map.invalidateSize(), 120);
@@ -3886,9 +3891,8 @@ function renderAdminOverviewMap(){
     // olduğunda showAdminScreen() zaten renderAdminOverview()'i tekrar çağırıyor.
     if (!el.offsetParent) return;
     // Binlerce firma noktası SVG ile yavaşlar — canvas renderer performansı ciddi artırır.
-    S._adminOvMap = L.map("adminOverviewMap", {scrollWheelZoom:true, renderer:L.canvas({padding:0.5}), minZoom:6, maxBoundsViscosity:1}).setView([39.0, 35.2], 6);
-    // Harita sadece Türkiye ile sınırlı kalsın — dünyanın geri kalanına kaydırılamaz/uzaklaşılamaz
-    S._adminOvMap.setMaxBounds(L.latLngBounds([35.0, 24.5], [43.0, 45.5]));
+    S._adminOvMap = L.map("adminOverviewMap", {scrollWheelZoom:true, renderer:L.canvas({padding:0.5}), minZoom:TURKEY_MIN_ZOOM, maxBoundsViscosity:1}).setView([39.0, 35.2], 6);
+    S._adminOvMap.setMaxBounds(TURKEY_BOUNDS);
     S._adminOvTileLayers = addBaseTileLayers(S._adminOvMap);
     S._adminOvMap.on("zoomend", updateOvBranchLabels);
   } else if (el.offsetParent){
