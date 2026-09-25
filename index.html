@@ -727,6 +727,24 @@ select:focus,input:focus{border-color:var(--exp)}
 .ann-fields input,.ann-fields select{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 11px;font-family:inherit;font-size:13px}
 .ann-status{font-size:12px;color:var(--muted)}
 .ann-status.ok{color:var(--exp)}
+.ann-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.ann-stat{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center}
+.ann-stat .v{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:600}
+.ann-stat .k{font-size:11px;color:var(--muted);margin-top:2px}
+.ann-stat.click .v{color:var(--exp)}
+.ann-stat.dismiss .v{color:var(--imp)}
+.ann-detail-list{margin-top:12px;font-size:12.5px}
+.ann-detail-list summary{cursor:pointer;color:var(--muted);list-style:none}
+.ann-detail-list summary::before{content:"▸ ";color:var(--faint)} .ann-detail-list[open] summary::before{content:"▾ "}
+.ann-branch-rows{margin-top:8px;max-height:280px;overflow-y:auto;border-top:1px solid var(--border)}
+.ann-branch-row{display:flex;align-items:center;gap:10px;padding:7px 2px;border-bottom:1px solid var(--border)}
+.ann-branch-row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ann-branch-row .t{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint);flex:0 0 auto}
+.ann-st{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:6px;flex:0 0 auto}
+.ann-st-none{background:var(--panel2);color:var(--faint)}
+.ann-st-seen{background:rgba(139,150,175,.15);color:var(--muted)}
+.ann-st-click{background:rgba(53,196,168,.15);color:var(--exp)}
+.ann-st-dismiss{background:rgba(232,163,61,.15);color:var(--imp)}
 .onboard-card{position:relative;width:100%;max-width:420px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:32px 28px 24px;box-shadow:0 24px 70px rgba(0,0,0,.45);text-align:center}
 .onboard-close{position:absolute;top:12px;right:12px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}
 .onboard-close:hover{color:var(--text);border-color:var(--exp)}
@@ -4480,16 +4498,48 @@ function renderAnnouncementAdmin(){
   }
   box.className = "ann-current";
   const date = new Date(a.createdAt).toLocaleString("tr-TR", {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+
+  // Kim gördü / tıkladı / doğrudan kapattı — hedef kitledeki (target) şubelere göre
+  const views = (S.announcementViews && S.announcementViews[a.id]) || {};
+  const eligible = Object.entries(SUBE_TABLE).filter(([,rec]) => a.target==="all" || branchClassOf(rec[0])===a.target);
+  let clicked=0, dismissed=0;
+  const rows = eligible.map(([uname,rec])=>{
+    const v = views[uname];
+    if (v && v.action==="clicked") clicked++;
+    else if (v && v.action==="dismissed") dismissed++;
+    return {uname, name:rec[0], v};
+  });
+  const seenCount = rows.filter(r=>r.v).length;
+  const notSeenCount = eligible.length - seenCount;
+  rows.sort((x,y)=>{
+    const rank = r => r.v ? (r.v.action==="clicked"?0:(r.v.action==="dismissed"?1:2)) : 3;
+    return rank(x)-rank(y) || (y.v?y.v.seenAt:0)-(x.v?x.v.seenAt:0);
+  });
+  const fmtT = ts => ts ? new Date(ts).toLocaleString("tr-TR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}) : "";
+  const statusOf = v => !v ? `<span class="ann-st ann-st-none">Görmedi</span>`
+    : v.action==="clicked" ? `<span class="ann-st ann-st-click">Tıkladı</span>`
+    : v.action==="dismissed" ? `<span class="ann-st ann-st-dismiss">Kapattı</span>`
+    : `<span class="ann-st ann-st-seen">Gördü</span>`;
+
   box.innerHTML = `<div class="ann-current-head"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:var(--exp)"><path d="M3 11v3a1 1 0 001 1h2l4 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M15 8a4 4 0 010 8M18.5 5.5a8 8 0 010 13"/></svg><b>Yayında</b></div>
     <div class="ann-current-body">
       <img src="${a.imageData}" alt="">
       <div class="ann-current-meta">
         Link: <a href="${a.link}" target="_blank" rel="noopener">${a.link}</a><br>
-        Hedef: ${ANN_TARGET_LABEL[a.target] || a.target}<br>
+        Hedef: ${ANN_TARGET_LABEL[a.target] || a.target} (${eligible.length} şube)<br>
         Yayın tarihi: ${date}<br>
         <button class="btn" type="button" id="annEndBtn" style="margin-top:8px">Kampanyayı bitir</button>
       </div>
-    </div>`;
+    </div>
+    <div class="ann-stats">
+      <div class="ann-stat"><div class="v">${seenCount}</div><div class="k">Gördü</div></div>
+      <div class="ann-stat click"><div class="v">${clicked}</div><div class="k">Tıkladı</div></div>
+      <div class="ann-stat dismiss"><div class="v">${dismissed}</div><div class="k">Doğrudan kapattı</div></div>
+      <div class="ann-stat"><div class="v">${notSeenCount}</div><div class="k">Henüz görmedi</div></div>
+    </div>
+    <details class="ann-detail-list"><summary>Şube bazında dökümü gör (${eligible.length})</summary>
+      <div class="ann-branch-rows">${rows.map(r=>`<div class="ann-branch-row"><span class="nm">${r.name}</span>${statusOf(r.v)}<span class="t">${r.v?fmtT(r.v.actionAt||r.v.seenAt):""}</span></div>`).join("")}</div>
+    </details>`;
   $("annEndBtn").onclick = endAnnouncement;
 }
 
@@ -4508,12 +4558,17 @@ function maybeShowAnnouncement(){
   $("annOverlayImg").src = a.imageData;
   $("annOverlayLink").href = a.link;
   $("annOverlay").hidden = false;
-  const dismiss = ()=>{
+  // Görüldüğü anda kaydedilir (action henüz yok); kapatma/tıklama ayrıca işaretlenir —
+  // yönetim böylece "gördü ama kapattı" ile "gördü ve tıkladı"yı ayırt edebilir.
+  const viewRef = fbDB.ref(`announcementViews/${a.id}/${S.branch.username}`);
+  viewRef.set({ seenAt: Date.now(), action: null }).catch(()=>{});
+  const dismiss = (action)=>{
     $("annOverlay").hidden = true;
     try{ localStorage.setItem("dtr-ann-seen-"+a.id, "1"); }catch(e){}
+    viewRef.update({ action, actionAt: Date.now() }).catch(()=>{});
   };
-  $("annOverlayClose").onclick = dismiss;
-  $("annOverlayLink").onclick = dismiss;
+  $("annOverlayClose").onclick = ()=> dismiss("dismissed");
+  $("annOverlayLink").onclick = ()=> dismiss("clicked");
 }
 
 // Veri Yükleme: her kaynağın durumu
@@ -4853,6 +4908,7 @@ function loadCloud(){
     cloudOn("important", snap=>{ S.important = snap.val() || {}; render(); renderAdminStats(); });
     cloudOn("visits", snap=>{ S.visits = snap.val() || {}; render(); renderAdminStats(); });
     cloudOn("loginLogs", snap=>{ S.loginLogs = snap.val() || {}; renderAdminStats(); });
+    cloudOn("announcementViews", snap=>{ S.announcementViews = snap.val() || {}; if ($("adminAnnouncementsScreen") && !$("adminAnnouncementsScreen").hidden) renderAnnouncementAdmin(); });
   } else if (uname){
     cloudOn("starred/"+uname, snap=>{ if (!S.starredDirty){ S.starred = {[uname]: snap.val() || {}}; render(); } });
     cloudOn("important/"+uname, snap=>{ S.important = {[uname]: snap.val() || {}}; render(); });
