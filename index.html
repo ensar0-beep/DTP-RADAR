@@ -64,7 +64,8 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 .wrap{max-width:1100px;margin:0 auto;padding:20px 14px 80px}
 header{padding:20px 0 22px;position:relative}
 .header-right-row{position:absolute;top:2px;right:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 20px)}
-.header-account,.header-tools{display:contents} /* masaüstünde sarmalayıcılar görünmez; mobilde iki ayrı satıra dönüşür */
+/* Ziyaret Listem, şube rozeti + Çıkış, rehber ve tema ikonları artık profil menüsünde (her ekranda) */
+.header-account,.header-tools{display:none}
 .theme-toggle{flex:0 0 auto;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:50%;width:34px;height:34px;font-size:15px;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;line-height:1}
 /* Emoji yerine kullanılan satır-içi SVG ikonlar (bkz. ICONS) — currentColor, metinle aynı boyut/hizada akar */
 .ic{width:1em;height:1em;vertical-align:-0.15em;flex:0 0 auto}
@@ -88,10 +89,43 @@ h1{font-family:'Sora',sans-serif;font-size:26px;letter-spacing:-.02em}
 .brand-sub{font-size:11.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
 /* Mobilde kaydırılınca görünen küçük üst çubuk — sadece @media(max-width:560px) içinde görünür kılınır */
 .mobile-sticky-brand{display:none}
-/* Mobil profil rozeti ve alt çekmece menüsü — masaüstünde tamamen gizli,
-   yalnızca @media(max-width:560px) içinde görünür kılınır. */
-.profile-avatar{display:none}
-.profile-sheet,.profile-sheet-scrim{display:none}
+/* Profil rozeti ve menüsü. Masaüstünde rozetin altında açılan bir kart (konumu JS ile
+   rozete göre hesaplanır), mobilde alt çekmece (bkz. @media 560px). */
+.profile-avatar{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+  width:36px;height:36px;padding:0;border-radius:50%;cursor:pointer;
+  background:color-mix(in srgb,var(--exp) 16%,transparent);
+  border:1px solid color-mix(in srgb,var(--exp) 42%,transparent);
+  color:var(--exp);font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:700;transition:.15s}
+.profile-avatar[hidden]{display:none!important}
+.profile-avatar:hover{background:color-mix(in srgb,var(--exp) 26%,transparent)}
+.profile-avatar.on{background:var(--exp);color:var(--panel);border-color:var(--exp)}
+/* Ziyaret listesinde firma varsa rozetin köşesinde küçük işaret */
+.pa-ping{position:absolute;top:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:var(--imp);border:2px solid var(--bg)}
+.pa-ping[hidden]{display:none!important}
+.profile-sheet-scrim{position:fixed;inset:0;z-index:2400;background:transparent}
+.profile-sheet-scrim[hidden]{display:none!important}
+.profile-sheet{position:fixed;z-index:2500;width:238px;background:var(--panel);border:1px solid var(--border);
+  border-radius:13px;box-shadow:0 22px 48px rgba(0,0,0,.30);padding:5px;animation:fade .14s ease}
+.profile-sheet[hidden]{display:none!important}
+.ps-grab{display:none}
+.ps-head{display:flex;align-items:center;gap:11px;padding:11px 12px 9px}
+.ps-av{flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--exp) 16%,transparent);border:1px solid color-mix(in srgb,var(--exp) 42%,transparent);color:var(--exp);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ps-who{min-width:0}
+.ps-who b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ps-who small{display:block;color:var(--faint);font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.ps-sep{height:1px;background:var(--border);margin:4px 3px}
+.ps-row{display:flex;align-items:center;gap:11px;width:100%;background:none;border:none;color:var(--text);
+  font-family:inherit;font-size:13px;text-align:left;padding:10px 12px;cursor:pointer;border-radius:9px}
+.ps-row[hidden]{display:none!important}
+.ps-row:hover{background:var(--panel2)}
+.ps-row svg{width:16px;height:16px;stroke:var(--muted);flex:0 0 auto}
+.ps-row .ps-lbl{flex:1;min-width:0}
+.ps-row .ps-val{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--faint)}
+.ps-visit svg{stroke:var(--imp)}
+.ps-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--imp);background:color-mix(in srgb,var(--imp) 18%,transparent);border-radius:20px;padding:1px 8px}
+.ps-badge[hidden]{display:none!important}
+.ps-out{color:var(--danger)}
+.ps-out svg{stroke:var(--danger)}
 .tagline{color:var(--muted);font-size:13px;margin-top:12px}
 .intro-row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
 .tagline-lead{color:var(--muted);font-size:13px;flex:1;min-width:180px;line-height:1.5}
@@ -938,44 +972,25 @@ select:focus,input:focus{border-color:var(--exp)}
   .mobile-sticky-brand .msb-name{flex:1;min-width:0;font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .mobile-sticky-brand .msb-name b{color:var(--exp);font-weight:700}
   .mobile-sticky-brand .msb-avatar{width:28px;height:28px;font-size:10.5px}
-  /* --- Profil rozeti (başlıkta ve sabit üst çubukta) --- */
-  .profile-avatar{display:flex;align-items:center;justify-content:center;flex:0 0 auto;
-    width:32px;height:32px;padding:0;border-radius:50%;cursor:pointer;
-    background:color-mix(in srgb,var(--exp) 16%,transparent);
-    border:1px solid color-mix(in srgb,var(--exp) 42%,transparent);
-    color:var(--exp);font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:700}
-  .profile-avatar[hidden]{display:none!important}
-  .profile-avatar.on{background:var(--exp);color:var(--bg);border-color:var(--exp)}
-  /* Mobilde hesap şeridi ve ikon düğmeleri profil menüsüne taşındı */
-  .header-tools,.header-account{display:none}
-  /* --- Alt çekmece --- */
-  .profile-sheet-scrim{display:block;position:fixed;inset:0;z-index:2400;background:rgba(5,8,15,.55);animation:fade .16s ease}
-  .profile-sheet-scrim[hidden]{display:none!important}
-  .profile-sheet{display:block;position:fixed;left:0;right:0;bottom:0;z-index:2500;
-    background:var(--panel);border-top:1px solid var(--border);border-radius:18px 18px 0 0;
+  /* Mobilde menü, rozetin altındaki kart yerine alt çekmeceye dönüşür (taban stiller ortak) */
+  .profile-avatar{width:32px;height:32px;font-size:11.5px}
+  .profile-avatar.on{color:var(--bg)}
+  .profile-sheet-scrim{background:rgba(5,8,15,.55);animation:fade .16s ease}
+  .profile-sheet{left:0;right:0;bottom:0;top:auto!important;width:auto;
+    border-radius:18px 18px 0 0;border-top:1px solid var(--border);
     box-shadow:0 -16px 44px rgba(0,0,0,.36);
     padding:6px 8px calc(16px + env(safe-area-inset-bottom, 0px));
     animation:sheetup .22s cubic-bezier(.32,.72,0,1)}
-  .profile-sheet[hidden]{display:none!important}
-  .ps-grab{width:34px;height:4px;border-radius:3px;background:var(--border);margin:6px auto 2px}
-  .ps-head{display:flex;align-items:center;gap:11px;padding:12px 12px 10px}
-  .ps-av{flex:0 0 auto;width:36px;height:36px;border-radius:50%;background:color-mix(in srgb,var(--exp) 16%,transparent);border:1px solid color-mix(in srgb,var(--exp) 42%,transparent);color:var(--exp);font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
-  .ps-who{min-width:0}
-  .ps-who b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .ps-who small{display:block;color:var(--faint);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em}
-  .ps-sep{height:1px;background:var(--border);margin:5px 4px}
-  .ps-row{display:flex;align-items:center;gap:12px;width:100%;background:none;border:none;color:var(--text);
-    font-family:inherit;font-size:13.5px;text-align:left;padding:13px 12px;cursor:pointer;border-radius:10px}
-  .ps-row[hidden]{display:none!important}
-  .ps-row:active{background:var(--panel2)}
-  .ps-row svg{width:17px;height:17px;stroke:var(--muted);flex:0 0 auto}
-  .ps-row .ps-lbl{flex:1;min-width:0}
-  .ps-row .ps-val{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--faint)}
-  .ps-visit svg{stroke:var(--imp)}
-  .ps-badge{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:700;color:var(--imp);background:color-mix(in srgb,var(--imp) 20%,transparent);border-radius:20px;padding:1px 8px}
-  .ps-badge[hidden]{display:none!important}
-  .ps-out{color:var(--danger)}
-  .ps-out svg{stroke:var(--danger)}
+  .ps-grab{display:block;width:34px;height:4px;border-radius:3px;background:var(--border);margin:6px auto 2px}
+  .ps-head{padding:12px 12px 10px}
+  .ps-av{width:36px;height:36px;font-size:12.5px}
+  .ps-who b{font-size:14px}
+  .ps-who small{font-size:10.5px}
+  .ps-sep{margin:5px 4px}
+  .ps-row{gap:12px;font-size:13.5px;padding:13px 12px;border-radius:10px}
+  .ps-row svg{width:17px;height:17px}
+  .ps-row .ps-val{font-size:12px}
+  .ps-badge{font-size:11.5px}
   /* iOS'ta odaklanınca zoom olmasın diye form fontları 16px */
   select,input[type=search],input[type=text],.filterbar select,.search-row input[type=search]{font-size:16px}
   /* GİRİŞ KAPISI — mobilde Konsept B: kutu sınırı yok, radar sahne arka planı */
@@ -1188,7 +1203,7 @@ select:focus,input:focus{border-color:var(--exp)}
     </svg>
   </span>
   <span class="msb-name">Dış Ticaret <b>Radar</b></span>
-  <button class="profile-avatar msb-avatar" id="mobileStickyAvatar" type="button" aria-label="Hesap menüsü"><span class="pa-initials">–</span></button>
+  <button class="profile-avatar msb-avatar" id="mobileStickyAvatar" type="button" aria-label="Hesap menüsü"><span class="pa-initials">–</span><span class="pa-ping" hidden></span></button>
 </div>
 <header>
   <div class="header-right-row">
@@ -1203,7 +1218,7 @@ select:focus,input:focus{border-color:var(--exp)}
       <button class="branch-badge-logout" id="adminHeaderLogout">Çıkış</button>
     </span>
     </span>
-    <button class="profile-avatar" id="profileAvatar" type="button" aria-label="Hesap menüsü"><span class="pa-initials">–</span></button>
+    <button class="profile-avatar" id="profileAvatar" type="button" aria-label="Hesap menüsü"><span class="pa-initials">–</span><span class="pa-ping" hidden></span></button>
     <span class="header-tools">
     <button class="theme-toggle" id="onboardHelpBtn" hidden title="Nasıl kullanılır?" aria-label="Kullanım rehberini aç"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-4 10 4-10 4-10-4z"/><path d="M6 11v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg></button>
     <button class="theme-toggle" id="themeToggle" title="Açık/koyu tema" aria-label="Tema değiştir"><svg class="ic" id="themeToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A8.5 8.5 0 1111.2 3 6.8 6.8 0 0021 12.8z"/></svg></button>
@@ -4451,17 +4466,26 @@ var syncProfileMenu = null;
     $("psVisitBtn").hidden = !owner;
     $("psVisitCount").textContent = total;
     $("psVisitCount").hidden = total === 0;
+    document.querySelectorAll(".pa-ping").forEach(el=>{ el.hidden = total === 0; });
     // Tema etiketi
     $("psThemeVal").textContent = document.documentElement.getAttribute("data-theme")==="light" ? "Açık" : "Koyu";
     // Kullanım rehberi: başlıktaki rehber düğmesi gizliyse burada da gösterme
     const help = $("onboardHelpBtn");
     $("psGuideBtn").hidden = !help || help.hidden;
   }
-  function open(){ syncProfileMenu(); scrim.hidden = false; sheet.hidden = false; document.querySelectorAll(".profile-avatar").forEach(a=>a.classList.add("on")); }
+  // Masaüstünde menü, tıklanan rozetin altına konumlanır (position:fixed + ölçülen koordinat);
+  // mobilde bu değerler temizlenir, CSS alt çekmece olarak yerleştirir.
+  function place(anchor){
+    if (window.innerWidth <= 560 || !anchor){ sheet.style.top = ""; sheet.style.right = ""; return; }
+    const r = anchor.getBoundingClientRect();
+    sheet.style.top = Math.round(r.bottom + 8) + "px";
+    sheet.style.right = Math.round(window.innerWidth - r.right) + "px";
+  }
+  function open(anchor){ syncProfileMenu(); scrim.hidden = false; sheet.hidden = false; place(anchor); document.querySelectorAll(".profile-avatar").forEach(a=>a.classList.add("on")); }
   function close(){ scrim.hidden = true; sheet.hidden = true; document.querySelectorAll(".profile-avatar").forEach(a=>a.classList.remove("on")); }
 
   document.querySelectorAll(".profile-avatar").forEach(av=>{
-    av.addEventListener("click", e=>{ e.stopPropagation(); sheet.hidden ? open() : close(); });
+    av.addEventListener("click", e=>{ e.stopPropagation(); sheet.hidden ? open(av) : close(); });
   });
   scrim.addEventListener("click", close);
   document.addEventListener("keydown", e=>{ if (e.key==="Escape" && !sheet.hidden) close(); });
