@@ -256,6 +256,9 @@ input[type=file]{display:none}
 .tim-badge .rank{font-family:'IBM Plex Mono',monospace}
 .tq-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(90deg,rgba(124,131,253,.18),rgba(124,131,253,.07));color:#A9AEFF;border:1px solid rgba(124,131,253,.4);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:600;font-family:'IBM Plex Sans',sans-serif;margin-left:6px;vertical-align:1px;white-space:nowrap}
 .only-tag{display:inline-block;margin-left:6px;font-size:10px;font-weight:600;color:var(--faint);border:1px solid var(--border);border-radius:6px;padding:1px 6px;vertical-align:2px;text-transform:uppercase;letter-spacing:.04em}
+/* İlk 1000/Turquality rozetlerini saran sarmalayıcı — masaüstünde display:contents ile kutudan
+   çıkarılır (ada göre eski satır-içi akış aynen korunur), mobilde alt satıra alınır (bkz. mobil blok) */
+.badge-row{display:contents}
 .tq-inline{color:#A9AEFF;font-weight:600}
 .no-diib{margin-top:8px;font-size:12px;color:var(--faint);font-style:italic}
 .chip-tq input{accent-color:#7C83FD}
@@ -1088,9 +1091,15 @@ select:focus,input:focus{border-color:var(--exp)}
   #radiusSel{flex:1 1 100%}
   .locstatus{min-width:100%;font-size:12px}
   #map{height:300px}
-  /* Firma kartı: rozetler ada göre alt satıra düşebilsin */
+  /* Firma kartı: rozetler artık ada karışmıyor, ad bittikten sonra kendi satırında,
+     hafif (konursuz) etiketler olarak akıyor — uzun adlarda/iki rozet olduğunda kart
+     öngörülemez şekilde uzamıyordu, bkz. .badge-row */
   .firm-name{font-size:14px;line-height:1.35}
-  .tim-badge,.tq-badge,.only-tag{margin-left:4px}
+  .firm-top{align-items:flex-start}
+  .only-tag{margin-left:4px}
+  .badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+  .badge-row .tim-badge{border:none;background:rgba(240,197,96,.1);color:#F0C560;font-size:10.5px;padding:2px 7px;margin-left:0;vertical-align:baseline}
+  .badge-row .tq-badge{border:none;background:rgba(124,131,253,.1);color:#A9AEFF;font-size:10.5px;padding:2px 7px;margin-left:0;vertical-align:baseline}
   .firm-dist{font-size:11px}
   /* Detay satırları: etiket üstte, değer altta (dar ekranda okunur) */
   .det-row{flex-wrap:wrap;gap:4px 8px}
@@ -3043,7 +3052,7 @@ function render(){
     const nameParts = splitFirmName(a.firma);
     div.innerHTML = `
       <div class="firm-head" data-toggle="${a.key}">
-        <div class="firm-top"><div class="firm-name">${isStarredForBranch?`<span class="star-badge" title="Şubeniz için hedef firma">${ic('starFilled')}</span>`:""}${isImportantForBranch?`<span class="important-badge" title="Sizin işaretlediğiniz önemli firma">${ic('pin')}</span>`:""}${adminViewImportant?`<span class="important-badge" title="Bu şube tarafından önemli işaretlenmiş">${ic('pin')}</span>`:""}${visitRec?`<span class="visit-badge visit-${visitRec.status}" title="${visitLabel}">${visitIcon}</span>`:""}${nameParts.main}${nameParts.suffix?`<span class="nm-suffix">${nameParts.suffix}</span>`:""}${newBadgeHTML}${a.tim?`<span class="tim-badge" title="TİM İlk 1000 İhracatçı${S.timYear?' '+S.timYear:''}">${ic('trophy')} İlk 1000${a.tim.r<9999?` · #${a.tim.r}`:''}</span>`:""}${a.tq?`<span class="tq-badge" title="${a.tq.prog||'Turquality/Marka Destek'}">${ic('medal')} ${/TURQUALITY/i.test(a.tq.prog)?'Turquality':'Marka Destek'}</span>`:""}</div>
+        <div class="firm-top"><div class="firm-name">${isStarredForBranch?`<span class="star-badge" title="Şubeniz için hedef firma">${ic('starFilled')}</span>`:""}${isImportantForBranch?`<span class="important-badge" title="Sizin işaretlediğiniz önemli firma">${ic('pin')}</span>`:""}${adminViewImportant?`<span class="important-badge" title="Bu şube tarafından önemli işaretlenmiş">${ic('pin')}</span>`:""}${visitRec?`<span class="visit-badge visit-${visitRec.status}" title="${visitLabel}">${visitIcon}</span>`:""}${nameParts.main}${nameParts.suffix?`<span class="nm-suffix">${nameParts.suffix}</span>`:""}${newBadgeHTML}${(a.tim||a.tq)?`<span class="badge-row">${a.tim?`<span class="tim-badge" title="TİM İlk 1000 İhracatçı${S.timYear?' '+S.timYear:''}">${ic('trophy')} İlk 1000${a.tim.r<9999?` · #${a.tim.r}`:''}</span>`:""}${a.tq?`<span class="tq-badge" title="${a.tq.prog||'Turquality/Marka Destek'}">${ic('medal')} ${/TURQUALITY/i.test(a.tq.prog)?'Turquality':'Marka Destek'}</span>`:""}</span>`:""}</div>
           <div class="firm-top-right">
             ${ownUname?`<button class="important-pin-toggle${isImportantForBranch?" marked":""}" data-important-key="${a.key}" title="${isImportantForBranch?'Önemli işaretini kaldır':'Önemli olarak işaretle'}">${ic('pin')}</button>`:""}
             ${S._visitView&&visitRec?`<span class="firm-visit-state ${visitRec.status}">${visitRec.status==="done"?ic('checkCircle')+" Ziyaret edildi":ic('bookmark')+" Planlandı"} · ${fmtVisitDate(visitRec.ts)}</span>`:""}
