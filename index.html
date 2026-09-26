@@ -528,16 +528,11 @@ select:focus,input:focus{border-color:var(--exp)}
 /* Toplam ithalat/ihracat: masaüstünde tam tutar, mobilde kısaltma (M$/B$) — bkz. @media 560px */
 .stat-strip-item .v .n-short{display:none}
 .stat-strip-sep{width:1px;align-self:stretch;background:var(--border);flex:0 0 auto}
-.stat-info-btn{background:var(--panel2);border:1px solid var(--border);color:var(--faint);border-radius:50%;width:15px;height:15px;font-size:10px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:0 0 auto;transition:.15s}
-.stat-info-btn:hover{border-color:var(--exp);color:var(--exp)}
-.stat-strip-item{position:relative}
-.stat-info-popover{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:8px;z-index:20;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:11px 13px;font-size:12px;line-height:1.5;color:var(--text);width:220px;max-width:calc(100vw - 40px);box-shadow:0 10px 30px rgba(0,0,0,.25);text-transform:none;letter-spacing:normal;font-weight:400;text-align:left}
 @media(max-width:480px){
   .stats{flex-wrap:wrap;gap:6px 0}
   .stat-strip-item{flex:1 1 30%;padding:4px}
   .stat-strip-item .k{font-size:9.5px}
   .stat-strip-item .v{font-size:14px}
-  .stat-info-popover{left:auto;right:0;transform:none;width:min(220px,calc(100vw - 40px))}
 }
 .locbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 /* Konum kaynağı seçici: Şube konumu / Şu anki konumum */
@@ -2792,37 +2787,6 @@ function renderIlOptions(){
 }
 
 // "Öngörülen ithalat/ihracat" soru işaretlerine tıklanınca açıklama popover'ı aç/kapat
-const STAT_INFO_TEXT = "Dahilde İşleme İzin Belgesi alan firmaların bir yıl içinde taahhüt ettiği ithalat / ihracat tutarıdır.";
-function wireStatInfoButtons(){
-  ["statInfoImp","statInfoExp"].forEach(id=>{
-    const btn = $(id);
-    if (!btn || btn.dataset.wired) return;
-    btn.dataset.wired = "1";
-    btn.addEventListener("click", e=>{
-      e.stopPropagation();
-      toggleStatInfoPopover(btn);
-    });
-  });
-}
-function toggleStatInfoPopover(btn){
-  const existing = document.querySelector(".stat-info-popover");
-  const wasOpenForThisBtn = existing && existing._ownerBtn === btn;
-  if (existing) existing.remove();
-  if (wasOpenForThisBtn) return; // aynı butona tekrar basınca sadece kapat
-  const pop = document.createElement("div");
-  pop.className = "stat-info-popover";
-  pop.textContent = STAT_INFO_TEXT;
-  pop._ownerBtn = btn;
-  btn.parentElement.appendChild(pop);
-  const closeOnOutside = e=>{
-    if (!pop.contains(e.target) && e.target!==btn){
-      pop.remove();
-      document.removeEventListener("click", closeOnOutside);
-    }
-  };
-  setTimeout(()=>document.addEventListener("click", closeOnOutside), 0);
-}
-
 // ---- Açılır-kapanır filtre paneli (mobilde alt çekmece, masaüstünde satır içi) ----
 $("filtersToggleBtn") && $("filtersToggleBtn").addEventListener("click", ()=>{
   S._filtersOpen = !S._filtersOpen;
@@ -3010,12 +2974,11 @@ function render(){
   else renderActiveFilterTags();
   const tImp = list.reduce((s,a)=>s+a.imp,0), tExp = list.reduce((s,a)=>s+a.exp,0);
   $("stats").innerHTML = `
+    <div class="stat-strip-item"><div class="k">İthalat</div><div class="v imp"><span class="n-full">${fmt$(tImp)}</span><span class="n-short">${fmtShort$(tImp)}</span></div></div>
+    <div class="stat-strip-sep"></div>
     <div class="stat-strip-item"><div class="k">Firma</div><div class="v">${list.length.toLocaleString("tr-TR")}</div></div>
     <div class="stat-strip-sep"></div>
-    <div class="stat-strip-item"><div class="k">İthalat <button class="stat-info-btn" id="statInfoImp" type="button" aria-label="Açıklama">?</button></div><div class="v imp"><span class="n-full">${fmt$(tImp)}</span><span class="n-short">${fmtShort$(tImp)}</span></div></div>
-    <div class="stat-strip-sep"></div>
-    <div class="stat-strip-item"><div class="k">İhracat <button class="stat-info-btn" id="statInfoExp" type="button" aria-label="Açıklama">?</button></div><div class="v exp"><span class="n-full">${fmt$(tExp)}</span><span class="n-short">${fmtShort$(tExp)}</span></div></div>`;
-  wireStatInfoButtons();
+    <div class="stat-strip-item"><div class="k">İhracat</div><div class="v exp"><span class="n-full">${fmt$(tExp)}</span><span class="n-short">${fmtShort$(tExp)}</span></div></div>`;
   $("resultCount").textContent = `${list.length} firma · ${periodLabel()}`;
   // Mobil filtre çekmecesinin alt düğmesi: seçili filtrelerle kaç firma geleceğini gösterir
   const applyBtn = $("filtersApplyBtn");
