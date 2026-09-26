@@ -1052,6 +1052,9 @@ select:focus,input:focus{border-color:var(--exp)}
   .map-top-right{display:contents}
   .map-top-right .map-chip{position:absolute;max-width:calc(100% - 70px)}
   .map-chip-visit:not([hidden]){display:flex;left:10px;right:auto;bottom:10px;top:auto}
+  /* Firma sayısı çipi kaldırıldı — aynı bilgi zaten haritanın altındaki İthalat/İhracat
+     şeridinde ve "N firma · Son 12 ay" satırında var, haritada ayrıca tekrar etmiyor. */
+  .map-chip-count{display:none!important}
   .map-visit-legend{display:none!important}
   /* Haritadaki etiketler mobilde kısa: firma ekini gösterme, uzun adı kırp, şube etiketi küçük */
   .leaflet-tooltip.ov-branch-label{font-size:10px;max-width:190px;overflow:hidden;text-overflow:ellipsis}
