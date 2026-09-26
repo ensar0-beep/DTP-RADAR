@@ -182,6 +182,10 @@ input[type=file]{display:none}
 /* sade tek satır filtre çubuğu */
 .filterbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:stretch}
 .filterbar[hidden]{display:none!important}
+/* Gruplama sarmalayıcıları: masaüstünde iz bırakmaz (içerik aynı düz satırda akar),
+   mobilde alt çekmeceye dönüşünce gerçek gruplara ayrılır — bkz. @media 560px. */
+.filter-group{display:contents}
+.filter-sheet-head,.filter-sheet-foot,.filter-group-label,.filter-group-sep,.filter-sheet-scrim{display:none}
 .filterbar select{width:auto;flex:0 0 auto;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 10px;font-family:inherit;font-size:13px}
 /* Dönem / Ay / İl seçicileri: çıplak tarayıcı select'i yerine Şube Seç ile aynı dildeki
    kart + aranabilir panel. Gerçek <select> DOM'da gizli kalır (mevcut tüm mantık ona bağlı). */
@@ -1053,10 +1057,27 @@ select:focus,input:focus{border-color:var(--exp)}
   /* Tanıtım + nedir butonları alt alta, tam genişlik */
   .intro-row{display:none} /* mobilde slogan satırı yok */
   .info-btn{flex:1 1 auto;justify-content:center}
-  /* Filtre çubuğu: her kontrol esnesin, taşma olmasın */
-  .filterbar{gap:7px}
-  .filterbar select{flex:1 1 42%;min-width:0}
-  .chip{flex:1 1 42%;justify-content:center}
+  /* Filtre çubuğu mobilde alt çekmece: profil menüsüyle aynı desen (sabit taban, perde,
+     tutamak). Gruplara ayrılır: Dönem (tam genişlik, alt alta) ve Belge Türü (yan yana çipler). */
+  .filter-sheet-scrim{display:block;position:fixed;inset:0;z-index:2400;background:rgba(5,8,15,.55);animation:fade .16s ease}
+  .filter-sheet-scrim[hidden]{display:none!important}
+  .filterbar{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:2500;margin-bottom:0;
+    flex-direction:column;flex-wrap:nowrap;gap:0;max-height:80vh;overflow-y:auto;
+    background:var(--panel);border-top:1px solid var(--border);border-radius:18px 18px 0 0;
+    box-shadow:0 -16px 44px rgba(0,0,0,.36);
+    padding:6px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+    animation:sheetup .22s cubic-bezier(.32,.72,0,1)}
+  .filterbar::before{content:"";display:block;width:34px;height:4px;border-radius:3px;background:var(--border);margin:6px auto 4px}
+  .filter-sheet-head{display:flex;align-items:center;justify-content:space-between;padding:8px 2px 12px;border-bottom:1px solid var(--border);margin-bottom:12px}
+  .fs-title{font-family:'Sora',sans-serif;font-weight:700;font-size:15px}
+  .fs-clear{background:none;border:none;color:var(--imp);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 2px}
+  .filter-group{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 12px}
+  .filter-group-label{display:block;flex:1 1 100%;font-size:10.5px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px}
+  .filter-group[data-group="period"] > .fsel{flex:1 1 100%}
+  .filter-group[data-group="doctype"] .chip{flex:0 1 auto;justify-content:center}
+  .filter-group-sep{display:block;height:1px;background:var(--border);margin:0 0 4px}
+  .filter-sheet-foot{display:block;padding:12px 2px 4px;border-top:1px solid var(--border);margin-top:2px;position:sticky;bottom:0;background:var(--panel)}
+  .fs-apply{display:block;width:100%;text-align:center;background:var(--exp);color:var(--bg);border:none;border-radius:11px;padding:12px;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer}
   /* İstatistik kutuları 2'li grid */
   .stats{grid-template-columns:1fr 1fr;gap:8px}
   .stat .v{font-size:15px}
@@ -1368,19 +1389,36 @@ select:focus,input:focus{border-color:var(--exp)}
   </div>
   <button class="filters-toggle-btn" id="filtersToggleBtn" type="button" hidden>Filtreler <span id="filtersCount" class="filters-count" hidden>0</span></button>
 </div>
+<!-- Mobilde bu panel alt çekmeceye dönüşür (bkz. @media 560px); masaüstünde .filter-group'lar
+     display:contents olduğu için içerik aynı düz satırda akar, hiçbir görsel değişiklik olmaz. -->
+<div class="filter-sheet-scrim" id="filtersScrim" hidden></div>
 <div class="filterbar" id="controlsCard" style="display:none" hidden>
-  <select id="yearSel" title="Yıl / dönem"></select>
-  <select id="monthSel" title="Ay"><option value="">Tüm aylar</option></select>
-  <select id="ilSel" title="İl"><option value="">Tüm iller</option></select>
+  <div class="filter-sheet-head">
+    <span class="fs-title">Filtreler</span>
+    <button type="button" class="fs-clear" id="filtersClearBtn">Temizle</button>
+  </div>
+  <div class="filter-group" data-group="period">
+    <div class="filter-group-label">Dönem</div>
+    <select id="yearSel" title="Yıl / dönem"></select>
+    <select id="monthSel" title="Ay"><option value="">Tüm aylar</option></select>
+    <select id="ilSel" title="İl"><option value="">Tüm iller</option></select>
+  </div>
+  <div class="filter-group-sep"></div>
+  <div class="filter-group" data-group="doctype">
+    <div class="filter-group-label">Belge Türü</div>
+    <label class="chip chip-diib" id="diibChip"><input type="checkbox" id="diibOnly"> <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/></svg> DİİB</label>
+    <label class="chip" id="timChip" style="display:none"><input type="checkbox" id="timOnly"> <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0zM7 6H4a2 2 0 002 2M17 6h3a2 2 0 01-2 2"/></svg> İlk 1000</label>
+    <label class="chip chip-tq" id="tqChip" style="display:none"><input type="checkbox" id="tqOnly"> <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L7 21l5-2.5L17 21l-1.5-8.5"/></svg> Turquality</label>
+  </div>
   <select id="sortSel" title="Sırala" style="display:none">
     <option value="exp">İhracat ↓</option>
     <option value="imp">İthalat ↓</option>
     <option value="name">Firma A→Z</option>
     <option value="dist" disabled id="distOpt">Yakınlık</option>
   </select>
-  <label class="chip chip-diib" id="diibChip"><input type="checkbox" id="diibOnly"> <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/></svg> DİİB</label>
-  <label class="chip" id="timChip" style="display:none"><input type="checkbox" id="timOnly"> <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0zM7 6H4a2 2 0 002 2M17 6h3a2 2 0 01-2 2"/></svg> İlk 1000</label>
-  <label class="chip chip-tq" id="tqChip" style="display:none"><input type="checkbox" id="tqOnly"> <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L7 21l5-2.5L17 21l-1.5-8.5"/></svg> Turquality</label>
+  <div class="filter-sheet-foot">
+    <button type="button" class="fs-apply" id="filtersApplyBtn">Filtreleri uygula</button>
+  </div>
 </div>
 <div id="activeFilterTags" class="active-filter-tags" hidden></div>
 
@@ -2762,9 +2800,26 @@ function toggleStatInfoPopover(btn){
   setTimeout(()=>document.addEventListener("click", closeOnOutside), 0);
 }
 
-// ---- Açılır-kapanır filtre paneli ----
+// ---- Açılır-kapanır filtre paneli (mobilde alt çekmece, masaüstünde satır içi) ----
 $("filtersToggleBtn") && $("filtersToggleBtn").addEventListener("click", ()=>{
   S._filtersOpen = !S._filtersOpen;
+  render();
+});
+// "Uygula" ve perde: çekmeceyi kapatır. Filtreler zaten anında uygulandığı için (her kontrol
+// kendi onchange'inde render() çağırıyor) bu düğme yeni bir işlem yapmıyor, sadece kapatıyor.
+$("filtersApplyBtn") && $("filtersApplyBtn").addEventListener("click", ()=>{ S._filtersOpen = false; render(); });
+$("filtersScrim") && $("filtersScrim").addEventListener("click", ()=>{ S._filtersOpen = false; render(); });
+document.addEventListener("keydown", e=>{ if (e.key==="Escape" && S._filtersOpen){ S._filtersOpen = false; render(); } });
+// "Temizle": dönem/ay/il ve belge türü kutucuklarını varsayılana döndürür
+$("filtersClearBtn") && $("filtersClearBtn").addEventListener("click", ()=>{
+  const ySel = $("yearSel"); if (ySel && [...ySel.options].some(o=>o.value==="last12")) ySel.value = "last12";
+  const mSel = $("monthSel"); if (mSel) mSel.value = "";
+  const iSel = $("ilSel"); if (iSel) iSel.value = "";
+  ["diibOnly","timOnly","tqOnly"].forEach(id=>{ const el = $(id); if (el) el.checked = false; });
+  S.shown = 50;
+  rebuildMonthOptions();
+  if (S.userLoc) refineMahalle();
+  syncFilterSelects();
   render();
 });
 
@@ -2903,6 +2958,8 @@ function render(){
   const filtersOpen = !!S._filtersOpen;
   $("controlsCard").hidden = !(has && !visitScreenOpen && filtersOpen);
   $("controlsCard").style.display = (has && !visitScreenOpen && filtersOpen)?"":"none";
+  // Mobilde alt çekmece perdesi; masaüstünde zaten display:none (bkz. taban CSS), etkisi yok.
+  if ($("filtersScrim")) $("filtersScrim").hidden = !(has && !visitScreenOpen && filtersOpen);
   const searchRow = $("searchRow") || document.querySelector(".search-row");
   if (searchRow) searchRow.style.display = (has && !visitScreenOpen)?"":"none";
   const filtersBtn = $("filtersToggleBtn");
@@ -2936,6 +2993,9 @@ function render(){
     <div class="stat-strip-item"><div class="k">İhracat <button class="stat-info-btn" id="statInfoExp" type="button" aria-label="Açıklama">?</button></div><div class="v exp"><span class="n-full">${fmt$(tExp)}</span><span class="n-short">${fmtShort$(tExp)}</span></div></div>`;
   wireStatInfoButtons();
   $("resultCount").textContent = `${list.length} firma · ${periodLabel()}`;
+  // Mobil filtre çekmecesinin alt düğmesi: seçili filtrelerle kaç firma geleceğini gösterir
+  const applyBtn = $("filtersApplyBtn");
+  if (applyBtn) applyBtn.textContent = list.length ? `${list.length.toLocaleString("tr-TR")} firmayı göster` : "Sonuç yok";
 
   const maxV = Math.max(1, ...list.slice(0,S.shown).map(a=>Math.max(a.imp,a.exp)));
   // "Yeni firma" rozeti için: en son yüklenen ay
