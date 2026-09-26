@@ -605,7 +605,7 @@ select:focus,input:focus{border-color:var(--exp)}
 /* Harita üstü yüzen düğmeler — yalnızca mobilde (bkz. @media 560px) */
 .map-chip{display:none;position:absolute;z-index:1100;align-items:center;gap:6px;background:rgba(21,28,46,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid var(--border);color:var(--text);border-radius:20px;padding:7px 11px;font-family:inherit;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer;max-width:calc(100% - 70px)}
 .map-chip .chev{color:var(--muted)}
-.map-chip-src{top:10px;left:54px;color:var(--exp)}
+.map-chip-src{top:10px;left:10px;color:var(--exp)}
 .map-chip-src span{overflow:hidden;text-overflow:ellipsis}
 .map-chip-rad{top:10px;right:10px;display:flex} /* yarıçap seçici her ekranda haritanın üstünde */
 /* Ziyaret Listem çipi haritanın sağ üst köşesinde, yarıçap çipinin solunda durur (her ekranda).
@@ -621,8 +621,8 @@ select:focus,input:focus{border-color:var(--exp)}
 .map-chip-visit.on .map-chip-n{background:rgba(0,0,0,.18)}
 /* Açıklama cümlesi ve form tipi yarıçap seçici artık gösterilmiyor (#radiusSel mantık için DOM'da kalır) */
 .locbar{display:none}
-.map-chip-count{bottom:10px;left:10px;color:var(--muted);font-weight:500;cursor:default}
-.map-chip-menu{display:none;position:absolute;z-index:1150;top:48px;left:54px;min-width:170px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.map-chip-count{bottom:28px;right:10px;color:var(--muted);font-weight:500;cursor:default}
+.map-chip-menu{display:none;position:absolute;z-index:1150;top:48px;left:10px;min-width:170px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
 .map-chip-menu.right{left:auto;right:10px}
 .map-chip-menu:not([hidden]){display:block}
 .map-chip-menu button{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;color:var(--text);font-family:inherit;font-size:13px;text-align:left;padding:9px 10px;border-radius:7px;cursor:pointer}
@@ -683,6 +683,15 @@ select:focus,input:focus{border-color:var(--exp)}
 .mp .n-imp{color:var(--imp)} .mp .n-exp{color:var(--exp)}
 .leaflet-bar a{background:var(--panel2);color:var(--text);border-color:var(--border)}
 .leaflet-bar a:hover{background:var(--panel)}
+/* Yakınlaştırma: varsayılan kutu kontrol yerine ince, camsı bir kapsül — sağ kenarın dikey
+   ortasında durur, köşelerdeki çiplerle (konum/yarıçap/ziyaret/sayı) hiç çakışmaz. */
+.leaflet-top.leaflet-left{top:50%;left:auto;right:8px;bottom:auto;transform:translateY(-50%)}
+.leaflet-control-zoom{border:none!important;background:rgba(21,28,46,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:16px!important;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.28)}
+.leaflet-control-zoom a{width:26px!important;height:26px!important;line-height:26px!important;background:transparent!important;color:var(--text)!important;border:none!important;font-weight:400!important;font-size:14px!important}
+.leaflet-control-zoom a:first-child{border-bottom:1px solid rgba(255,255,255,.1)!important}
+.leaflet-control-zoom a:hover{background:rgba(255,255,255,.12)!important}
+[data-theme="light"] .leaflet-control-zoom{background:rgba(255,255,255,.78)}
+[data-theme="light"] .leaflet-control-zoom a:first-child{border-bottom-color:rgba(0,0,0,.08)!important}
 .leaflet-control-attribution{background:rgba(13,18,32,.55)!important;color:var(--faint)!important;font-size:8px!important;padding:1px 5px!important;border-radius:5px 0 0 0;opacity:.6;line-height:1.4;transition:opacity .15s}
 .leaflet-control-attribution:hover{opacity:1}
 .leaflet-control-attribution a{color:var(--faint)!important}
@@ -1042,7 +1051,7 @@ select:focus,input:focus{border-color:var(--exp)}
      olur, ziyaret çipi eski yerine — haritanın sağ altına — döner. */
   .map-top-right{display:contents}
   .map-top-right .map-chip{position:absolute;max-width:calc(100% - 70px)}
-  .map-chip-visit:not([hidden]){display:flex;right:10px;bottom:28px;top:auto}
+  .map-chip-visit:not([hidden]){display:flex;left:10px;right:auto;bottom:10px;top:auto}
   .map-visit-legend{display:none!important}
   /* Haritadaki etiketler mobilde kısa: firma ekini gösterme, uzun adı kırp, şube etiketi küçük */
   .leaflet-tooltip.ov-branch-label{font-size:10px;max-width:190px;overflow:hidden;text-overflow:ellipsis}
@@ -1386,6 +1395,9 @@ select:focus,input:focus{border-color:var(--exp)}
 <button id="locBtn" hidden><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0114 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg> Şu anki konumumu kullan</button>
 
 
+<!-- İthalat/İhracat toplam şeridi artık arama/sırala/filtrele satırının üstünde (bkz. render()'daki
+     #stats görünürlük satırı, #results ile aynı koşulu paylaşıyor) -->
+<div class="stats" id="stats" style="display:none"></div>
 <!-- FİLTRE (sade, tek satır) -->
 <div class="search-row">
   <div class="search-box-wrap">
@@ -1447,7 +1459,6 @@ select:focus,input:focus{border-color:var(--exp)}
 </div>
 
 <div id="results" style="display:none">
-  <div class="stats" id="stats"></div>
   <div class="toolrow">
     <div class="result-count" id="resultCount"></div>
     <div style="display:flex;gap:8px;align-items:center">
@@ -2977,6 +2988,7 @@ function render(){
   if (sortWrap){ sortWrap.hidden = !(has && !visitScreenOpen); updateSortButtonUI(); }
   $("locCard").style.display = (has && !visitScreenOpen)?"":"none";
   $("results").style.display = (has && !visitScreenOpen)?"":"none";
+  $("stats").style.display = (has && !visitScreenOpen)?"":"none";
   // "DİİB nedir?/Turquality nedir?" tanıtım satırı da Ziyaret Listem ekranında gereksiz kalabalık
   // yapıyordu — ana firma listesiyle birlikte gizleniyor.
   const introRow = document.querySelector(".intro-row");
