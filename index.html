@@ -751,6 +751,8 @@ select:focus,input:focus{border-color:var(--exp)}
 .flow .axis{width:2px;height:16px;background:var(--axis)}
 .flow-nums{display:flex;justify-content:space-between;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:12.5px;margin-top:6px;gap:8px}
 .flow-nums .n-imp{color:var(--imp);font-weight:600} .flow-nums .n-exp{color:var(--exp);font-weight:600}
+/* Kapalı kart: masaüstünde tam tutar, mobilde kısaltma (M$/B$) — bkz. @media 560px */
+.flow-nums .n-short{display:none}
 .flow-nums .fn{display:flex;align-items:center;gap:6px}
 .flow-nums .fn-r{justify-content:flex-end}
 .fn-tag{font-family:'IBM Plex Sans',sans-serif;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:5px}
@@ -1039,6 +1041,12 @@ select:focus,input:focus{border-color:var(--exp)}
   /* Kapalı kart sade: firma adı + İlçe / İl + ithalat-ihracat; adres ve VKN satırı kart açılınca görünür */
   .firm-addr,.firm-meta{display:none}
   .firm-loc{display:block}
+  /* Ticari unvan eki (SANAYİ VE TİCARET A.Ş. vb.) kapalı kartta gösterilmiyor — kart açılınca
+     (firma detayındaki tam ad) yine görünüyor, burada sadece liste sadeleşiyor. */
+  .firm-name .nm-suffix{display:none}
+  /* Tam tutar yerine kısaltma (18,42 M$ / 284 B$) — kart açılınca detaydaki tam tutar değişmedi */
+  .flow-nums .n-full{display:none}
+  .flow-nums .n-short{display:inline}
   /* Tanıtım + nedir butonları alt alta, tam genişlik */
   .intro-row{display:none} /* mobilde slogan satırı yok */
   .info-btn{flex:1 1 auto;justify-content:center}
@@ -1853,6 +1861,13 @@ const SUBE_TABLE={"duzcecedidiyesubesi":["Düzce Cedidiye Şubesi",40.837068,31.
 const trUp = s => String(s??"").toLocaleUpperCase("tr-TR");
 const fmt$ = n => "$" + Math.round(n).toLocaleString("tr-TR");
 const fmtM = n => { const m = n/1e6; const v = m>=100?Math.round(m):+(m.toFixed(m>=10?1:2)); return v.toLocaleString("tr-TR") + " M$"; };
+// Mobil firma kartlarında tam tutar yerine kısaltma: ≥1M "M$", ≥1000 "B$" (bin), altı $ aynen.
+const fmtShort$ = n => {
+  const abs = Math.abs(n);
+  if (abs >= 1e6){ const m = n/1e6; const v = m>=100?Math.round(m):+(m.toFixed(m>=10?1:2)); return v.toLocaleString("tr-TR") + " M$"; }
+  if (abs >= 1000) return Math.round(n/1000).toLocaleString("tr-TR") + " B$";
+  return fmt$(n);
+};
 const toast = msg => { const t=document.getElementById("toast"); t.textContent=msg; t.style.display="block"; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display="none",4200); };
 
 /* ================= İKONLAR (emoji yerine — "İnce Çizgi" seti) =================
@@ -2981,8 +2996,8 @@ function render(){
           <div class="bar bexp" style="width:${(a.exp/maxV*100).toFixed(1)}%"></div>
         </div>
         <div class="flow-nums">
-          <span class="fn"><span class="fn-tag tag-imp">↓ İthalat</span> <span class="n-imp">${fmt$(a.imp)}</span></span>
-          <span class="fn fn-r"><span class="n-exp">${fmt$(a.exp)}</span> <span class="fn-tag tag-exp">İhracat ↑</span></span>
+          <span class="fn"><span class="fn-tag tag-imp">↓ İthalat</span> <span class="n-imp n-full">${fmt$(a.imp)}</span><span class="n-imp n-short">${fmtShort$(a.imp)}</span></span>
+          <span class="fn fn-r"><span class="n-exp n-full">${fmt$(a.exp)}</span><span class="n-exp n-short">${fmtShort$(a.exp)}</span> <span class="fn-tag tag-exp">İhracat ↑</span></span>
         </div>`:`<div class="no-diib">DİİB belgesi bu dönemde yok${a.tq?" · Turquality havuzundan":(a.tim?" · İlk 1000 havuzundan":"")}</div>`}
         ${starAssignMode?`<button class="star-assign-btn${isStarredForTarget?" starred":""}" data-star-key="${a.key}">${isStarredForTarget?ic('starFilled')+" Yıldızlı (kaldırmak için tıkla)":ic('star')+" Bu şube için yıldızla"}</button>`:""}
       </div>
