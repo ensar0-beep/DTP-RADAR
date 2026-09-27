@@ -2819,7 +2819,7 @@ function updateMapChips(listLen){
   const src = $("mapSrcChipLabel"), rad = $("mapRadChipLabel"), cnt = $("mapCountChip");
   if (src){
     src.textContent = S._locSource==="gps" ? "Buradayım"
-      : (S.branch ? "Şube konumu" : (S._adminViewBranch && SUBE_TABLE[S._adminViewBranch] ? SUBE_TABLE[S._adminViewBranch][0] : "Konum"));
+      : (S.branch && !S.branch.isGuest ? "Şube konumu" : (S._adminViewBranch && SUBE_TABLE[S._adminViewBranch] ? SUBE_TABLE[S._adminViewBranch][0] : "Konum"));
   }
   if (rad && $("radiusSel")){ const o=$("radiusSel"); rad.textContent = o.options[o.selectedIndex]?.textContent || ""; }
   if (cnt && typeof listLen==="number") cnt.textContent = `${listLen.toLocaleString("tr-TR")} firma`;
@@ -2830,14 +2830,14 @@ $("mapSrcChip") && $("mapSrcChip").addEventListener("click", e=>{
   const menu = $("mapSrcMenu"); if (!menu.hidden){ closeMapChipMenus(); return; }
   closeMapChipMenus();
   const opts = [];
-  if (S.branch) opts.push({k:"branch", label:"Şube konumu", icon:ic('building')||""});
+  if (S.branch && !S.branch.isGuest) opts.push({k:"branch", label:"Şube konumu", icon:ic('building')||""});
   else if ((S.isAdmin || S.isGroupUser) && S._adminViewBranch && SUBE_TABLE[S._adminViewBranch]) opts.push({k:"branch", label:SUBE_TABLE[S._adminViewBranch][0]});
   opts.push({k:"gps", label:"Buradayım"});
   const cur = S._locSource==="gps" ? "gps" : "branch";
   menu.innerHTML = opts.map(o=>`<button type="button" data-src="${o.k}" class="${o.k===cur?"active":""}">${o.label}${o.k===cur?" ✓":""}</button>`).join("");
   menu.querySelectorAll("button").forEach(b=>{ b.onclick = ()=>{ closeMapChipMenus();
     if (b.dataset.src==="gps") setLocSource("gps");
-    else if (S.branch) setLocSource("branch");
+    else if (S.branch && !S.branch.isGuest) setLocSource("branch");
     else if (S._adminViewBranch) applyAdminBranchPreview(S._adminViewBranch);
   }; });
   menu.hidden = false;
@@ -3965,6 +3965,14 @@ const GRUP_TABLE = {
   "kobisatis": "Kobi Satış",
   "ktsatis": "Kurumsal ve Ticari Satış",
 };
+// Şube domaininde (@sube...) ama SUBE_TABLE'da YOK, kasıtlı olarak: bankayla ilgisi olmayan genel
+// ziyaretçi hesapları. Bu yüzden yönetim panelindeki şube listesi/istatistikleri SUBE_TABLE'ı
+// dolaştığı için bu kullanıcılar orada hiç görünmez. Sabit bir şube konumu da yok — yalnızca
+// "Şu Anki Konumum" (GPS) ile kendi konumunu seçebilirler, geri kalan her şey (arama, filtre,
+// yıldız, ziyaret listesi) diğer şube kullanıcılarıyla birebir aynı.
+const GUEST_TABLE = {
+  "misafir": "Misafir",
+};
 // Genel müdürlük kullanıcıları buranın konumundan başlar (GPS izni beklenmez, harita ve yakın
 // firmalar anında gelir). İstedikleri zaman üstteki "Şube Seç" ile başka bir şubeye geçebilirler.
 const GRUP_VARSAYILAN_SUBE = "ktbu"; // Bankacılık Üssü
@@ -3999,6 +4007,10 @@ function initFirebase(){
       if (rec){
         S.branch = {username:uname, name:rec[0], lat:rec[1], lon:rec[2]};
         applyBranchLocation();
+      } else if (GUEST_TABLE[uname]){
+        // Misafir hesabı: sabit konumu yok, renderBranchUI() bunu görünce Şube Konumu
+        // sekmesini gizleyip doğrudan GPS'e geçiyor.
+        S.branch = {username:uname, name:GUEST_TABLE[uname], lat:null, lon:null, isGuest:true};
       }
       S.group = null;
     } else if (S.isGroupUser){
@@ -4161,7 +4173,7 @@ $("gateAdminUser").addEventListener("keydown", e=>{ if(e.key==="Enter") $("gateA
 
 // Şube girişinde konumu otomatik ayarla (GPS istemeden), harita ve mesafe hesapları o noktadan başlasın
 function applyBranchLocation(){
-  if (!S.branch) return;
+  if (!S.branch || S.branch.isGuest) return; // misafir gibi sabit konumu olmayanlar için çağrılmamalı — bkz. GUEST_TABLE
   showMapLoadingOverlay();
   S.userLoc = {lat:S.branch.lat, lon:S.branch.lon};
   S._locSource = "branch";
@@ -4206,11 +4218,13 @@ function renderBranchUI(){
   if (S.branch){
     badge.hidden = false;
     $("branchBadgeName").textContent = S.branch.name;
-    $("locSrcBranch").hidden = false;
+    // Misafir gibi sabit konumu olmayan hesaplarda "Şube Konumu" sekmesi hiç gösterilmez,
+    // konum doğrudan GPS'ten ("Şu Anki Konumum") gelir.
+    $("locSrcBranch").hidden = !!S.branch.isGuest;
     if (adminPicker) adminPicker.hidden = true; // güvence: şube kullanıcısı Şube Seç'i asla görmesin
     if (visitBtn) visitBtn.hidden = false;
     if (helpBtn) helpBtn.hidden = false;
-    setLocSource("branch");
+    setLocSource(S.branch.isGuest ? "gps" : "branch");
     // Kullanım rehberi yalnızca bu şubenin bu tarayıcıdaki İLK girişinde açılır; sonra sağ üstteki
     // rehber (kep) düğmesinden istenince açılabilir.
     try{
@@ -4513,7 +4527,7 @@ var syncProfileMenu = null;
     return trUp(two) || "–";
   }
   function currentIdentity(){
-    if (S.branch) return { name: S.branch.name, role: "Şube" };
+    if (S.branch) return { name: S.branch.name, role: S.branch.isGuest ? "Misafir" : "Şube" };
     if (S.isGroupUser && S.group) return { name: S.group.name, role: "Genel Müdürlük" };
     if (S.isAdmin) return { name: (ADMIN_TABLE[(S.user&&S.user.email||"").split("@")[0]] || "Yönetim"), role: "Yönetim" };
     return { name: "—", role: "" };
