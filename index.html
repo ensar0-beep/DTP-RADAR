@@ -3263,7 +3263,11 @@ function firmDetailHTML(a, mapsUrl){
   const list = $("firmList");
   if (!list) return;
   const THRESHOLD = 90;   // eylem için gereken piksel
-  let card=null, hint=null, startX=0, startY=0, dx=0, horizontal=null, swiped=false;
+  // Kendi verisinin düğümü: şube kullanıcısında şube adı, departman (genel müdürlük)
+  // kullanıcısında departman adı. Eskiden burada doğrudan S.branch'e bakılıyordu; departman
+  // kullanıcılarında bu boş olduğu için kaydırma hiç başlamıyordu (Ziyaret Listem düğmesi ve
+  // kart içindeki ziyaret butonu ownDataUname() kullandığı için onlarda sorun görünmüyordu).
+  let card=null, hint=null, startX=0, startY=0, dx=0, horizontal=null, swiped=false, uname=null;
   function reset(animate){
     if (card){
       if (animate){ card.classList.remove("swiping"); card.style.transform=""; }
@@ -3273,7 +3277,8 @@ function firmDetailHTML(a, mapsUrl){
     card=null; horizontal=null; dx=0;
   }
   list.addEventListener("touchstart", e=>{
-    if (!S.branch || e.touches.length!==1) return;
+    uname = ownDataUname();
+    if (!uname || e.touches.length!==1) return;
     const c = e.target.closest(".firm");
     if (!c || e.target.closest("button, a, input, select")) return;
     card=c; startX=e.touches[0].clientX; startY=e.touches[0].clientY; dx=0; horizontal=null; swiped=false;
@@ -3294,7 +3299,7 @@ function firmDetailHTML(a, mapsUrl){
     }
     e.preventDefault(); // yatay kaydırmada sayfa scroll etmesin
     const key = card.dataset.key;
-    const rec = (S.visits[S.branch.username]||{})[key];
+    const rec = (S.visits[uname]||{})[key];
     if (dx>0){
       hint.className = "swipe-hint add" + (dx>=THRESHOLD?" armed":"");
       hint.innerHTML = rec ? ic('bookmark')+" Zaten ziyaret listende" : ic('bookmark')+" Ziyaret listesine ekle";
@@ -3311,7 +3316,7 @@ function firmDetailHTML(a, mapsUrl){
     if (horizontal && Math.abs(dx)>=THRESHOLD){
       swiped = true;
       const key = card.dataset.key;
-      const rec = (S.visits[S.branch.username]||{})[key];
+      const rec = (S.visits[uname]||{})[key];
       // Sağa kaydırma yalnızca listeye ekler; "ziyaret edildi" işareti Ziyaret Listem ekranından yapılır
       if (dx>0){
         if (!rec){ setVisitStatus(key,"planned"); toast("Ziyaret listesine eklendi"); }
