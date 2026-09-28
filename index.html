@@ -3707,8 +3707,12 @@ async function refineMahalle(){
   } finally { _refineBusy = false; }
 }
 
-function requestLocation(){
-  if (!navigator.geolocation){ toast("Tarayıcı konum desteklemiyor."); return; }
+// onFail: konum alınamazsa çağrılır — çağıran taraf arayüzü eski (gerçek) konuma geri alsın diye.
+// Hata mesajı MUTLAKA toast ile de duyurulur: #locStatus satırı mobilde gizli olduğu için
+// (bkz. .locbar{display:none}) kullanıcı aksi hâlde hiçbir geri bildirim görmüyordu.
+function requestLocation(onFail){
+  const fail = () => { if (typeof onFail === "function") onFail(); };
+  if (!navigator.geolocation){ const m="Bu tarayıcı konum özelliğini desteklemiyor."; $("locStatus").textContent=m; toast(m); fail(); return; }
   $("locStatus").textContent="Konum alınıyor…";
   navigator.geolocation.getCurrentPosition(p=>{
     showMapLoadingOverlay();
@@ -3721,11 +3725,21 @@ function requestLocation(){
     $("map").style.display="block";
     initMap(); geocodeVisible();
   }, e=>{
-    $("locStatus").textContent = "Konum alınamadı — konum düğmesiyle tekrar deneyebilirsin.";
-    if (e.code!==e.PERMISSION_DENIED) toast("Konum alınamadı: "+e.message);
+    // Sık karşılaşılan iki durum ayrı ayrı anlatılır: siteye konum izni verilmemiş olması ve
+    // sayfanın https olmayan bir adresten açılmış olması (tarayıcı bu durumda izni hiç sormaz).
+    const msg = e.code===e.PERMISSION_DENIED
+      ? (window.isSecureContext===false
+          ? "Konum alınamadı: sayfa güvenli bağlantıyla (https) açılmadığı için tarayıcı konum izni vermiyor. Siteyi https adresinden aç."
+          : "Konum izni verilmedi. Tarayıcının adres çubuğundaki kilit/konum simgesinden bu siteye konum izni verip tekrar dene.")
+      : (e.code===e.TIMEOUT
+          ? "Konum zaman aşımına uğradı — tekrar dene."
+          : "Konum alınamadı: "+e.message);
+    $("locStatus").textContent = msg;
+    toast(msg);
+    fail();
   }, {enableHighAccuracy:true, timeout:15000});
 }
-$("locBtn").onclick = requestLocation;
+$("locBtn").onclick = ()=> requestLocation(); // tıklama olayı onFail gibi geçmesin
 
 // Veri geldikten sonra konum iznini bir kez otomatik iste
 let _autoLocAsked=false;
@@ -4369,6 +4383,7 @@ function setLocSource(which){
   } else if (which==="gps"){
     // Önizlenen bir şube varsa (admin/departman "Şube Seç"): Şu Anki Konumum'a geçince önizleme
     // temizlenir — Şube kartı da sıfırlanır, aksi hâlde eski şubenin önemli/ziyaret verisiyle karışır.
+    const prevPreview = S._adminViewBranch;
     if (S._adminViewBranch){
       S._adminViewBranch = null;
       S._starTargetBranch = null;
@@ -4376,7 +4391,23 @@ function setLocSource(which){
       syncAbpCard();
       const hint = $("adminBranchPickerHint"); if (hint) hint.textContent = "";
     }
-    requestLocation();
+    // Konum alınamazsa (izin yok / https değil / zaman aşımı) S.userLoc eski konumda kalıyordu:
+    // arayüz "Şu Anki Konumum" seçiliymiş gibi görünürken harita ve mesafeler hâlâ eski şubeye
+    // göreydi. Departman kullanıcıları için tek konum kaynağı bu olduğundan en çok orada fark
+    // ediliyordu. Hata olursa seçim geri alınır, gerçekten hangi konumdaysak arayüz onu gösterir.
+    requestLocation(()=>{
+      gBtn.classList.remove("active");
+      if (prevPreview && SUBE_TABLE[prevPreview]){
+        const sel = $("adminBranchSelect"); if (sel) sel.value = prevPreview;
+        applyAdminBranchPreview(prevPreview);
+        syncAbpCard();
+        const hint = $("adminBranchPickerHint");
+        if (hint && S.isGroupUser) hint.textContent = `Konum "${SUBE_TABLE[prevPreview][0]}" için aktif.`;
+      } else if (S.branch && !S.branch.isGuest){
+        bBtn.classList.add("active");
+        applyBranchLocation();
+      }
+    });
   }
 }
 $("locSrcBranch").onclick = ()=> setLocSource("branch");
