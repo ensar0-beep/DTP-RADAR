@@ -2984,7 +2984,16 @@ function render(){
   const applyBtn = $("filtersApplyBtn");
   if (applyBtn) applyBtn.textContent = list.length ? `${list.length.toLocaleString("tr-TR")} firmayı göster` : "Sonuç yok";
 
-  const maxV = Math.max(1, ...list.slice(0,S.shown).map(a=>Math.max(a.imp,a.exp)));
+  // Çubuk ölçeği: görünen listenin EN BÜYÜĞÜNE değil, %90'lık dilimine göre. Tek bir dev
+  // ihracatçı (ör. Ford gibi milyar dolarlık bir firma) listeye girdiğinde eski kural bütün
+  // ölçeği kendine çekiyor, geri kalan firmaların çubukları tek piksele iniyordu. Tavanın
+  // üstünde kalan firmalar (en üst %10) tam çubuk gösterilir — bkz. aşağıdaki Math.min(100,…).
+  // Tavan listeden hesaplandığı için küçük şubede de büyük şubede de kendini ayarlar.
+  const maxV = (()=>{
+    const vals = list.slice(0,S.shown).map(a=>Math.max(a.imp,a.exp)).filter(v=>v>0).sort((x,y)=>x-y);
+    if (!vals.length) return 1;
+    return Math.max(1, vals[Math.ceil(vals.length*0.9)-1]);
+  })();
   // "Yeni firma" rozeti için: en son yüklenen ay
   const firstMonthMap = firstMonthByKeyMap();
   const latestMonth = loadedMonths()[0] || null;
@@ -3041,9 +3050,9 @@ function render(){
         <div class="firm-meta">${a.vkn?`VKN ${a.vkn} · `:""}${a.il||"İl —"}${a.belge?` · ${a.belge} belge`:(a.tq?" · Turquality":(a.tim?" · İlk 1000":""))}${a.tq&&a.tq.marka?` · ${a.tq.markalar&&a.tq.markalar.length>1?a.tq.markalar.length+' marka':a.tq.marka}`:""} <span class="firm-caret">⌄</span></div>
         <div class="firm-loc">${[cardIlce, a.il].filter(Boolean).join(" / ") || "Konum —"} <span class="firm-caret">⌄</span></div>
         ${(a.imp||a.exp)?`<div class="flow">
-          <div class="bar bimp" style="width:${(a.imp/maxV*100).toFixed(1)}%"></div>
+          <div class="bar bimp" style="width:${Math.min(100, a.imp/maxV*100).toFixed(1)}%"></div>
           <div class="axis"></div>
-          <div class="bar bexp" style="width:${(a.exp/maxV*100).toFixed(1)}%"></div>
+          <div class="bar bexp" style="width:${Math.min(100, a.exp/maxV*100).toFixed(1)}%"></div>
         </div>
         <div class="flow-nums">
           <span class="fn"><span class="fn-tag tag-imp">↓ İthalat</span> <span class="n-imp n-full">${fmt$(a.imp)}</span><span class="n-imp n-short">${fmtShort$(a.imp)}</span></span>
