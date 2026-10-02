@@ -633,25 +633,32 @@ select:focus,input:focus{border-color:var(--exp)}
 .radar-spin{animation:radarspin 1.8s linear infinite;transform-origin:22px 22px}
 @keyframes radarspin{to{transform:rotate(360deg)}}
 .map-loading-text{font-size:12.5px;color:var(--muted);font-weight:500}
-/* Haritanın üstünde yüzen camsı firma kartı (z-index 1250: Leaflet katmanları 400-800 ve
-   harita üstü çip menüleri 1150'nin üstünde kalmalı). Harita artık daralmıyor. */
-.map-side-panel{position:absolute;right:12px;top:12px;bottom:12px;width:280px;max-width:calc(100% - 24px);z-index:1250;
-  background:color-mix(in srgb, var(--panel) 84%, transparent);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  border:1px solid var(--border);border-radius:12px;box-shadow:0 18px 44px rgba(0,0,0,.34);
-  display:flex;flex-direction:column;overflow:hidden;animation:fade .16s ease}
-.map-side-panel[hidden]{display:none!important}
-.map-side-panel-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:11px 12px 9px;border-bottom:1px solid var(--border)}
-.map-side-panel-titles{flex:1;min-width:0;font-weight:600;font-size:12.5px;line-height:1.35}
-.map-side-panel-titles small{display:block;font-weight:400;color:var(--muted);font-size:10.5px;margin-top:2px;font-family:'IBM Plex Mono',monospace}
-.map-side-panel-close{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:7px;width:23px;height:23px;font-size:11px;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:0}
-.map-side-panel-close:hover{border-color:var(--danger);color:var(--danger)}
-.map-side-panel-body{overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;padding:5px}
+/* Haritada bir noktaya tıklanınca haritanın HEMEN ALTINDA açılan seçim kartı. Daha önce harita
+   üstünde yüzen bir panel vardı; haritayı örttüğü ve listedekinden farklı bir görünüm kullandığı
+   için kaldırıldı. Kart içeriği listedeki kapalı kartla AYNI sınıfları kullanır
+   (.firm-top/.firm-loc/.firm-addr/.flow…) — mobil/masaüstü farkları (kısa rakam, ilçe-il satırı,
+   unvan eki, rozet yerleşimi) böylece kendiliğinden doğru gelir. */
+.map-pick{margin-top:12px;background:var(--panel);border:1px solid rgba(232,163,61,.45);border-radius:13px;overflow:hidden;box-shadow:0 0 0 1px rgba(232,163,61,.14);animation:fade .16s ease}
+.map-pick[hidden]{display:none!important}
+.map-pick-head{display:flex;align-items:center;gap:9px;padding:8px 12px;background:rgba(232,163,61,.07);border-bottom:1px solid var(--border);font-size:12px;font-weight:600}
+.map-pick-title{flex:1;min-width:0}
+.map-pick-title small{font-weight:400;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px}
+.map-pick-close{flex:0 0 auto;background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:7px;width:23px;height:23px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:.15s}
+.map-pick-close:hover{border-color:var(--danger);color:var(--danger)}
+.map-pick-card{padding:12px 14px;cursor:pointer;transition:background .12s}
+.map-pick-card:hover{background:var(--panel2)}
+.map-pick-rest{border-top:1px solid var(--border)}
+.map-pick-rest[hidden]{display:none!important}
+.mpr{display:flex;align-items:center;gap:9px;padding:9px 12px;font-size:12.5px;cursor:pointer;transition:background .12s}
+.mpr + .mpr{border-top:1px solid rgba(38,48,74,.5)}
+.mpr:hover{background:var(--panel2)}
+.mpr-no{flex:0 0 auto;width:18px;height:18px;border-radius:5px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:10px;display:flex;align-items:center;justify-content:center}
+.mpr-nm{flex:1;min-width:0;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mpr-km{flex:0 0 auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+.mpr-v{flex:0 0 auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--exp);font-weight:600}
 @media(max-width:760px){
   .map-row{flex-direction:column}
   #map{flex:none;width:100%}
-  /* Mobilde yüzen kart yerine haritanın tabanına yapışan şerit — harita üst yarısı açık kalır */
-  .map-side-panel{right:8px;left:8px;top:auto;bottom:8px;width:auto;max-width:none;max-height:56%}
 }
 /* Leaflet koyu tema uyumu */
 .leaflet-container{background:var(--bg);font-family:'IBM Plex Sans',sans-serif}
@@ -661,23 +668,6 @@ select:focus,input:focus{border-color:var(--exp)}
 .leaflet-popup-content{margin:10px 12px;font-size:12.5px;line-height:1.45;max-height:min(50vh,360px);overflow-y:auto;overflow-x:hidden}
 .leaflet-popup-close-button{color:var(--muted)!important}
 .leaflet-container a{color:var(--exp)}
-.mp-h{font-weight:600;font-size:12.5px;margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel2);z-index:1}
-.mp-f{display:flex;gap:9px;padding:9px;border-radius:9px;cursor:pointer;transition:background .12s}
-.mp-f + .mp-f{border-top:1px solid rgba(38,48,74,.45)}
-.mp-f:hover{background:rgba(53,196,168,.09)}
-.mp-f:active{background:rgba(53,196,168,.17)}
-.mp-rank{flex:0 0 auto;width:19px;height:19px;border-radius:6px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:10.5px;display:flex;align-items:center;justify-content:center;margin-top:1px}
-.mp-f:first-child .mp-rank{color:var(--exp);border-color:rgba(53,196,168,.45)}
-.mp-body{flex:1;min-width:0}
-.mp-n{font-weight:600;font-size:12px;line-height:1.35;overflow-wrap:break-word;word-break:break-word}
-.mp-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px;font-size:10.5px;color:var(--muted)}
-.mp-km{font-family:'IBM Plex Mono',monospace;color:var(--exp)}
-.mp-meta .tim-badge,.mp-meta .tq-badge{margin-left:0;font-size:9.5px;padding:1px 6px}
-.mp-v{display:flex;justify-content:space-between;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;margin-top:6px;white-space:nowrap}
-.mp-bar{display:flex;height:4px;border-radius:3px;overflow:hidden;margin-top:5px;background:var(--panel2)}
-.mp-bar i{display:block;height:100%}
-.mp-bar .bi{background:var(--imp)} .mp-bar .be{background:var(--exp)}
-.mp .n-imp{color:var(--imp)} .mp .n-exp{color:var(--exp)}
 .leaflet-bar a{background:var(--panel2);color:var(--text);border-color:var(--border)}
 .leaflet-bar a:hover{background:var(--panel)}
 /* Yakınlaştırma: varsayılan kutu kontrol yerine ince, camsı bir kapsül — sağ kenarın dikey
@@ -1384,19 +1374,16 @@ select:focus,input:focus{border-color:var(--exp)}
       <div class="map-chip-menu right" id="mapRadMenu" hidden></div>
       <div class="map-chip map-chip-count" id="mapCountChip"></div>
       <div class="map-visit-legend" id="mapVisitLegend" hidden><span><i class="pl"></i>Planlı</span><span><i class="dn"></i>Ziyaret edildi</span><span><i class="ot"></i>Diğer firmalar</span></div>
-      <!-- Haritanın üstünde yüzen firma kartı: harita artık daralmıyor, panel camsı bir katman
-           olarak haritanın sağ kenarında açılıyor (mobilde alt şerit gibi tabana yapışıyor). -->
-      <div class="map-side-panel" id="mapSidePanel" hidden>
-        <div class="map-side-panel-header">
-          <div class="map-side-panel-titles">
-            <span id="mapSidePanelTitle"></span>
-            <small id="mapSidePanelSub"></small>
-          </div>
-          <button class="map-side-panel-close" id="mapSidePanelClose" type="button" aria-label="Kapat"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-        </div>
-        <div class="map-side-panel-body" id="mapSidePanelBody"></div>
-      </div>
     </div>
+  </div>
+  <!-- Haritada bir noktaya tıklanınca buraya, haritanın hemen altına açılır (bkz. renderMapPick) -->
+  <div class="map-pick" id="mapPick" hidden>
+    <div class="map-pick-head">
+      <span class="map-pick-title" id="mapPickTitle"></span>
+      <button class="map-pick-close" id="mapPickClose" type="button" aria-label="Kapat"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="map-pick-card" id="mapPickCard"></div>
+    <div class="map-pick-rest" id="mapPickRest" hidden></div>
   </div>
 </div>
 <!-- locBtn görünmez: requestLocation'ı tetiklemek için kod içi kullanılır -->
@@ -2976,6 +2963,7 @@ function render(){
   $("locCard").style.display = (has && !visitScreenOpen)?"":"none";
   $("results").style.display = (has && !visitScreenOpen)?"":"none";
   $("stats").style.display = (has && !visitScreenOpen)?"":"none";
+  if (!(has && !visitScreenOpen)) closeMapPick(); // veri yokken / Ziyaret Listem ekranında seçim kartı da kapanır
   // "DİİB nedir?/Turquality nedir?" tanıtım satırı da Ziyaret Listem ekranında gereksiz kalabalık
   // yapıyordu — ana firma listesiyle birlikte gizleniyor.
   const introRow = document.querySelector(".intro-row");
@@ -3084,6 +3072,8 @@ function render(){
     el.appendChild(div);
   }
   $("showMore").style.display = list.length>S.shown?"":"none";
+  // Harita seçim kartı aynı listeden ve aynı çubuk ölçeğinden beslenir ki listedeki kartla birebir aynı görünsün
+  renderMapPick(list, maxV);
   if (S.userLoc || S.map) scheduleDrawMap(list);
 }
 
@@ -3378,25 +3368,6 @@ $("firmList").addEventListener("click", e=>{
 $("visitListBody") && $("visitListBody").addEventListener("click", e=>{
   const btn = e.target.closest(".visit-detail-btn");
   if (btn) toggleVisitForBranch(btn.dataset.visitKey);
-});
-
-// Harita popup'ındaki bir firmaya tıklanınca: aşağıdaki ana listede o firmayı aç ve oraya kaydır.
-// Popup içeriği Leaflet tarafından dinamik oluşturulduğu için document seviyesinde delege ediyoruz.
-document.addEventListener("click", e=>{
-  const row = e.target.closest(".mp-f");
-  if (!row) return;
-  const key = row.dataset.firmKey;
-  if (!key) return;
-  S._openFirm = key;
-  // Tıklanan firma, gösterilen ilk S.shown kayıt dışında kalmasın diye gerektiği kadar genişlet
-  const list = applyManualMerges(applyStarPriority(filtered()));
-  const idx = list.findIndex(a=>a.key===key);
-  if (idx >= 0 && idx >= S.shown) S.shown = idx + 10;
-  render();
-  requestAnimationFrame(()=>{
-    const card = document.querySelector(`.firm[data-key="${CSS.escape(key)}"]`);
-    if (card) card.scrollIntoView({behavior:"smooth", block:"center"});
-  });
 });
 
 // Yönetim panelinde seçili şube için firmayı yıldızla/kaldır, buluta kaydet
@@ -3910,9 +3881,8 @@ function drawMap(list){
         // fare ile sorun çıkmıyordu). Bir sonraki "tick"e erteleyerek dokunma olayının tamamen
         // bitmesini bekliyoruz.
         setTimeout(()=>{
-          S._openFirm = top[0].key;
-          render();
-          openMapSidePanel(firms.length, top);
+          openMapPick(top);
+          render(); // seçim kartını render() çiziyor (bkz. renderMapPick)
         }, 0);
       });
     S.mapLayers.push(glow, m);
@@ -3942,34 +3912,97 @@ function drawMap(list){
   setTimeout(()=>S.map.invalidateSize(), 60);
 }
 
-// Bir harita noktasına tıklanınca: Leaflet popup yerine haritanın yanındaki SABİT panel dolar.
-// Böylece liste hiçbir zaman haritayı/nokta işaretlerini kapatmaz, konumu değişmez.
-function openMapSidePanel(count, top){
-  const panel = $("mapSidePanel");
-  if (!panel) return;
-  panel.hidden = false;
-  $("mapSidePanelTitle").textContent = `Bu noktada ${count} firma`;
-  // Alt başlık: noktadaki firmaların toplam ihracatı — hangi noktanın daha değerli olduğu bir bakışta görünsün
-  const toplamExp = top.reduce((s,f)=>s+(f.exp||0), 0);
-  $("mapSidePanelSub").textContent = toplamExp > 0 ? `Toplam ihracat ${fmtM(toplamExp)}` : "";
-  $("mapSidePanelBody").innerHTML = `<div class="mp">` + top.map((f,i)=>{
-    const np = splitFirmName(f.firma);
-    const d = S.distByKey[f.key];
-    // İthalat/ihracat oranı: hangi yönde daha ağır olduğu çubuktan anlaşılsın
-    const tot = (f.imp||0) + (f.exp||0);
-    const impPct = tot > 0 ? (f.imp/tot*100) : 0;
-    return `<div class="mp-f" data-firm-key="${f.key}">
-      <div class="mp-rank">${i+1}</div>
-      <div class="mp-body">
-        <div class="mp-n">${np.main}${np.suffix?`<span class="nm-suffix">${np.suffix}</span>`:""}</div>
-        <div class="mp-meta">${d!==undefined?`<span class="mp-km">≈ ${d<10?d.toFixed(1):Math.round(d)} km</span>`:""}${f.tim?`<span class="tim-badge">${ic('trophy')} İlk 1000${f.tim.r<9999?` · #${f.tim.r}`:''}</span>`:""}${f.tq?`<span class="tq-badge">${ic('medal')} ${/TURQUALITY/i.test(f.tq.prog)?'Turquality':'Marka Destek'}</span>`:""}</div>
-        <div class="mp-v"><span class="n-exp">İhr ${fmt$(f.exp)}</span><span class="n-imp">İth ${fmt$(f.imp)}</span></div>
-        ${tot>0?`<div class="mp-bar"><i class="bi" style="width:${impPct.toFixed(1)}%"></i><i class="be" style="width:${(100-impPct).toFixed(1)}%"></i></div>`:""}
-      </div>
-    </div>`;
-  }).join("") + `</div>`;
+/* ---- Harita seçim kartı ----
+   Bir harita noktasına tıklanınca haritanın HEMEN ALTINDA açılır: o noktadaki en yüksek ihracatlı
+   firma, listedekiyle birebir aynı biçimde tam kart olarak; noktada başka firmalar varsa altında
+   tek satırlık özet olarak. Satıra dokununca o firma karta geçer, karta dokununca aşağıdaki
+   listede açılıp oraya kaydırılır.
+   Durum anahtar olarak tutulur (firma nesnesi değil): filtre/dönem değişince kart tazelenir,
+   listeden düşen firmalar seçimden de düşer. */
+function openMapPick(firms){
+  S._pickKeys = firms.map(f=>f.key);   // ihracata göre sıralı gelir
+  S._pickKey = S._pickKeys[0] || null;
+  S._openFirm = S._pickKey;            // nokta haritada turuncuya döner, kart listede de açılır
 }
-$("mapSidePanelClose") && ($("mapSidePanelClose").onclick = ()=>{ $("mapSidePanel").hidden = true; });
+function closeMapPick(){
+  S._pickKeys = null; S._pickKey = null;
+  const el = $("mapPick"); if (el) el.hidden = true;
+}
+function renderMapPick(list, maxV){
+  const box = $("mapPick"); if (!box) return;
+  if (!S._pickKeys || !S._pickKeys.length){ box.hidden = true; return; }
+  list = list || applyManualMerges(applyStarPriority(filtered()));
+  const byKey = new Map(list.map(a=>[a.key, a]));
+  const kalan = S._pickKeys.filter(k=>byKey.has(k));
+  if (!kalan.length){ closeMapPick(); return; } // filtre değişti, noktadaki firmalar listede yok
+  S._pickKeys = kalan;
+  if (!byKey.has(S._pickKey)) S._pickKey = kalan[0];
+  const a = byKey.get(S._pickKey);
+  if (!maxV) maxV = Math.max(1, ...kalan.map(k=>Math.max(byKey.get(k).imp, byKey.get(k).exp)));
+
+  $("mapPickTitle").innerHTML = kalan.length > 1
+    ? `Seçilen nokta <small>· ${kalan.length} firma</small>`
+    : "Seçilen firma";
+
+  const d = S.distByKey[a.key];
+  const exact = S.distByKey[a.key+"__addr"];
+  const precise = S.distByKey[a.key+"__mh"];
+  const cardIlce = (a.tq && a.tq.ilce) ? trUp(a.tq.ilce) : (a.adres && a.il ? extractIlce(a.adres, a.il) : null);
+  const nameParts = splitFirmName(a.firma);
+  $("mapPickCard").innerHTML = `
+    <div class="firm-top">
+      <div class="firm-name">${nameParts.main}${nameParts.suffix?`<span class="nm-suffix">${nameParts.suffix}</span>`:""}${(a.tim||a.tq)?`<span class="badge-row">${a.tim?`<span class="tim-badge" title="TİM İlk 1000 İhracatçı${S.timYear?' '+S.timYear:''}">${ic('trophy')} İlk 1000${a.tim.r<9999?` · #${a.tim.r}`:''}</span>`:""}${a.tq?`<span class="tq-badge" title="${a.tq.prog||'Turquality/Marka Destek'}">${ic('medal')} ${/TURQUALITY/i.test(a.tq.prog)?'Turquality':'Marka Destek'}</span>`:""}</span>`:""}</div>
+      <div class="firm-top-right">${d!==undefined?`<div class="firm-dist" title="${exact?'Tam adres':(precise?'Mahalle bazlı':'İlçe merkezine göre')}">≈ ${d<10?d.toFixed(1):Math.round(d)} km${exact?` <span class="prec exact">${ic('pin')}</span>`:(precise?' <span class="prec">•</span>':'')}</div>`:""}</div>
+    </div>
+    <div class="firm-addr">${a.adres|| (a.tq?(a.tq.web?a.tq.web:"Turquality kayıtlı firma"):(a.tim?"Adres yok — sadece İlk 1000 listesinde":"Adres yok"))}</div>
+    <div class="firm-meta">${a.vkn?`VKN ${a.vkn} · `:""}${a.il||"İl —"}${a.belge?` · ${a.belge} belge`:(a.tq?" · Turquality":(a.tim?" · İlk 1000":""))}</div>
+    <div class="firm-loc">${[cardIlce, a.il].filter(Boolean).join(" / ") || "Konum —"}</div>
+    ${(a.imp||a.exp)?`<div class="flow">
+      <div class="bar bimp" style="width:${Math.min(100, a.imp/maxV*100).toFixed(1)}%"></div>
+      <div class="axis"></div>
+      <div class="bar bexp" style="width:${Math.min(100, a.exp/maxV*100).toFixed(1)}%"></div>
+    </div>
+    <div class="flow-nums">
+      <span class="fn"><span class="fn-tag tag-imp">↓ İthalat</span> <span class="n-imp n-full">${fmt$(a.imp)}</span><span class="n-imp n-short">${fmtShort$(a.imp)}</span></span>
+      <span class="fn fn-r"><span class="n-exp n-full">${fmt$(a.exp)}</span><span class="n-exp n-short">${fmtShort$(a.exp)}</span> <span class="fn-tag tag-exp">İhracat ↑</span></span>
+    </div>`:`<div class="no-diib">DİİB belgesi bu dönemde yok${a.tq?" · Turquality havuzundan":(a.tim?" · İlk 1000 havuzundan":"")}</div>`}`;
+
+  const digerleri = kalan.map((k,i)=>({k, no:i+1})).filter(x=>x.k !== S._pickKey);
+  const rest = $("mapPickRest");
+  rest.hidden = !digerleri.length;
+  rest.innerHTML = digerleri.map(({k,no})=>{
+    const f = byKey.get(k);
+    const fd = S.distByKey[k];
+    return `<div class="mpr" data-pick-key="${k}">
+      <span class="mpr-no">${no}</span>
+      <span class="mpr-nm">${splitFirmName(f.firma).main}</span>
+      ${fd!==undefined?`<span class="mpr-km">≈ ${fd<10?fd.toFixed(1):Math.round(fd)} km</span>`:""}
+      <span class="mpr-v">${fmtShort$(f.exp)}</span>
+    </div>`;
+  }).join("");
+  box.hidden = false;
+}
+$("mapPickClose") && ($("mapPickClose").onclick = closeMapPick);
+// Alt satır: o firmayı karta al (harita noktası ve listedeki açık kart da ona geçer)
+$("mapPickRest") && $("mapPickRest").addEventListener("click", e=>{
+  const row = e.target.closest(".mpr"); if (!row) return;
+  S._pickKey = row.dataset.pickKey;
+  S._openFirm = S._pickKey;
+  render();
+});
+// Kart: aşağıdaki ana listede o firmayı aç ve oraya kaydır
+$("mapPickCard") && $("mapPickCard").addEventListener("click", ()=>{
+  const key = S._pickKey; if (!key) return;
+  S._openFirm = key;
+  const list = applyManualMerges(applyStarPriority(filtered()));
+  const idx = list.findIndex(a=>a.key===key);
+  if (idx >= 0 && idx >= S.shown) S.shown = idx + 10; // seçilen firma gösterilen ilk N kaydın dışındaysa genişlet
+  render();
+  requestAnimationFrame(()=>{
+    const card = document.querySelector(`.firm[data-key="${CSS.escape(key)}"]`);
+    if (card) card.scrollIntoView({behavior:"smooth", block:"center"});
+  });
+});
 
 /* ================= CSV EXPORT ================= */
 $("firmsCsvBtn") && ($("firmsCsvBtn").onclick = ()=> $("csvBtn").click());
