@@ -3631,9 +3631,23 @@ async function geocodeVisible(){
   for (const a of list){
     const geo = S.addrGeo && S.addrGeo[a.key];
     if (geo && isFinite(geo.lat) && isFinite(geo.lon)){
-      S.distByKey[a.key]=haversine(S.userLoc,{lat:geo.lat,lon:geo.lon});
-      S.distByKey[a.key+"__c"]={lat:geo.lat,lon:geo.lon};
-      S.distByKey[a.key+"__addr"]=true; // tam adres hassasiyeti — mahalle sorgusuna gerek yok
+      // seviye: koordinatın hangi kademede DOĞRULANDIĞI (scripts/geocode.js yazar; Google'dan
+      // dönen adresin il/ilçesi beklenenle karşılaştırılır, tutmazsa bir alt kademeye inilir).
+      // Eskiden her kayıt "tam adres" sayılıyordu — oysa kayıtların üçte biri Google'ın kendi
+      // etiketiyle bile yaklaşıktı, bir kısmı da başka ilçeye düşmüştü.
+      let seviye = geo.seviye || ((geo.precision==="ROOFTOP"||geo.precision==="RANGE_INTERPOLATED") ? "bina" : "ilce");
+      // Google'ın kendi etiketi "yaklaşık" diyorsa (bina değil, bir bölgenin merkezi) doğrulama
+      // geçse bile bina sayılmaz — ör. "Alcı OSB, Sincan" doğru yerdedir ama kapı numarası değildir.
+      if (seviye==="bina" && geo.precision==="APPROXIMATE") seviye = "mahalle";
+      // İlçe seviyesindeki bir kayıt daha önce mahalleye inceltildiyse (refineMahalle) onu bozma
+      if (!(seviye==="ilce" && S.distByKey[a.key+"__mh"])){
+        S.distByKey[a.key]=haversine(S.userLoc,{lat:geo.lat,lon:geo.lon});
+        S.distByKey[a.key+"__c"]={lat:geo.lat,lon:geo.lon};
+        if (seviye==="bina") S.distByKey[a.key+"__addr"]=true;
+        else if (seviye==="mahalle") S.distByKey[a.key+"__mh"]=true;
+        // "ilce": hassasiyet işareti yok — kartta "İlçe merkezine göre" yazar ve
+        // refineMahalle() bu firmayı mahalle seviyesine çekmeyi deneyebilir
+      }
       continue;
     }
     const c = localCoord(a);

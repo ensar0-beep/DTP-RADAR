@@ -110,7 +110,61 @@ const db = admin.database();
 /* ---------------- Yardımcılar ---------------- */
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-async function geocodeOne(query, il) {
+/* ---------------- Adres temizleme ---------------- */
+// Google, adreste birden fazla numara ifadesi görünce ("NO: 3  İÇ KAPI NO: 1") yanlış sokağı
+// eşleştirebiliyordu (ör. SANİPAK: Çam Pınarı Sk. No:3 yerine İmtiyaz Sk. No:17). Bina içi
+// ayrıntılar (iç kapı, kat, daire, blok) adresin yerini belirlemeye katkı sağlamadığı için atılır.
+function temizleAdres(adres) {
+  let a = " " + trUp(adres).replace(/\s+/g, " ") + " ";
+  a = a.replace(/İÇ\s*KAPI\s*(NO|NUMARA)?\s*:?\s*[0-9A-ZÇĞİÖŞÜ/\-]+/g, " ");
+  a = a.replace(/\bKAT\s*:?\s*[0-9A-ZÇĞİÖŞÜ/\-]+/g, " ");
+  a = a.replace(/\bDAİRE\s*:?\s*[0-9A-ZÇĞİÖŞÜ/\-]+/g, " ");
+  a = a.replace(/\bD\s*:\s*[0-9A-ZÇĞİÖŞÜ/\-]+/g, " ");
+  a = a.replace(/\b([A-ZÇĞİÖŞÜ0-9]+\s+)?BLOK\b/g, " ");
+  a = a.replace(/\bPOSTA\s*KUTUSU\s*:?\s*[0-9]+/g, " ");
+  a = a.replace(/\bNO\s*:?\s*/g, "NO:");
+  return a.replace(/\s+/g, " ").trim();
+}
+
+// Adresten ilçe — index_147.html'deki extractIlce ile birebir aynı olmalı
+function extractIlce(adres, il) {
+  if (!il) return null;
+  const u = trUp(adres);
+  let m = u.match(new RegExp("([A-ZÇĞİÖŞÜ]{3,20})\\s*[\\/\\\\-]\\s*" + il));
+  if (m && !ILLER.includes(m[1])) return m[1];
+  const i = u.lastIndexOf(il);
+  if (i > 0) {
+    const before = u.slice(0, i).replace(/[,.\s]+$/, "").trim();
+    m = before.match(/([A-ZÇĞİÖŞÜ]{3,20})$/);
+    if (m && !ILLER.includes(m[1]) && !["MAH","CAD","SOK","BLOK","APT","OSB","NO","KAT","SAN","TİC","SİT"].includes(m[1])) return m[1];
+  }
+  return null;
+}
+
+// Adresten mahalle adı — index_147.html'deki extractMahalle ile aynı mantık (…MAH./MAHALLESİ öncesi sözcük)
+function extractMahalle(adres) {
+  const u = trUp(adres).replace(/\s+/g, " ");
+  const m = u.match(/([A-ZÇĞİÖŞÜ0-9.\-]+(?:\s+[A-ZÇĞİÖŞÜ0-9.\-]+)?)\s+MAH(?:\.|ALLESİ|ALLESI)?\b/);
+  return m ? m[1].replace(/\.$/, "").trim() : null;
+}
+
+// Karşılaştırma için sadeleştirme: boşluk/noktalama atılır, Türkçe harfler düzleştirilir
+const sadeleştir = s => trUp(String(s || ""))
+  .replace(/İ/g, "I").replace(/Ş/g, "S").replace(/Ğ/g, "G").replace(/Ü/g, "U").replace(/Ö/g, "O").replace(/Ç/g, "C")
+  .replace(/[^A-Z0-9]/g, "");
+const sadeIlce = s => sadeleştir(s).replace(/MERKEZ/g, "").replace(/OSB/g, "");
+
+function bilesen(r, ...tipler) {
+  for (const t of tipler) {
+    const c = (r.address_components || []).find(x => (x.types || []).includes(t));
+    if (c) return c.long_name;
+  }
+  return "";
+}
+
+/* ---------------- Google Geocoding ---------------- */
+// Ham sonucu döndürür; doğrulama çağıran tarafta yapılır.
+async function sorgula(query, il) {
   const components = il ? `country:TR|administrative_area:${il}` : "country:TR";
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&region=tr&components=${encodeURIComponent(components)}&key=${API_KEY}`;
   for (let attempt = 1; attempt <= 3; attempt++) {
@@ -130,6 +184,8 @@ async function geocodeOne(query, il) {
         lon: r.geometry.location.lng,
         formatted: r.formatted_address || "",
         precision: r.geometry.location_type || "",
+        gelenIlce: bilesen(r, "administrative_area_level_2", "locality"),
+        gelenIl: bilesen(r, "administrative_area_level_1"),
       };
     }
     if (data.status === "ZERO_RESULTS") return null;
@@ -138,11 +194,48 @@ async function geocodeOne(query, il) {
       await sleep(2000 * attempt);
       continue;
     }
-    // REQUEST_DENIED, INVALID_REQUEST vb. — tekrar denemenin anlamı yok.
     console.warn(`  ⚠ Geocoding hatası: ${data.status} ${data.error_message || ""}`);
     return null;
   }
   return null;
+}
+
+// Sonucun beklenen il/ilçeye düşüp düşmediğini doğrular.
+function dogrula(geo, il, ilce) {
+  if (!geo) return { ok: false, neden: "sonuç yok" };
+  const f = sadeleştir(geo.formatted);
+  if (il) {
+    const ilOk = sadeleştir(geo.gelenIl).includes(sadeleştir(il)) || f.includes(sadeleştir(il));
+    if (!ilOk) return { ok: false, neden: `il tutmadı (${geo.gelenIl || "?"})` };
+  }
+  if (ilce && sadeIlce(ilce).length >= 3) {
+    const b = sadeIlce(ilce);
+    const ilceOk = sadeIlce(geo.gelenIlce).includes(b) || b.includes(sadeIlce(geo.gelenIlce)) || f.includes(b);
+    if (!ilceOk) return { ok: false, neden: `ilçe tutmadı (${geo.gelenIlce || "?"})` };
+  }
+  return { ok: true };
+}
+
+/* Kademeli çözüm: bina → mahalle → ilçe. Her kademede sonuç beklenen il/ilçeye düşmüyorsa
+   bir alt kademeye inilir; böylece yanlış bir sokağa "kesin adres" damgası vurulmaz. */
+async function coz(adres, il, ilce) {
+  const temiz = temizleAdres(adres);
+  const mah = extractMahalle(adres);
+  const denemeler = [];
+  denemeler.push({ seviye: "bina", q: `${temiz}, Türkiye` });
+  if (mah && ilce) denemeler.push({ seviye: "mahalle", q: `${mah} Mahallesi, ${ilce}, ${il || ""}, Türkiye` });
+  if (ilce) denemeler.push({ seviye: "ilce", q: `${ilce}, ${il || ""}, Türkiye` });
+
+  let sorguSayisi = 0, sonHata = "";
+  for (const d of denemeler) {
+    const geo = await sorgula(d.q, il);
+    sorguSayisi++;
+    const v = dogrula(geo, il, ilce);
+    if (geo && v.ok) return { geo, seviye: d.seviye, sorguSayisi };
+    sonHata = v.neden || "sonuç yok";
+    await sleep(120);
+  }
+  return { geo: null, seviye: null, sorguSayisi, neden: sonHata };
 }
 
 /* ---------------- Ana akış ---------------- */
@@ -207,8 +300,10 @@ async function main() {
     process.exit(0);
   }
 
-  let done = 0, found = 0, notFound = 0;
+  let done = 0, toplamSorgu = 0, notFound = 0;
+  const sayac = { bina: 0, mahalle: 0, ilce: 0 };
   const notFoundList = [];
+  const rapor = [];
   let pendingWrite = {};
 
   const flush = async () => {
@@ -221,36 +316,56 @@ async function main() {
     if (done >= LIMIT) break;
     done++;
     const il = extractIl(a.adres);
-    const query = `${a.adres}, Türkiye`;
-    process.stdout.write(`[${done}/${Math.min(todo.length, LIMIT)}] ${a.firma.slice(0, 40).padEnd(40)} `);
-    let geo = null;
-    try { geo = await geocodeOne(query, il); }
+    const ilce = extractIlce(a.adres, il);
+    process.stdout.write(`[${done}/${Math.min(todo.length, LIMIT)}] ${a.firma.slice(0, 38).padEnd(38)} `);
+    let sonuc = { geo: null, seviye: null, sorguSayisi: 0 };
+    try { sonuc = await coz(a.adres, il, ilce); }
     catch (e) { console.log(`HATA: ${e.message}`); }
+    toplamSorgu += sonuc.sorguSayisi;
 
-    if (geo) {
-      found++;
-      console.log(`✓ ${geo.precision} (${geo.lat.toFixed(5)}, ${geo.lon.toFixed(5)})`);
-      pendingWrite[`addrGeo/${a.key}`] = { lat: geo.lat, lon: geo.lon, formatted: geo.formatted, precision: geo.precision, ts: Date.now() };
+    const eski = existingAddrGeo[a.key];
+    if (sonuc.geo) {
+      sayac[sonuc.seviye]++;
+      const etiket = sonuc.seviye === "bina" ? "✓ bina" : (sonuc.seviye === "mahalle" ? "~ mahalle" : "· ilçe");
+      console.log(`${etiket}  ${sonuc.geo.precision}  (${sonuc.geo.lat.toFixed(5)}, ${sonuc.geo.lon.toFixed(5)})`);
+      // seviye: koordinatın hangi kademede doğrulandığı — istemci buna göre "tam adres" der ya da demez
+      pendingWrite[`addrGeo/${a.key}`] = {
+        lat: sonuc.geo.lat, lon: sonuc.geo.lon,
+        formatted: sonuc.geo.formatted, precision: sonuc.geo.precision,
+        seviye: sonuc.seviye, ts: Date.now(),
+      };
+      rapor.push([a.firma, il || "", ilce || "", sonuc.seviye, sonuc.geo.precision, sonuc.geo.formatted,
+        eski ? eski.formatted || "" : "", sonuc.geo.lat, sonuc.geo.lon]);
     } else {
       notFound++;
-      notFoundList.push({ key: a.key, firma: a.firma, adres: a.adres });
-      console.log("— bulunamadı");
+      notFoundList.push({ key: a.key, firma: a.firma, adres: a.adres, neden: sonuc.neden || "" });
+      console.log(`— çözülemedi (${sonuc.neden || ""})`);
+      rapor.push([a.firma, il || "", ilce || "", "YOK", "", "", eski ? eski.formatted || "" : "", "", ""]);
     }
 
     if (Object.keys(pendingWrite).length >= 25) await flush();
-    await sleep(150); // ~6.6 istek/sn — güvenli tempo
+    await sleep(120);
   }
   await flush();
 
   if (notFoundList.length) {
     const outPath = path.join(__dirname, "not_found.json");
     fs.writeFileSync(outPath, JSON.stringify(notFoundList, null, 2), "utf8");
-    console.log(`\nBulunamayan ${notFoundList.length} adres → ${outPath}`);
+    console.log(`\nÇözülemeyen ${notFoundList.length} adres → ${outPath}`);
   }
+  const esc = s => '"' + String(s == null ? "" : s).replace(/"/g, '""') + '"';
+  const csv = "﻿" + ["Firma;Il;Ilce;Seviye;Hassasiyet;Yeni adres;Eski adres;Enlem;Boylam"]
+    .concat(rapor.map(r => r.map(esc).join(";"))).join("\n");
+  const raporYolu = path.join(__dirname, "geocode_rapor.csv");
+  fs.writeFileSync(raporYolu, csv, "utf8");
 
-  const cost = (found * 0.005).toFixed(2);
-  console.log(`\nBitti. Denenen: ${done} · Bulunan: ${found} · Bulunamayan: ${notFound}`);
-  console.log(`Tahmini maliyet: ~$${cost} (ilk $200/ay Google kredisi kapsıyorsa muhtemelen $0)`);
+  console.log(`\nBitti. Firma: ${done} · Google sorgusu: ${toplamSorgu}`);
+  console.log(`  bina seviyesi : ${sayac.bina}`);
+  console.log(`  mahalle       : ${sayac.mahalle}`);
+  console.log(`  ilçe          : ${sayac.ilce}`);
+  console.log(`  çözülemeyen   : ${notFound}`);
+  console.log(`Rapor: ${raporYolu}`);
+  console.log(`Tahmini maliyet: ~$${(toplamSorgu * 0.005).toFixed(2)} (aylık ücretsiz kota kapsıyorsa $0)`);
   process.exit(0);
 }
 
