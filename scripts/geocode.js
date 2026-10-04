@@ -136,7 +136,7 @@ function extractIlce(adres, il) {
   if (i > 0) {
     const before = u.slice(0, i).replace(/[,.\s]+$/, "").trim();
     m = before.match(/([A-ZÇĞİÖŞÜ]{3,20})$/);
-    if (m && !ILLER.includes(m[1]) && !["MAH","CAD","SOK","BLOK","APT","OSB","NO","KAT","SAN","TİC","SİT"].includes(m[1])) return m[1];
+    if (m && !ILLER.includes(m[1]) && !["MAH","MAHALLE","MAHALLESİ","MH","CAD","CADDE","CADDESİ","CD","SOK","SOKAK","SOKAĞI","SK","BULVAR","BULVARI","BLV","BLOK","APT","APARTMANI","SİTE","SİTESİ","OSB","NO","KAT","SAN","SANAYİ","TİC","SİT","BÖLGESİ","ORGANİZE","KÜME","EVLERİ","MEVKİİ","MEVKİ","KÖY","KÖYÜ","BELDE","BELDESİ","YOLU","YOL"].includes(m[1])) return m[1];
   }
   return null;
 }

@@ -417,6 +417,26 @@ input[type=file]{display:none}
 @media(max-width:900px){.branch-strip{flex-wrap:wrap;row-gap:10px}.bs-who{padding-right:0}.bs-kpis{border:none;flex-basis:100%;order:3;justify-content:flex-start;padding:10px 0 0;border-top:1px solid var(--border)}.bs-acts{padding-left:auto;margin-left:auto}}
 .bulk-star[hidden]{display:none}
 .branch-prox-table tbody tr.sel td{background:rgba(53,196,168,.07)}
+/* Konum Denetimi ekranı */
+.geo-kpis{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+.geo-kpi{flex:1 1 130px;background:var(--panel2);border:1px solid var(--border);border-radius:11px;padding:11px 13px}
+.geo-kpi .k{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+.geo-kpi .v{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums}
+.geo-kpi.iyi .v{color:var(--exp)} .geo-kpi.orta .v{color:var(--imp)} .geo-kpi.kotu .v{color:var(--danger)}
+.geo-howto{margin-top:14px;background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--imp);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
+.geo-howto b{color:var(--text)}
+.geo-howto code{font-family:'IBM Plex Mono',monospace;font-size:11.5px;background:var(--panel);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--text)}
+.geo-filters{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 2px}
+.geo-filter{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:6px 13px;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;transition:.15s}
+.geo-filter:hover{color:var(--text);border-color:var(--axis)}
+.geo-filter.active{background:rgba(232,163,61,.12);border-color:var(--imp);color:var(--imp)}
+.geo-rozet{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;border-radius:5px;padding:2px 7px;white-space:nowrap}
+.geo-rozet.il{background:rgba(224,96,96,.16);color:var(--danger)}
+.geo-rozet.ilce{background:rgba(232,163,61,.16);color:var(--imp)}
+.geo-rozet.kaba{background:rgba(139,150,175,.16);color:var(--muted)}
+.geo-rozet.yok{background:rgba(91,159,232,.16);color:#5B9FE8}
+.geo-adres{color:var(--muted);font-size:11.5px;line-height:1.4;max-width:380px}
+.geo-bos{color:var(--faint);font-size:12.5px;text-align:center;padding:26px 0}
 .admin-subhead{font-family:'Sora',sans-serif;font-weight:600;font-size:13.5px;margin-top:26px;margin-bottom:8px;color:var(--text)}
 
 /* Şube sınıflandırma sekmeleri */
@@ -1524,6 +1544,10 @@ select:focus,input:focus{border-color:var(--exp)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10M20 21V10M2 10l10-6 10 6M6 10v11M10 10v11M14 10v11M18 10v11"/></svg>
         Firmalar
       </button>
+      <button class="admin-nav-item" id="navGeo" type="button" data-target="adminGeoScreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 11.9-5"/><circle cx="12" cy="10" r="2.5"/><path d="M16 15l2.5 2.5L23 13"/></svg>
+        Konum Denetimi
+      </button>
       <button class="admin-nav-item" id="navBranches" type="button" data-target="adminBranchesScreen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M13 21V11l6 3v7"/><path d="M9 9v.01M9 12v.01M9 15v.01"/></svg>
         Şubeler
@@ -1745,6 +1769,25 @@ select:focus,input:focus{border-color:var(--exp)}
           <button class="btn primary" id="mergeConfirmBtn" disabled><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6M8 12L5.5 14.5a3 3 0 004.24 4.24L12 16.5M16 12l2.5-2.5a3 3 0 00-4.24-4.24L12 7.5"/></svg> Seçilenleri Birleştir</button>
         </div>
         <div id="mergeFirmList" class="merge-firm-list"></div>
+      </div>
+
+      <!-- Konum Denetimi: firmaların haritadaki konumu ne kadar güvenilir -->
+      <div id="adminGeoScreen" class="admin-screen" hidden>
+        <div class="admin-head">
+          <div>
+            <div class="admin-screen-title">Konum Denetimi</div>
+            <div class="admin-screen-desc">Firmaların haritadaki noktası ne kadar güvenilir? Yeni ayı yükledikten sonra buradan kontrol et — sorunlu olanları aşağıda listeler.</div>
+          </div>
+          <button class="btn" id="geoCsvBtn" type="button">Excel indir</button>
+        </div>
+        <div class="geo-kpis" id="geoKpis"></div>
+        <div class="geo-howto" id="geoHowto"></div>
+        <div class="admin-subhead-row">
+          <div class="admin-subhead">Sorunlu konumlar</div>
+          <button class="btn" id="geoRescanBtn" type="button">Yeniden tara</button>
+        </div>
+        <div class="geo-filters" id="geoFilters"></div>
+        <div class="branch-prox-table-wrap" id="geoListWrap"></div>
       </div>
 
       <!-- Duyurular -->
@@ -2054,7 +2097,9 @@ function extractIlce(adres, il){
   if (i>0){
     const before = u.slice(0,i).replace(/[,.\s]+$/,"").trim();
     m = before.match(/([A-ZÇĞİÖŞÜ]{3,20})$/);
-    if (m && !ILLER.includes(m[1]) && !["MAH","CAD","SOK","BLOK","APT","OSB","NO","KAT","SAN","TİC","SİT"].includes(m[1])) return m[1];
+    // Adres "… CUMHURİYET MAHALLESİ ANKARA" gibi bitince il'den önceki kelime ilçe değil,
+    // yol/yapı tipini belirten bir sözcük oluyordu — kartta "MAHALLESİ / ANKARA" görünüyordu.
+    if (m && !ILLER.includes(m[1]) && !["MAH","MAHALLE","MAHALLESİ","MH","CAD","CADDE","CADDESİ","CD","SOK","SOKAK","SOKAĞI","SK","BULVAR","BULVARI","BLV","BLOK","APT","APARTMANI","SİTE","SİTESİ","OSB","NO","KAT","SAN","SANAYİ","TİC","SİT","BÖLGESİ","ORGANİZE","KÜME","EVLERİ","MEVKİİ","MEVKİ","KÖY","KÖYÜ","BELDE","BELDESİ","YOLU","YOL"].includes(m[1])) return m[1];
   }
   return null;
 }
@@ -4547,7 +4592,149 @@ function renderAuth(){
 // ---- Yönetim paneli: Şube Yönetimi (giriş istatistikleri + yıldız firma atama) ----
 
 // ---- Yönetim paneli: sidebar navigasyonu ----
-const ADMIN_SCREENS = ["adminOverviewScreen", "adminAudiencesScreen", "adminFirmsScreen", "adminBranchesScreen", "adminAnnouncementsScreen", "adminFirmViewScreen"];
+/* ================= KONUM DENETİMİ (yönetim) =================
+   Firmaların haritadaki noktası hangi kademede doğrulanmış, hangileri şüpheli?
+   Kriterler scripts/geocode.js'in doğrulamasıyla aynı: kayıtlı adresin il/ilçesi firmanın
+   kendi adresindekiyle örtüşmeli. Bu ekran salt okunurdur — düzeltme, Google anahtarı
+   tarayıcıya konulamadığı için bilgisayarda çalışan betikle yapılır (bkz. geoHowto). */
+S._geoDenetim = null;
+S._geoFiltre = "hepsi";
+
+const geoNorm = s => trUp(String(s||""))
+  .replace(/İ/g,"I").replace(/Ş/g,"S").replace(/Ğ/g,"G").replace(/Ü/g,"U").replace(/Ö/g,"O").replace(/Ç/g,"C")
+  .replace(/[^A-Z0-9]/g,"");
+const geoSadeIlce = s => geoNorm(s).replace(/MERKEZ/g,"").replace(/OSB/g,"");
+
+// geocodeVisible() ile AYNI kural — ikisi ayrışırsa ekran yanlış bilgi verir
+function geoSeviyesi(geo){
+  if (!geo) return null;
+  let s = geo.seviye || ((geo.precision==="ROOFTOP"||geo.precision==="RANGE_INTERPOLATED") ? "bina" : "ilce");
+  if (s==="bina" && geo.precision==="APPROXIMATE") s = "mahalle";
+  return s;
+}
+
+const GEO_TIP_ETIKET = {
+  il:   {ad:"Yanlış il",        sinif:"il"},
+  ilce: {ad:"Yanlış ilçe",      sinif:"ilce"},
+  yok:  {ad:"Koordinat yok",    sinif:"yok"},
+  kaba: {ad:"Sadece ilçe",      sinif:"kaba"},
+};
+
+function konumDenetle(){
+  // Tüm aylardaki firmalar: aggregate() yalnız seçili dönemi kapsar, denetim hepsini görmeli
+  const firmalar = new Map();
+  for (const f of S.files){
+    for (const r of (f.records||[])){
+      if (!r.key) continue;
+      let a = firmalar.get(r.key);
+      if (!a){ a = {key:r.key, firma:r.firma, adres:r.adres||"", il:r.il||""}; firmalar.set(r.key, a); }
+      else if ((r.adres||"").length > a.adres.length){ a.adres = r.adres; a.il = r.il || a.il; }
+    }
+  }
+  const ozet = {toplam:firmalar.size, bina:0, mahalle:0, ilce:0, kayitYok:0, hatali:0};
+  const satirlar = [];
+  for (const a of firmalar.values()){
+    const geo = S.addrGeo && S.addrGeo[a.key];
+    const ilce = (a.adres && a.il) ? extractIlce(a.adres, a.il) : null;
+    if (!geo || !isFinite(geo.lat) || !isFinite(geo.lon)){
+      ozet.kayitYok++;
+      satirlar.push({...a, ilce, tip:"yok", gelen:"", km:null});
+      continue;
+    }
+    const sev = geoSeviyesi(geo);
+    if (ozet[sev] !== undefined) ozet[sev]++;
+    const bicim = geo.formatted || "";
+    const n = geoNorm(bicim);
+    let tip = null;
+    if (bicim && a.il && !n.includes(geoNorm(a.il))) tip = "il";
+    else if (bicim && ilce && geoSadeIlce(ilce).length>=3 && !n.includes(geoSadeIlce(ilce))) tip = "ilce";
+    else if (sev === "ilce") tip = "kaba";
+    if (!tip) continue;
+    if (tip==="il" || tip==="ilce") ozet.hatali++;
+    const merkez = localCoord({adres:a.adres, il:a.il});
+    const km = merkez ? haversine(merkez, {lat:geo.lat, lon:geo.lon}) : null;
+    satirlar.push({...a, ilce, tip, gelen:bicim, km});
+  }
+  const sira = {il:0, ilce:1, yok:2, kaba:3};
+  satirlar.sort((x,y)=> (sira[x.tip]-sira[y.tip]) || String(x.firma).localeCompare(String(y.firma),"tr"));
+  return {ozet, satirlar};
+}
+
+function renderKonumDenetim(){
+  if (!$("geoKpis")) return;
+  // Koordinatlar buluttan gelmeden tarama yapma: aksi hâlde "hepsi koordinatsız" gibi görünür
+  if (!S._addrGeoYuklendi || !S.files.length){
+    $("geoKpis").innerHTML = "";
+    $("geoHowto").innerHTML = "";
+    $("geoFilters").innerHTML = "";
+    $("geoListWrap").innerHTML = `<div class="geo-bos">${radarSpinner(18)} Konum verisi buluttan yükleniyor…</div>`;
+    return;
+  }
+  if (!S._geoDenetim) S._geoDenetim = konumDenetle();
+  const {ozet, satirlar} = S._geoDenetim;
+  const yuzde = n => ozet.toplam ? ` <small>%${(n/ozet.toplam*100).toFixed(0)}</small>` : "";
+  $("geoKpis").innerHTML = `
+    <div class="geo-kpi"><div class="k">Toplam firma</div><div class="v">${ozet.toplam.toLocaleString("tr-TR")}</div></div>
+    <div class="geo-kpi iyi"><div class="k">Bina seviyesi</div><div class="v">${ozet.bina.toLocaleString("tr-TR")}${yuzde(ozet.bina)}</div></div>
+    <div class="geo-kpi"><div class="k">Mahalle seviyesi</div><div class="v">${ozet.mahalle.toLocaleString("tr-TR")}</div></div>
+    <div class="geo-kpi orta"><div class="k">Sadece ilçe</div><div class="v">${ozet.ilce.toLocaleString("tr-TR")}</div></div>
+    <div class="geo-kpi orta"><div class="k">Koordinat yok</div><div class="v">${ozet.kayitYok.toLocaleString("tr-TR")}</div></div>
+    <div class="geo-kpi ${ozet.hatali ? "kotu" : "iyi"}"><div class="k">Yanlış konum</div><div class="v">${ozet.hatali.toLocaleString("tr-TR")}</div></div>`;
+
+  $("geoHowto").innerHTML = `<b>Nasıl düzeltilir?</b> Yeni ayı yükledikten sonra bilgisayarda
+    <code>scripts/konumlari_guncelle.command</code> dosyasına çift tıkla — koordinatı olmayan yeni firmaları
+    Google'dan çözüp buraya yazar, sonra bu ekranda <b>Yeniden tara</b> de.
+    <br>Google anahtarı güvenlik gereği tarayıcıya konulamaz (herkese açık kaynak koddan okunabilirdi),
+    bu yüzden çözümleme adımı bilgisayarda çalışır. <b>"Sadece ilçe"</b> olanlar yanlış değildir —
+    adres bina seviyesinde doğrulanamadığı için firma ilçe merkezinde gösterilir ve kartta tam adres iddia edilmez.`;
+
+  const say = t => satirlar.filter(x=>x.tip===t).length;
+  const filtreler = [["hepsi", `Hepsi (${satirlar.length})`], ["il", `Yanlış il (${say("il")})`],
+    ["ilce", `Yanlış ilçe (${say("ilce")})`], ["yok", `Koordinat yok (${say("yok")})`], ["kaba", `Sadece ilçe (${say("kaba")})`]];
+  $("geoFilters").innerHTML = filtreler.map(([k,ad])=>
+    `<button type="button" class="geo-filter${S._geoFiltre===k?" active":""}" data-geo-filtre="${k}">${ad}</button>`).join("");
+
+  const gosterilecek = S._geoFiltre==="hepsi" ? satirlar : satirlar.filter(x=>x.tip===S._geoFiltre);
+  const wrap = $("geoListWrap");
+  if (!gosterilecek.length){
+    wrap.innerHTML = `<div class="geo-bos">${satirlar.length ? "Bu filtrede kayıt yok." : "Sorunlu konum bulunamadı — hepsi doğrulanmış görünüyor."}</div>`;
+    return;
+  }
+  wrap.innerHTML = `<table class="branch-prox-table">
+    <thead><tr><th>Sorun</th><th>Firma</th><th>Beklenen konum</th><th>Kayıtlı adres</th><th>Sapma</th></tr></thead>
+    <tbody>${gosterilecek.slice(0, 500).map(x=>{
+      const e = GEO_TIP_ETIKET[x.tip];
+      return `<tr>
+        <td><span class="geo-rozet ${e.sinif}">${e.ad}</span></td>
+        <td class="name">${x.firma}</td>
+        <td class="geo-adres">${[x.ilce, x.il].filter(Boolean).join(" / ") || "—"}</td>
+        <td class="geo-adres">${x.gelen || "<i>kayıt yok</i>"}</td>
+        <td class="num">${x.km!=null ? x.km.toFixed(1)+" km" : "—"}</td>
+      </tr>`;
+    }).join("")}</tbody></table>
+    ${gosterilecek.length>500 ? `<div class="hint" style="padding:10px 12px">İlk 500 kayıt gösteriliyor — tamamı için Excel indir.</div>` : ""}`;
+}
+
+$("geoFilters") && $("geoFilters").addEventListener("click", e=>{
+  const b = e.target.closest("[data-geo-filtre]"); if (!b) return;
+  S._geoFiltre = b.dataset.geoFiltre;
+  renderKonumDenetim();
+});
+$("geoRescanBtn") && ($("geoRescanBtn").onclick = ()=>{ S._geoDenetim = null; renderKonumDenetim(); toast("Konumlar yeniden tarandı"); });
+$("geoCsvBtn") && ($("geoCsvBtn").onclick = ()=>{
+  if (!S._geoDenetim) S._geoDenetim = konumDenetle();
+  const esc = v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  let csv = "﻿Sorun;Firma;Beklenen ilçe;İl;Firma adresi;Kayıtlı adres;Sapma (km)\n";
+  for (const x of S._geoDenetim.satirlar){
+    csv += [esc(GEO_TIP_ETIKET[x.tip].ad), esc(x.firma), esc(x.ilce||""), esc(x.il||""), esc(x.adres),
+            esc(x.gelen), x.km!=null ? x.km.toFixed(1) : ""].join(";")+"\n";
+  }
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const u = URL.createObjectURL(blob); const aEl=document.createElement("a");
+  aEl.href=u; aEl.download="konum-denetimi.csv"; aEl.click(); URL.revokeObjectURL(u);
+});
+
+const ADMIN_SCREENS = ["adminOverviewScreen", "adminAudiencesScreen", "adminFirmsScreen", "adminGeoScreen", "adminBranchesScreen", "adminAnnouncementsScreen", "adminFirmViewScreen"];
 function showAdminScreen(targetId){
   ADMIN_SCREENS.forEach(id => { const el = $(id); if (el) el.hidden = (id !== targetId); });
   document.querySelectorAll(".admin-nav-item").forEach(nav => nav.classList.toggle("active", nav.dataset.target === targetId));
@@ -4565,6 +4752,9 @@ function showAdminScreen(targetId){
   } else if (targetId === "adminFirmsScreen"){
     renderMergeFirmList();
     renderDuplicateSuggestions();
+  } else if (targetId === "adminGeoScreen"){
+    S._geoDenetim = null; // ekrana her girişte taze tara (yeni ay yüklenmiş olabilir)
+    renderKonumDenetim();
   } else if (targetId === "adminAnnouncementsScreen"){
     renderAnnouncementAdmin();
   } else if (targetId === "adminOverviewScreen"){
@@ -5729,7 +5919,11 @@ function loadCloud(){
   // Önceden hesaplanmış TAM ADRES koordinatlarını buluttan yükle (scripts/geocode.js yazar)
   cloudOn("addrGeo", snap=>{
     S.addrGeo = snap.val() || {};
+    S._addrGeoYuklendi = true;
     if (S.userLoc) geocodeVisible(); // yeni/güncel adres koordinatı geldiyse mesafeleri baştan hesapla
+    // Konum Denetimi ekranı açıkken veri sonradan gelirse tazelensin — yoksa koordinatlar
+    // henüz yüklenmemişken "hepsi koordinatsız" gibi yanıltıcı bir tablo kalıyordu
+    if ($("adminGeoScreen") && !$("adminGeoScreen").hidden){ S._geoDenetim = null; renderKonumDenetim(); }
   });
   // Admin'in elle birleştirdiği firma eşleşmelerini buluttan yükle (sadece admin yazar)
   cloudOn("manualMerges", snap=>{
